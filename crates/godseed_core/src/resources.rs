@@ -212,3 +212,38 @@ impl ReturnDigestLog {
     }
 }
 
+/// Authoritative registry of inscribed documents and legal charters (AC-205, Architecture Sec 12)
+#[derive(Resource, Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct DocumentRegistry {
+    pub documents: Vec<crate::types::InscribedDocument>,
+    pub next_id: u32,
+}
+
+impl Default for DocumentRegistry {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl DocumentRegistry {
+    pub fn new() -> Self {
+        Self { documents: Vec::new(), next_id: 1 }
+    }
+
+    pub fn register(&mut self, mut doc: crate::types::InscribedDocument) -> u32 {
+        let id = self.next_id;
+        self.next_id += 1;
+        doc.id = id;
+        self.documents.push(doc);
+        id
+    }
+
+    pub fn get(&self, id: u32) -> Option<&crate::types::InscribedDocument> {
+        self.documents.iter().find(|d| d.id == id)
+    }
+
+    pub fn get_mut(&mut self, id: u32) -> Option<&mut crate::types::InscribedDocument> {
+        self.documents.iter_mut().find(|d| d.id == id)
+    }
+}
+

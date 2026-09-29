@@ -13,14 +13,15 @@ use crate::components::{
 use crate::content::{caps, knowledge, ContentDefinitions};
 use crate::events::{SimEvent, TelemetryEvent};
 use crate::resources::{
-    EventRing, NextCausalId, PendingConsequenceRegistry, RelationshipLedger, ReputationRegistry,
+    DocumentRegistry, EventRing, NextCausalId, PendingConsequenceRegistry, RelationshipLedger, ReputationRegistry,
     ReturnDigestLog, TelemetryLog,
 };
 use crate::settlement::SettlementDirectory;
 use crate::types::{
     ActionResult, CapabilityId, CapabilityLevel, CausalPointer, CitizenId, ConsequenceStage,
-    ConsequenceType, EpisodicRecord, Exchange, LocationId, MemoryTag, OccupationType,
-    PlayerAction, ResourceType, SideEffect, SimClock, TalkTopic, TriggerCondition,
+    ConsequenceType, DocumentType, EpisodicRecord, Exchange, InscribedDocument, LocationId,
+    MemoryTag, OccupationType, PlayerAction, RelationalBond, ResourceType, SideEffect, SimClock,
+    TalkTopic, TriggerCondition,
 };
 use crate::world::WorldMap;
 
@@ -37,6 +38,7 @@ pub fn player_action_system(
     mut next_causal: ResMut<NextCausalId>,
     mut consequences: ResMut<PendingConsequenceRegistry>,
     mut return_digests: ResMut<ReturnDigestLog>,
+    mut documents: ResMut<DocumentRegistry>,
     mut player_query: Query<
         (
             &mut CitizenMeta,
@@ -108,6 +110,7 @@ pub fn player_action_system(
                 &mut next_causal,
                 &mut consequences,
                 &mut return_digests,
+                &mut documents,
                 &npc_query,
                 &mut episodic_query,
             );
@@ -145,6 +148,7 @@ fn resolve_action(
     next_causal: &mut NextCausalId,
     consequences: &mut PendingConsequenceRegistry,
     return_digests: &mut ReturnDigestLog,
+    documents: &mut DocumentRegistry,
     npc_query: &Query<
         (&CitizenMeta, &mut Disposition, &NpcSchedule, &SettlementRef, &OccupationProfile),
         Without<PlayerMarker>,
@@ -166,6 +170,16 @@ fn resolve_action(
         PlayerAction::HelpWithFelling { npc } => resolve_help_with_felling(
             tick, *npc, settlement_ref, relationships, event_ring,
             next_causal, consequences, npc_query, episodic_query,
+        ),
+        PlayerAction::Diagnose { location } => resolve_diagnose(
+            tick, *location, capabilities, transform, settlement_ref, player_epistemic, event_ring,
+        ),
+        PlayerAction::DraftDocument { doc_type } => resolve_draft_document(
+            tick, doc_type, capabilities, transform, player_epistemic, documents, event_ring,
+        ),
+        PlayerAction::ArbitrateDispute { document_id, consequence_id } => resolve_arbitrate_dispute(
+            tick, *document_id, *consequence_id, documents, consequences, relationships,
+            episodic_query, next_causal, event_ring,
         ),
         PlayerAction::Offer { npc, exchange } => resolve_offer(
             tick, *npc, exchange, finances, inventory, capabilities,
@@ -1265,3 +1279,317 @@ pub fn resource_ordinal(r: ResourceType) -> u8 {
         ResourceType::Parchment => 7,
     }
 }
+
+fn resolve_diagnose(
+    tick: u64,
+    location: LocationId,
+    capabilities: &CapabilitySet,
+    transform: &TransformationState,
+    settlement_ref: &SettlementRef,
+    player_epistemic: &mut EpistemicState,
+    event_ring: &mut EventRing,
+) -> ActionResult {
+    if !capabilities.has(caps::DIAGNOSIS) && transform.stage < 2 {
+        return ActionResult {
+            tick,
+            success: false,
+            message: "You lack the diagnostic training to analyze systemic settlement conditions. Reach Scholar Stage 2 (The Settlement Chronicler) first.".to_string(),
+            side_effects: vec![],
+        };
+    }
+
+    if settlement_ref.current_location != location {
+        return ActionResult {
+            tick,
+            success: false,
+            message: format!("You are not at Location #{}. You must be on-site to conduct a diagnosis.", location.0),
+            side_effects: vec![],
+        };
+    }
+
+    let (_finding_id, report_text) = match location.0 {
+        5 => {
+            player_epistemic.learn(2, tick);
+            (
+                2u16,
+                "Agricultural Diagnosis (South Fields): Stalk mildew, soil drainage pooling, and necrotic rust in the lower furrows. The crops suffer from fungal blight vulnerability."
+            )
+        }
+        4 => {
+            player_epistemic.learn(2, tick);
+            (
+                2u16,
+                "Agricultural Diagnosis (North Fields): Soil nitrogen depletion and weed encroachment along the boundary furrows."
+            )
+        }
+        11 => {
+            player_epistemic.learn(1, tick);
+            (
+                1u16,
+                "Silvicultural Diagnosis (Forest Edge): Fungal conks, heart rot, and crown thinning in the mature oak stands. The timber shows severe environmental stress."
+            )
+        }
+        8 => {
+            player_epistemic.learn(4, tick);
+            (
+                4u16,
+                "Archaeological Diagnosis (The Old Archive): Moisture-sealed subterranean vault joints and foundational stone settlement beneath the collapsed nave."
+            )
+        }
+        6 => {
+            player_epistemic.learn(3, tick);
+            (
+                3u16,
+                "Botanical Diagnosis (Herb Garden): Silverleaf moss and mountain sage have adapted to limestone shale along the shaded western wall."
+            )
+        }
+        _ => {
+            (
+                0u16,
+                "Survey Diagnosis: You observe general structural wear and municipal foot traffic patterns."
+            )
+        }
+    };
+
+    event_ring.emit(SimEvent::PlayerAction {
+        tick,
+        action_name: format!("Diagnose(LocationId({}))", location.0),
+        success: true,
+    });
+
+    ActionResult {
+        tick,
+        success: true,
+        message: format!("You conduct a methodical on-site examination.\n\n{}", report_text),
+        side_effects: vec![],
+    }
+}
+
+fn resolve_draft_document(
+    tick: u64,
+    doc_type: &DocumentType,
+    capabilities: &CapabilitySet,
+    transform: &TransformationState,
+    player_epistemic: &EpistemicState,
+    documents: &mut DocumentRegistry,
+    event_ring: &mut EventRing,
+) -> ActionResult {
+    if !capabilities.has(caps::DIAGNOSIS) && transform.stage < 2 && capabilities.level(caps::INSCRIPTION) < CapabilityLevel::JOURNEYMAN {
+        return ActionResult {
+            tick,
+            success: false,
+            message: "You lack documentary authority. You must reach Scholar Stage 2 (The Settlement Chronicler) to draft legally binding instruments.".to_string(),
+            side_effects: vec![],
+        };
+    }
+
+    match doc_type {
+        DocumentType::HarvestDiagnosisReport { location: _, finding } => {
+            if *finding > 0 && !player_epistemic.has_knowledge(*finding) {
+                return ActionResult {
+                    tick,
+                    success: false,
+                    message: format!("You have not diagnosed or observed finding #{} yet. You cannot draft an unsubstantiated report.", finding),
+                    side_effects: vec![],
+                };
+            }
+        }
+        DocumentType::DebtReliefCharter { creditor, debtor, terms } => {
+            if creditor == debtor || *terms == 0 {
+                return ActionResult {
+                    tick,
+                    success: false,
+                    message: "Invalid debt relief charter parameters.".to_string(),
+                    side_effects: vec![],
+                };
+            }
+        }
+        DocumentType::FoundingArchiveTranslation { secret_id } => {
+            if *secret_id > 0 && !player_epistemic.has_knowledge(*secret_id) {
+                return ActionResult {
+                    tick,
+                    success: false,
+                    message: "You cannot translate an archive secret you have not observed or learned.".to_string(),
+                    side_effects: vec![],
+                };
+            }
+        }
+    }
+
+    let doc = InscribedDocument {
+        id: 0,
+        doc_type: doc_type.clone(),
+        drafter: CitizenId::PLAYER,
+        signers: vec![CitizenId::PLAYER],
+        binding_tick: tick,
+        related_consequence_id: None,
+    };
+
+    let doc_id = documents.register(doc);
+
+    event_ring.emit(SimEvent::PlayerAction {
+        tick,
+        action_name: format!("DraftDocument(#{})", doc_id),
+        success: true,
+    });
+
+    ActionResult {
+        tick,
+        success: true,
+        message: format!(
+            "Using iron gall ink and official parchment, you draft and seal:\n\"{}\"\n\nInscribed Document #{} has been registered with documentary authority.",
+            doc_type.title(),
+            doc_id
+        ),
+        side_effects: vec![SideEffect::DocumentCreated { id: doc_id }],
+    }
+}
+
+fn resolve_arbitrate_dispute(
+    tick: u64,
+    document_id: u32,
+    consequence_id: u32,
+    documents: &mut DocumentRegistry,
+    consequences: &mut PendingConsequenceRegistry,
+    relationships: &mut RelationshipLedger,
+    episodic_query: &mut Query<
+        (&CitizenMeta, &mut EpisodicMemory, &mut RelationalLedger, &mut EpistemicState),
+        Without<PlayerMarker>,
+    >,
+    next_causal: &mut NextCausalId,
+    event_ring: &mut EventRing,
+) -> ActionResult {
+    let doc_title = if let Some(doc) = documents.get(document_id) {
+        doc.doc_type.title()
+    } else {
+        return ActionResult {
+            tick,
+            success: false,
+            message: format!("Document #{} does not exist in official records.", document_id),
+            side_effects: vec![],
+        };
+    };
+
+    let consequence = if let Some(c) = consequences.consequences.iter_mut().find(|c| c.id == consequence_id) {
+        c
+    } else {
+        return ActionResult {
+            tick,
+            success: false,
+            message: format!("Pending consequence #{} not found.", consequence_id),
+            side_effects: vec![],
+        };
+    };
+
+    if consequence.stage == ConsequenceStage::Resolved {
+        return ActionResult {
+            tick,
+            success: false,
+            message: format!("Situation #{} has already been peacefully resolved.", consequence_id),
+            side_effects: vec![],
+        };
+    }
+
+    consequence.stage = ConsequenceStage::Resolved;
+    let causal_root = consequence.causal_root;
+
+    let mut involved_citizens = Vec::new();
+    match &consequence.consequence_type {
+        ConsequenceType::FraternalLaborStrain { elder, junior, .. } => {
+            involved_citizens.push(*elder);
+            involved_citizens.push(*junior);
+        }
+        ConsequenceType::CropBlightDispute { farmer_a, farmer_b, .. } => {
+            involved_citizens.push(*farmer_a);
+            involved_citizens.push(*farmer_b);
+        }
+        ConsequenceType::DebtDispute { creditor, debtor, .. } => {
+            involved_citizens.push(*creditor);
+            involved_citizens.push(*debtor);
+        }
+    }
+
+    if let Some(doc_mut) = documents.get_mut(document_id) {
+        doc_mut.related_consequence_id = Some(consequence_id);
+        for &cit in &involved_citizens {
+            if !doc_mut.signers.contains(&cit) {
+                doc_mut.signers.push(cit);
+            }
+        }
+    }
+
+    for &cit in &involved_citizens {
+        relationships.adjust(CitizenId::PLAYER, cit, 25);
+
+        for (meta, mut mem, mut ledger, _) in episodic_query.iter_mut() {
+            if meta.id == cit {
+                let turn_id = next_causal.next();
+                mem.add_record(EpisodicRecord {
+                    id: turn_id,
+                    tick,
+                    actor: CitizenId::PLAYER,
+                    target: Some(cit),
+                    tag: MemoryTag::ContractSigned,
+                    delta_sentiment: 20,
+                    delta_trust: 35,
+                    delta_obligation: 40,
+                    is_permanent: true,
+                    narrative_token: 205,
+                    causal: Some(CausalPointer {
+                        root_event_id: causal_root,
+                        parent_event_id: causal_root,
+                        sequence_step: 3,
+                    }),
+                });
+
+                let bond = ledger.bonds.entry(0).or_insert_with(RelationalBond::default);
+                *bond = RelationalBond::new(
+                    (bond.sentiment + 25).min(100),
+                    (bond.trust + 40).min(100),
+                    (bond.obligation + 50).min(1000),
+                );
+            }
+        }
+    }
+
+    if involved_citizens.len() >= 2 {
+        let a = involved_citizens[0];
+        let b = involved_citizens[1];
+        relationships.adjust(a, b, 20);
+
+        for (meta, _, mut ledger, _) in episodic_query.iter_mut() {
+            if meta.id == a {
+                let bond_b = ledger.bonds.entry(b.0).or_insert_with(RelationalBond::default);
+                *bond_b = RelationalBond::new(
+                    (bond_b.sentiment + 20).max(10).min(100),
+                    (bond_b.trust + 20).max(10).min(100),
+                    0,
+                );
+            } else if meta.id == b {
+                let bond_a = ledger.bonds.entry(a.0).or_insert_with(RelationalBond::default);
+                *bond_a = RelationalBond::new(
+                    (bond_a.sentiment + 20).max(10).min(100),
+                    (bond_a.trust + 20).max(10).min(100),
+                    0,
+                );
+            }
+        }
+    }
+
+    event_ring.emit(SimEvent::PlayerAction {
+        tick,
+        action_name: format!("ArbitrateDispute(Doc#{}, Consequence#{})", document_id, consequence_id),
+        success: true,
+    });
+
+    ActionResult {
+        tick,
+        success: true,
+        message: format!(
+            "You present Inscribed Document #{} (\"{}\") with the full documentary authority of a Settlement Chronicler.\n\nAll parties review the binding provisions and affix their marks. Situation #{} is formally RESOLVED. Feud and division are averted.",
+            document_id, doc_title, consequence_id
+        ),
+        side_effects: vec![SideEffect::DisputeArbitrated { consequence_id, document_id }],
+    }
+}
+

@@ -9,7 +9,7 @@ use clap::Parser;
 use godseed_core::{
     sim::Simulation,
     types::{
-        CapabilityId, CitizenId, LocationId, OccupationType,
+        CapabilityId, CitizenId, DocumentType, LocationId, OccupationType,
         PlayerAction, ResourceType, SideEffect, TalkTopic,
     },
 };
@@ -323,6 +323,49 @@ fn parse_command(input: &str, sim: &mut Simulation) -> Result<Option<PlayerActio
                 CitizenId(6)
             };
             Ok(Some(PlayerAction::HelpWithFelling { npc: target_id }))
+        }
+
+        "diagnose" => {
+            let loc_id = if parts.len() >= 2 {
+                parts[1].parse::<u16>().map(LocationId).map_err(|_| "Location ID must be a number".to_string())?
+            } else {
+                sim.summary().player.map(|p| p.location).unwrap_or(LocationId(5))
+            };
+            Ok(Some(PlayerAction::Diagnose { location: loc_id }))
+        }
+
+        "draft" => {
+            if parts.len() < 2 {
+                return Err("Usage: draft <harvest|debt|archive> [args...]".to_string());
+            }
+            let doc_type = match parts[1].to_lowercase().as_str() {
+                "harvest" | "crop" | "report" => {
+                    let loc_id = parts.get(2).and_then(|s| s.parse::<u16>().ok()).map(LocationId).unwrap_or(LocationId(5));
+                    let finding = parts.get(3).and_then(|s| s.parse::<u16>().ok()).unwrap_or(2);
+                    DocumentType::HarvestDiagnosisReport { location: loc_id, finding }
+                }
+                "debt" | "charter" => {
+                    let creditor = parts.get(2).and_then(|s| s.parse::<u64>().ok()).map(CitizenId).unwrap_or(CitizenId(4));
+                    let debtor = parts.get(3).and_then(|s| s.parse::<u64>().ok()).map(CitizenId).unwrap_or(CitizenId(2));
+                    let terms = parts.get(4).and_then(|s| s.parse::<u32>().ok()).unwrap_or(50);
+                    DocumentType::DebtReliefCharter { creditor, debtor, terms }
+                }
+                "archive" | "history" => {
+                    let secret = parts.get(2).and_then(|s| s.parse::<u16>().ok()).unwrap_or(7);
+                    DocumentType::FoundingArchiveTranslation { secret_id: secret }
+                }
+                _ => return Err("Unknown document type. Use harvest, debt, or archive.".to_string()),
+            };
+            Ok(Some(PlayerAction::DraftDocument { doc_type }))
+        }
+
+        "arbitrate" => {
+            if parts.len() < 3 {
+                return Err("Usage: arbitrate <document_id> <consequence_id>".to_string());
+            }
+            let doc_id = parts[1].parse::<u32>().map_err(|_| "Document ID must be a number".to_string())?;
+            let cons_id = parts[2].parse::<u32>().map_err(|_| "Consequence ID must be a number".to_string())?;
+            Ok(Some(PlayerAction::ArbitrateDispute { document_id: doc_id, consequence_id: cons_id }))
         }
 
         "sleep" => Ok(Some(PlayerAction::Sleep)),

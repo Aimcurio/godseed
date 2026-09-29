@@ -21,7 +21,7 @@ use crate::persistence::{CitizenSnapshot, SimulationSnapshot, load_snapshot, sav
 use crate::player::spawn_player;
 use crate::replay::compute_authoritative_state_hash;
 use crate::resources::{
-    EventRing, NextCausalId, NextCitizenId, PendingConsequenceRegistry, RelationshipLedger,
+    DocumentRegistry, EventRing, NextCausalId, NextCitizenId, PendingConsequenceRegistry, RelationshipLedger,
     ReputationRegistry, ReturnDigestLog, TelemetryLog,
 };
 use crate::settlement::{Settlement, SettlementDirectory};
@@ -73,6 +73,7 @@ impl Simulation {
         world.insert_resource(PendingConsequenceRegistry::default());
         world.insert_resource(ReturnDigestLog::default());
         world.insert_resource(NextCausalId::default());
+        world.insert_resource(DocumentRegistry::default());
 
         // ── Initialize Thornveil settlement ───────────────────────────────────
         let thornveil = Settlement::new(
@@ -367,6 +368,10 @@ impl Simulation {
         world.insert_resource(NextCitizenId(snapshot.next_citizen_id));
         world.insert_resource(TelemetryLog::new()); // telemetry is session-local
         world.insert_resource(ContentDefinitions::thornveil()); // content is always re-loaded
+        world.insert_resource(PendingConsequenceRegistry::default());
+        world.insert_resource(ReturnDigestLog::default());
+        world.insert_resource(NextCausalId::default());
+        world.insert_resource(DocumentRegistry::default());
 
         for c in snapshot.citizens {
             let mut builder = world.spawn((

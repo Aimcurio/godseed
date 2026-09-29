@@ -26,6 +26,7 @@ pub mod caps {
     pub const INSCRIPTION: CapabilityId = CapabilityId(7);
     pub const FARMING: CapabilityId = CapabilityId(8);
     pub const TRADING: CapabilityId = CapabilityId(9);
+    pub const DIAGNOSIS: CapabilityId = CapabilityId(10);
 }
 
 /// Well-known knowledge node IDs
@@ -49,6 +50,7 @@ pub mod milestones {
     pub const INSCRIPTION_LEARNED: MilestoneId = MilestoneId(3);
     pub const FIVE_INSCRIPTIONS: MilestoneId = MilestoneId(4);
     pub const SCHOLAR_RECOGNIZED: MilestoneId = MilestoneId(5);
+    pub const CHRONICLER_RECOGNIZED: MilestoneId = MilestoneId(6);
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -572,6 +574,17 @@ fn capability_defs() -> Vec<CapabilityDefinition> {
             description: "Ability to evaluate goods and negotiate prices. Unlocks better market terms.".to_string(),
             practice_resource: None,
             unlocks_actions: vec!["Buy/Sell at improved prices".to_string()],
+        },
+        CapabilityDefinition {
+            id: caps::DIAGNOSIS,
+            name: "Diagnosis".to_string(),
+            description: "Ability to examine agricultural, structural, and ecological symptoms in the field. Core of the Settlement Chronicler path. Unlocks Diagnose and DraftDocument actions.".to_string(),
+            practice_resource: None,
+            unlocks_actions: vec![
+                "Diagnose(Location)".to_string(),
+                "DraftDocument(Type)".to_string(),
+                "ArbitrateDispute(Document, Consequence)".to_string(),
+            ],
         },
     ]
 }

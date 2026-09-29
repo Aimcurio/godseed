@@ -8,7 +8,7 @@ use crate::components::{
 use crate::content::{caps, knowledge, milestones};
 use crate::events::SimEvent;
 use crate::resources::{EventRing, RelationshipLedger};
-use crate::types::{CitizenId, SimClock, TransformationPath};
+use crate::types::{CapabilityLevel, CitizenId, SimClock, TransformationPath};
 
 /// Monthly: check if player meets conditions to advance the Inscription path.
 pub fn transformation_check_system(
@@ -26,7 +26,7 @@ pub fn transformation_check_system(
     >,
     _npc_dispositions: Query<(&CitizenMeta, &mut Disposition), Without<PlayerMarker>>,
 ) {
-    for (meta, mut transform, capabilities, knowledge) in player_query.iter_mut() {
+    for (meta, mut transform, mut capabilities, knowledge) in player_query.iter_mut() {
         if !meta.alive { continue; }
 
         match transform.path {
@@ -90,11 +90,24 @@ pub fn transformation_check_system(
                             && !transform.milestones.contains(&milestones::SCHOLAR_RECOGNIZED)
                         {
                             transform.milestones.push(milestones::SCHOLAR_RECOGNIZED);
-                            transform.progress = 100;
+                            transform.stage = 2; // Unlock Stage 2: The Settlement Chronicler
+                            transform.progress = 0;
+                            capabilities.set(caps::DIAGNOSIS, CapabilityLevel::NOVICE);
+                            capabilities.set(caps::INSCRIPTION, CapabilityLevel::JOURNEYMAN);
+
+                            event_ring.emit(SimEvent::TransformationEvent { stage: 2, tick: clock.tick });
+                            event_ring.emit(SimEvent::CapabilityAcquired {
+                                citizen: CitizenId::PLAYER,
+                                capability_id: caps::DIAGNOSIS.0,
+                                tick: clock.tick,
+                            });
                         }
                     }
-                    2 | 3 => {
-                        // Seamed — architecture exists but not implemented in VS1
+                    2 => {
+                        // Stage 2: The Settlement Chronicler (Documentary authority & legal arbitration)
+                    }
+                    3 => {
+                        // Seamed
                     }
                     _ => {}
                 }

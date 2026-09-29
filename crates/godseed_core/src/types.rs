@@ -242,6 +242,7 @@ impl CapabilityLevel {
     pub const NONE: Self = CapabilityLevel(0);
     pub const NOVICE: Self = CapabilityLevel(1);
     pub const SKILLED: Self = CapabilityLevel(2);
+    pub const JOURNEYMAN: Self = CapabilityLevel(2);
     pub const EXPERT: Self = CapabilityLevel(3);
 
     pub fn display(&self) -> &'static str {
@@ -346,6 +347,9 @@ pub enum PlayerAction {
     Sleep,
     Save { path: String },
     HelpWithFelling { npc: CitizenId },
+    Diagnose { location: LocationId },
+    DraftDocument { doc_type: DocumentType },
+    ArbitrateDispute { document_id: u32, consequence_id: u32 },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -390,6 +394,8 @@ pub enum SideEffect {
     TransformationProgress { stage: u8, progress: u16 },
     ReputationChanged { group: SocialGroupId, delta: i16 },
     PlayerMoved { to: LocationId },
+    DocumentCreated { id: u32 },
+    DisputeArbitrated { consequence_id: u32, document_id: u32 },
 }
 
 // ── Sim Clock ─────────────────────────────────────────────────────────────────
@@ -562,6 +568,51 @@ pub enum ConsequenceType {
         junior: CitizenId,
         target_workplace: LocationId,
     },
+    CropBlightDispute {
+        farmer_a: CitizenId,
+        farmer_b: CitizenId,
+        location: LocationId,
+    },
+    DebtDispute {
+        creditor: CitizenId,
+        debtor: CitizenId,
+        amount: u32,
+    },
+}
+
+/// Typed inscribed documents created through scholar documentary authority (AC-205, Architecture Sec 12)
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum DocumentType {
+    DebtReliefCharter { creditor: CitizenId, debtor: CitizenId, terms: u32 },
+    HarvestDiagnosisReport { location: LocationId, finding: u16 },
+    FoundingArchiveTranslation { secret_id: u16 },
+}
+
+impl DocumentType {
+    pub fn title(&self) -> String {
+        match self {
+            DocumentType::DebtReliefCharter { creditor, debtor, terms } => {
+                format!("Charter of Debt Relief: Citizen {} to Citizen {} ({} coins)", creditor.0, debtor.0, terms)
+            }
+            DocumentType::HarvestDiagnosisReport { location, finding } => {
+                format!("Official Harvest & Soil Diagnosis for Location #{} (Finding #{})", location.0, finding)
+            }
+            DocumentType::FoundingArchiveTranslation { secret_id } => {
+                format!("Ancient Inscription Translation: Record #{}", secret_id)
+            }
+        }
+    }
+}
+
+/// Physical or registered inscribed document with documentary binding authority
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct InscribedDocument {
+    pub id: u32,
+    pub doc_type: DocumentType,
+    pub drafter: CitizenId,
+    pub signers: Vec<CitizenId>,
+    pub binding_tick: u64,
+    pub related_consequence_id: Option<u32>,
 }
 
 /// Composable trigger conditions (supporting SimLab 3-trigger or simple latency)

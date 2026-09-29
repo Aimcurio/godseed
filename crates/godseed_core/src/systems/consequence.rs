@@ -81,6 +81,32 @@ pub fn pending_consequence_progression_system(
                         message: "Mira Ashbridge wipes down the bar counter and looks up with a knowing nod: 'You've been gone a spell. Word from the woods is Tomas works alone now—young Runn moved his kit over to Wren's forge. Timber's gotten dearer in the market since.'".to_string(),
                     });
                 }
+                ConsequenceType::CropBlightDispute { farmer_a, farmer_b: _, location } => {
+                    event_ring.emit(SimEvent::ConsequenceMatured {
+                        consequence_id: consequence.id,
+                        causal_root: consequence.causal_root,
+                        tick: current_tick,
+                    });
+                    digest_log.push(EpistemicReturnDigest {
+                        tick: current_tick,
+                        speaker: farmer_a,
+                        causal_root: consequence.causal_root,
+                        message: format!("Blight in the lower furrows of Location #{} caused harvest loss and finger-pointing over field borders.", location.0),
+                    });
+                }
+                ConsequenceType::DebtDispute { creditor, debtor, amount } => {
+                    event_ring.emit(SimEvent::ConsequenceMatured {
+                        consequence_id: consequence.id,
+                        causal_root: consequence.causal_root,
+                        tick: current_tick,
+                    });
+                    digest_log.push(EpistemicReturnDigest {
+                        tick: current_tick,
+                        speaker: debtor,
+                        causal_root: consequence.causal_root,
+                        message: format!("The unwritten debt of {} coins owed to Citizen {} has curdled into open hostility.", amount, creditor.0),
+                    });
+                }
             }
         }
     }
