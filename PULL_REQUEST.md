@@ -57,7 +57,7 @@ cargo run --release --bin godseed -- --persona transformation --headless-ticks 7
 
 ## How to Test
 
-### Run Full Automated Test Battery (20 tests, zero warnings):
+### Run Full Automated Test Battery (22 tests, zero warnings):
 ```powershell
 cargo test --all-targets
 ```
@@ -68,13 +68,19 @@ cargo run --release --bin soak_test
 ```
 
 ## Evidence Summary
-- **Test Battery**: 20/20 tests passing across all 14 Acceptance Criteria and adversarial boundary suites.
+- **Test Battery**: 22/22 tests passing across all 14 Acceptance Criteria and adversarial boundary suites:
+  - `ac_embodiment_and_population.rs`: AC-1 (embodiment/needs), AC-2 (population count), AC-3 (24h routines), `test_player_as_citizen_invariants_and_metabolic_parity` (biological/economic parity between player and NPCs).
+  - `ac_persistence_and_determinism.rs`: AC-9 (persistence), `test_ac9_deep_semantic_persistence_equivalence` (field-by-field verification of all citizen and world components across pre-save and loaded states), AC-10 (determinism), AC-11 (30-day departure/return), AC-12 (invariants), AC-14 (telemetry).
+  - `ac_progression_and_transformation.rs`: AC-6 (capabilities), AC-7 (Inscription path, Scholar Stage 1, 5 inscriptions).
+  - `ac_social_and_economy.rs`: AC-4 (dialogue/rapport), AC-5 & AC-8 (trade/stockpiles), AC-13 (gossip).
+  - `adversarial_and_integrity.rs`: Bad magic headers, illegal moves, unlearned inscription attempts, coin overspending, bit-flip CRC32 corruption detection, performance benchmark.
 - **7-Persona Life Tests**: 720 ticks (30 in-game days) executed across Cooperative, Opportunist, Transformation, Social Aggressive, Knowledge Seeker, Ignore Hooks, and Explorer. 100% of Thornveil's 15 NPCs survived. Distinct behavioral outcomes observed (Transformation achieved Scholar; commercial personas accumulated wealth; neglectful conversationalists starved).
-- **Soak Test**: 2,160 ticks (90 in-game days) completed in **3.6 milliseconds** with zero invariant failures and 15/15 living inhabitants preserved.
-- **Throughput**: **598,620 ticks/sec** in headless release profile.
+- **Soak Test**: 2,160 ticks (90 in-game days) completed in **106 milliseconds** (20,354 ticks/sec) with zero invariant failures and 15/15 living inhabitants preserved across all 9 checkpoints.
+- **Throughput**: ~20,000–600,000 ticks/sec depending on profile and logging.
 - **Memory Footprint**: ~14.2 MB RSS.
 - **Binary Footprint**: 5.45 MB (Windows PE x86_64).
-- **Persistence Integrity**: Verified via bit-flip test; corrupted payloads are deterministically rejected with `CRC32 mismatch`.
+- **Persistence Integrity**: Verified via bit-flip test; corrupted payloads are deterministically rejected with `CRC32 mismatch`. Deep semantic equivalence confirmed across all entity components.
+- **Independent Acceptance Status**: `INDEPENDENT_ACCEPTANCE_NOT_PERFORMED` (automated evaluation performed by primary author/test battery per governance standard; independent human evaluator review pending).
 
 ## Limitations
 1. **Single Settlement Boundary**: Only Thornveil is modeled in VS1; inter-settlement travel and caravans are seamed for VS2.

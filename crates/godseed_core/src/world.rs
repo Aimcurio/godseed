@@ -38,8 +38,9 @@ pub enum LocationType {
 }
 
 /// The Thornveil world map
-#[derive(Resource, Debug, Clone, Serialize, Deserialize)]
+#[derive(Resource, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct WorldMap {
+
     pub width: u8,
     pub height: u8,
     pub cells: Vec<MapCell>,

@@ -268,7 +268,7 @@ impl Simulation {
         Ok(Self::from_snapshot(snapshot))
     }
 
-    fn build_snapshot(&mut self) -> SimulationSnapshot {
+    pub fn build_snapshot(&mut self) -> SimulationSnapshot {
         let clock = *self.world.resource::<SimClock>();
         let world_map = self.world.resource::<WorldMap>().clone();
         let settlements = self.world.resource::<SettlementDirectory>().clone();
@@ -323,6 +323,8 @@ impl Simulation {
             }
         }
 
+        citizens.sort_by_key(|c| c.meta.id.0);
+
 
         SimulationSnapshot {
             version: 1,
@@ -339,7 +341,7 @@ impl Simulation {
         }
     }
 
-    fn from_snapshot(snapshot: SimulationSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: SimulationSnapshot) -> Self {
         let mut world = World::new();
 
         world.insert_resource(snapshot.clock);

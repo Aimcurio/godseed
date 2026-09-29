@@ -7,8 +7,9 @@ use std::collections::HashMap;
 use crate::types::{OccupationType, SettlementId};
 
 /// Settlement state
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Settlement {
+
     pub id: SettlementId,
     pub name: String,
     pub population: u32,
@@ -102,8 +103,9 @@ impl Settlement {
 }
 
 /// Resource holding all settlements (VS1: just one, Thornveil)
-#[derive(Resource, Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Resource, Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 pub struct SettlementDirectory {
+
     pub settlements: HashMap<u16, Settlement>, // SettlementId.0 → Settlement
 }
 

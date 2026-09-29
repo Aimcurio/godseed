@@ -6,8 +6,9 @@ use std::collections::HashMap;
 
 use crate::types::{CitizenId, HouseholdId, SettlementId};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Household {
+
     pub id: HouseholdId,
     pub settlement_id: SettlementId,
     pub head: CitizenId,
@@ -44,8 +45,9 @@ impl Household {
 }
 
 /// Resource holding all households
-#[derive(Resource, Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Resource, Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 pub struct HouseholdDirectory {
+
     pub households: HashMap<u32, Household>, // HouseholdId.0 → Household
     pub next_id: u32,
 }

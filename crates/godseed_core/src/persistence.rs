@@ -20,7 +20,7 @@ use crate::world::WorldMap;
 const MAGIC: &[u8; 8] = b"GODSEED1";
 const FORMAT_VERSION: u32 = 1;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct CitizenSnapshot {
     pub meta: CitizenMeta,
     pub demographics: Demographics,
@@ -45,7 +45,7 @@ pub struct CitizenSnapshot {
     pub knowledge: Option<KnowledgeInventory>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct SimulationSnapshot {
     pub version: u32,
     pub clock: SimClock,

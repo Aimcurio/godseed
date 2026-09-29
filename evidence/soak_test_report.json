@@ -1,7 +1,7 @@
 {
   "total_ticks": 2160,
-  "duration_ms": 3,
-  "ticks_per_sec": 598619.8,
+  "duration_ms": 106,
+  "ticks_per_sec": 20353.6,
   "checkpoints": [
     {"day": 10, "tick": 240, "hash": "ab7f031efe09fe33", "invariants_pass": true, "living_npcs": 15},
     {"day": 20, "tick": 480, "hash": "b697ac4f3db95c64", "invariants_pass": true, "living_npcs": 15},

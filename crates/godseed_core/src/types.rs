@@ -316,11 +316,12 @@ pub struct ScheduleSlot {
 
 // ── Reputation ────────────────────────────────────────────────────────────────
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ReputationRecord {
     pub value: i16, // -100..+100
     pub known_by_count: u32,
 }
+
 
 // ── Player Actions ────────────────────────────────────────────────────────────
 

@@ -10,7 +10,7 @@ use crate::events::{SimEvent, TelemetryEvent};
 // ── Relationship Ledger ───────────────────────────────────────────────────────
 
 /// All pairwise relationship values (player ↔ NPC and NPC ↔ NPC)
-#[derive(Resource, Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Resource, Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub struct RelationshipLedger {
     pub values: HashMap<(u64, u64), i16>, // (CitizenId.0, CitizenId.0) → -100..+100
 }
@@ -40,7 +40,7 @@ impl RelationshipLedger {
 // ── Reputation Registry ───────────────────────────────────────────────────────
 
 /// Aggregate settlement reputation per social group
-#[derive(Resource, Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Resource, Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub struct ReputationRegistry {
     pub player_reputation: i16, // overall player reputation in Thornveil (-100..+100)
     pub groups: HashMap<u8, ReputationRecord>, // SocialGroupId.0 → record
@@ -55,12 +55,13 @@ impl ReputationRegistry {
 // ── Event Ring (inherited from CIVITAS-1M) ────────────────────────────────────
 
 
-#[derive(Resource, Debug, Clone, Serialize, Deserialize)]
+#[derive(Resource, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct EventRing {
     pub events: VecDeque<SimEvent>,
     pub capacity: usize,
     pub total_emitted: u64,
 }
+
 
 impl EventRing {
     pub fn new(capacity: usize) -> Self {
