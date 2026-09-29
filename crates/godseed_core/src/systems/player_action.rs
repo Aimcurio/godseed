@@ -158,6 +158,15 @@ fn resolve_action(
         Without<PlayerMarker>,
     >,
 ) -> ActionResult {
+    if !meta.alive {
+        return ActionResult {
+            tick,
+            success: false,
+            message: "You are deceased. The dead cannot act in the realm of the living.".to_string(),
+            side_effects: vec![],
+        };
+    }
+
     match action {
         PlayerAction::Move { to } => resolve_move(tick, settlement_ref, world_map, *to),
         PlayerAction::Look => resolve_look(tick, settlement_ref, world_map, npc_query),
@@ -633,6 +642,21 @@ fn resolve_help_with_felling(
             tick,
             success: false,
             message: format!("{} isn't at the felling site right now.", meta.name),
+            side_effects: vec![],
+        };
+    }
+
+    let already_helped = episodic_query.iter().any(|(m, mem, _, _)| {
+        m.id == npc_id && mem.has_anchor_with_tag(MemoryTag::HelpedWithFelling)
+    }) || consequence_reg.consequences.iter().any(|c| {
+        matches!(c.consequence_type, ConsequenceType::FraternalLaborStrain { elder, .. } if elder == npc_id)
+    });
+
+    if already_helped {
+        return ActionResult {
+            tick,
+            success: false,
+            message: format!("You have already assisted {} with the great oak felling; the consequences are already unfolding.", meta.name),
             side_effects: vec![],
         };
     }
@@ -1459,17 +1483,6 @@ fn resolve_arbitrate_dispute(
     next_causal: &mut NextCausalId,
     event_ring: &mut EventRing,
 ) -> ActionResult {
-    let doc_title = if let Some(doc) = documents.get(document_id) {
-        doc.doc_type.title()
-    } else {
-        return ActionResult {
-            tick,
-            success: false,
-            message: format!("Document #{} does not exist in official records.", document_id),
-            side_effects: vec![],
-        };
-    };
-
     let consequence = if let Some(c) = consequences.consequences.iter_mut().find(|c| c.id == consequence_id) {
         c
     } else {
@@ -1480,6 +1493,32 @@ fn resolve_arbitrate_dispute(
             side_effects: vec![],
         };
     };
+
+    let (doc_title, doc_matches) = if let Some(doc) = documents.get(document_id) {
+        let matches = match (&consequence.consequence_type, &doc.doc_type) {
+            (ConsequenceType::CropBlightDispute { .. }, DocumentType::HarvestDiagnosisReport { .. }) => true,
+            (ConsequenceType::DebtDispute { .. }, DocumentType::DebtReliefCharter { .. }) => true,
+            (ConsequenceType::FraternalLaborStrain { .. }, DocumentType::FoundingArchiveTranslation { .. }) => true,
+            _ => false,
+        };
+        (doc.doc_type.title(), matches)
+    } else {
+        return ActionResult {
+            tick,
+            success: false,
+            message: format!("Document #{} does not exist in official records.", document_id),
+            side_effects: vec![],
+        };
+    };
+
+    if !doc_matches {
+        return ActionResult {
+            tick,
+            success: false,
+            message: format!("Document #{} ({}) is not legally applicable to arbitrate this dispute.", document_id, doc_title),
+            side_effects: vec![],
+        };
+    }
 
     if consequence.stage == ConsequenceStage::Resolved {
         return ActionResult {

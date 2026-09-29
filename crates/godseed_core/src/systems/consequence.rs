@@ -46,9 +46,9 @@ pub fn pending_consequence_progression_system(
 
             match consequence.consequence_type {
                 ConsequenceType::FraternalLaborStrain { elder, junior, target_workplace } => {
-                    // 1. Mutate junior's schedule and occupation to new workplace
+                    // 1. Mutate junior's schedule and occupation to new workplace if alive
                     for (meta, mut schedule, mut occ) in npc_query.iter_mut() {
-                        if meta.id == junior {
+                        if meta.id == junior && meta.alive {
                             schedule.work_location = target_workplace;
                             for slot in schedule.slots.iter_mut() {
                                 if slot.activity == crate::types::NpcActivity::Working {

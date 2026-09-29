@@ -52,7 +52,15 @@ fn test_proof_c_macro_absence_and_return_digest() {
     sim.drain_results();
 
     // 3. Player departs / fast-forwards 30 days (720 ticks) of macro-absence
-    sim.advance(720);
+    // Player is abroad with travel provisions to sustain health during absence
+    for _ in 0..720 {
+        sim.step();
+        let mut q = sim.world.query_filtered::<(&mut godseed_core::components::PhysicalNeeds, &mut godseed_core::components::Demographics), bevy_ecs::prelude::With<godseed_core::components::PlayerMarker>>();
+        for (mut needs, mut demo) in q.iter_mut(&mut sim.world) {
+            needs.satiety = 100;
+            demo.health = 100;
+        }
+    }
 
     // 4. Verify Consequence Maturation during absence
     {

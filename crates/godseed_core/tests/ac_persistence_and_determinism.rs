@@ -100,6 +100,10 @@ fn test_ac9_deep_semantic_persistence_equivalence() {
     assert_eq!(pre_save.reputation, loaded.reputation, "ReputationRegistry must match");
     assert_eq!(pre_save.events, loaded.events, "EventRing must match");
     assert_eq!(pre_save.next_citizen_id, loaded.next_citizen_id, "NextCitizenId must match");
+    assert_eq!(pre_save.pending_consequences, loaded.pending_consequences, "PendingConsequenceRegistry must match");
+    assert_eq!(pre_save.return_digests, loaded.return_digests, "ReturnDigestLog must match");
+    assert_eq!(pre_save.documents, loaded.documents, "DocumentRegistry must match");
+    assert_eq!(pre_save.next_causal_id, loaded.next_causal_id, "NextCausalId must match");
     assert_eq!(pre_save.citizens.len(), loaded.citizens.len(), "Citizen counts must match exactly");
 
     // Verify all 16 citizens (15 NPCs + 1 player)
@@ -120,6 +124,9 @@ fn test_ac9_deep_semantic_persistence_equivalence() {
         assert_eq!(&pre_c.kinship, &loaded_c.kinship, "Kinship mismatch for {:?}", pre_c.meta.id);
         assert_eq!(&pre_c.causal_audit, &loaded_c.causal_audit, "CausalAudit mismatch for {:?}", pre_c.meta.id);
         assert_eq!(&pre_c.inventory, &loaded_c.inventory, "Inventory mismatch for {:?}", pre_c.meta.id);
+        assert_eq!(&pre_c.episodic_memory, &loaded_c.episodic_memory, "EpisodicMemory mismatch for {:?}", pre_c.meta.id);
+        assert_eq!(&pre_c.relational_ledger, &loaded_c.relational_ledger, "RelationalLedger mismatch for {:?}", pre_c.meta.id);
+        assert_eq!(&pre_c.epistemic_state, &loaded_c.epistemic_state, "EpistemicState mismatch for {:?}", pre_c.meta.id);
 
         if pre_c.is_player {
             assert!(loaded_c.is_player, "Loaded entity must be marked as player");

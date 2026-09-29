@@ -8,10 +8,11 @@ use std::io;
 use std::fs;
 
 use crate::components::{
-    CausalAudit, CapabilitySet, CitizenMeta, Demographics, Disposition, HouseholdRef,
+    CausalAudit, CapabilitySet, CitizenMeta, Demographics, Disposition,
+    EpisodicMemory, EpistemicState, HouseholdRef,
     Inventory, Kinship, KnowledgeInventory, MobilityProfile, NpcGoals, NpcMemory, NpcSchedule,
     OccupationProfile, PersonalFinances, PhysicalNeeds, PlayerInputBuffer, PlayerMarker,
-    SettlementRef, TransformationState,
+    RelationalLedger, SettlementRef, TransformationState,
 };
 use crate::content::ContentDefinitions;
 use crate::household::HouseholdDirectory;
@@ -291,6 +292,10 @@ impl Simulation {
         let reputation = self.world.resource::<ReputationRegistry>().clone();
         let events = self.world.resource::<EventRing>().clone();
         let next_id = self.world.resource::<NextCitizenId>().0;
+        let pending_consequences = self.world.resource::<PendingConsequenceRegistry>().clone();
+        let return_digests = self.world.resource::<ReturnDigestLog>().clone();
+        let documents = self.world.resource::<DocumentRegistry>().clone();
+        let next_causal_id = self.world.resource::<NextCausalId>().0;
 
         let mut citizens = Vec::new();
 
@@ -307,11 +312,15 @@ impl Simulation {
                     Option<&Disposition>, Option<&PlayerMarker>,
                     Option<&CapabilitySet>, Option<&TransformationState>, Option<&KnowledgeInventory>,
                 ),
+                (
+                    Option<&EpisodicMemory>, Option<&RelationalLedger>, Option<&EpistemicState>,
+                ),
             )>();
 
             for (
                 (meta, demo, hh_ref, sref, occ, fin, needs, mob, kin, audit, inv),
                 (npc_mem, npc_sched, npc_goals, disp, is_player, caps, transform, knowledge),
+                (episodic, relational, epistemic),
             ) in q.iter(&self.world) {
                 citizens.push(CitizenSnapshot {
                     meta: meta.clone(),
@@ -333,15 +342,17 @@ impl Simulation {
                     capabilities: caps.cloned(),
                     transformation: transform.cloned(),
                     knowledge: knowledge.cloned(),
+                    episodic_memory: episodic.cloned(),
+                    relational_ledger: relational.cloned(),
+                    epistemic_state: epistemic.cloned(),
                 });
             }
         }
 
         citizens.sort_by_key(|c| c.meta.id.0);
 
-
         SimulationSnapshot {
-            version: 1,
+            version: crate::persistence::FORMAT_VERSION_V2,
             clock,
             world_map,
             settlements,
@@ -351,7 +362,11 @@ impl Simulation {
             events,
             next_citizen_id: next_id,
             citizens,
-            seed: 0, // VS1 is not seeded-only; authored content
+            seed: 0,
+            pending_consequences,
+            return_digests,
+            documents,
+            next_causal_id,
         }
     }
 
@@ -368,10 +383,10 @@ impl Simulation {
         world.insert_resource(NextCitizenId(snapshot.next_citizen_id));
         world.insert_resource(TelemetryLog::new()); // telemetry is session-local
         world.insert_resource(ContentDefinitions::thornveil()); // content is always re-loaded
-        world.insert_resource(PendingConsequenceRegistry::default());
-        world.insert_resource(ReturnDigestLog::default());
-        world.insert_resource(NextCausalId::default());
-        world.insert_resource(DocumentRegistry::default());
+        world.insert_resource(snapshot.pending_consequences);
+        world.insert_resource(snapshot.return_digests);
+        world.insert_resource(NextCausalId(snapshot.next_causal_id));
+        world.insert_resource(snapshot.documents);
 
         for c in snapshot.citizens {
             let mut builder = world.spawn((
@@ -392,6 +407,11 @@ impl Simulation {
             if let Some(sched) = c.npc_schedule { builder.insert(sched); }
             if let Some(goals) = c.npc_goals { builder.insert(goals); }
             if let Some(disp) = c.disposition { builder.insert(disp); }
+
+            // VS2 Authoritative Components
+            if let Some(ep) = c.episodic_memory { builder.insert(ep); }
+            if let Some(rl) = c.relational_ledger { builder.insert(rl); }
+            if let Some(es) = c.epistemic_state { builder.insert(es); }
 
             if c.is_player {
                 builder.insert(PlayerMarker);
