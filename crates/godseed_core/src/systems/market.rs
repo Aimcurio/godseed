@@ -62,6 +62,7 @@ pub fn household_consumption_system(
             if settlement.remove_stock(0, 0.15) {
                 needs.satiety = (needs.satiety + 15).min(100);
             }
+            settlement.remove_stock(1, 0.08); // Domestic firewood
         }
     }
 }

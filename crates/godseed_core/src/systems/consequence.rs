@@ -6,7 +6,7 @@ use crate::components::{CitizenMeta, NpcSchedule, OccupationProfile, PlayerMarke
 use crate::events::SimEvent;
 use crate::resources::{EventRing, EpistemicReturnDigest, PendingConsequenceRegistry, ReturnDigestLog};
 use crate::types::{
-    ConsequenceStage, ConsequenceType, OccupationType, SimClock, TriggerCondition,
+    CitizenId, ConsequenceStage, ConsequenceType, OccupationType, SimClock, TriggerCondition,
 };
 
 /// Evaluates pending consequences and advances them through their causal lifecycle
@@ -66,12 +66,19 @@ pub fn pending_consequence_progression_system(
                         tick: current_tick,
                     });
 
-                    // 3. Register return digest salutation for when player speaks with elder
+                    // 3. Register return digest salutations for when player speaks with elder or innkeeper
                     digest_log.push(EpistemicReturnDigest {
                         tick: current_tick,
                         speaker: elder,
                         causal_root: consequence.causal_root,
                         message: "Tomas Birch speaks with quiet regret: 'I haven't forgotten how you stood with me at the woodlot. But Runn took it hard... he felt he wasn't needed. He's taken an apprenticeship with Wren at the forge. I work the timber alone now.'".to_string(),
+                    });
+
+                    digest_log.push(EpistemicReturnDigest {
+                        tick: current_tick,
+                        speaker: CitizenId(1), // Mira Ashbridge
+                        causal_root: consequence.causal_root,
+                        message: "Mira Ashbridge wipes down the bar counter and looks up with a knowing nod: 'You've been gone a spell. Word from the woods is Tomas works alone now—young Runn moved his kit over to Wren's forge. Timber's gotten dearer in the market since.'".to_string(),
                     });
                 }
             }

@@ -14,7 +14,7 @@ use crate::content::{caps, knowledge, ContentDefinitions};
 use crate::events::{SimEvent, TelemetryEvent};
 use crate::resources::{
     EventRing, NextCausalId, PendingConsequenceRegistry, RelationshipLedger, ReputationRegistry,
-    TelemetryLog,
+    ReturnDigestLog, TelemetryLog,
 };
 use crate::settlement::SettlementDirectory;
 use crate::types::{
@@ -36,6 +36,7 @@ pub fn player_action_system(
     mut telemetry: ResMut<TelemetryLog>,
     mut next_causal: ResMut<NextCausalId>,
     mut consequences: ResMut<PendingConsequenceRegistry>,
+    mut return_digests: ResMut<ReturnDigestLog>,
     mut player_query: Query<
         (
             &mut CitizenMeta,
@@ -106,6 +107,7 @@ pub fn player_action_system(
                 &mut event_ring,
                 &mut next_causal,
                 &mut consequences,
+                &mut return_digests,
                 &npc_query,
                 &mut episodic_query,
             );
@@ -142,6 +144,7 @@ fn resolve_action(
     event_ring: &mut EventRing,
     next_causal: &mut NextCausalId,
     consequences: &mut PendingConsequenceRegistry,
+    return_digests: &mut ReturnDigestLog,
     npc_query: &Query<
         (&CitizenMeta, &mut Disposition, &NpcSchedule, &SettlementRef, &OccupationProfile),
         Without<PlayerMarker>,
@@ -157,7 +160,7 @@ fn resolve_action(
         PlayerAction::Inspect { target } => resolve_inspect(tick, *target, content, npc_query, relationships),
         PlayerAction::Talk { npc, topic } => resolve_talk(
             tick, *npc, topic, meta, settlement_ref, knowledge_inv, player_epistemic,
-            relationships, event_ring, npc_query, content, transform,
+            relationships, event_ring, return_digests, npc_query, content, transform,
             consequences, episodic_query,
         ),
         PlayerAction::HelpWithFelling { npc } => resolve_help_with_felling(
@@ -370,6 +373,7 @@ fn resolve_talk(
     player_epistemic: &mut EpistemicState,
     relationships: &mut RelationshipLedger,
     event_ring: &mut EventRing,
+    return_digests: &mut ReturnDigestLog,
     npc_query: &Query<
         (&CitizenMeta, &mut Disposition, &NpcSchedule, &SettlementRef, &OccupationProfile),
         Without<PlayerMarker>,
@@ -412,33 +416,40 @@ fn resolve_talk(
 
     let (message, side_effects, rel_delta) = match topic {
         TalkTopic::Greeting => {
-            // Check for VS2 specific felling consequence dialogue
-            let is_fraternal_matured = consequences.consequences.iter().any(|c| {
-                matches!(c.consequence_type, ConsequenceType::FraternalLaborStrain { .. })
-                    && c.stage == ConsequenceStage::Matured
-            });
-            let has_helped_felling = episodic_query.iter().any(|(meta, mem, _, _)| {
-                meta.id == CitizenId(6) && mem.has_anchor_with_tag(MemoryTag::HelpedWithFelling)
-            });
-
-            let response = if npc_id == CitizenId(6) && has_helped_felling {
-                if is_fraternal_matured {
-                    format!("{} smiles warmly at you, though his eyes look tired. \"I haven't forgotten how you stood with me felling the oak. But... Runn took it hard. He felt displaced, like he was no longer needed here. He packed his kit and apprenticed with Wren at the forge. I work alone now.\"", npc_meta.name)
-                } else {
-                    format!("{} smiles warmly and clasps your shoulder. \"Good to see you, friend. My back still remembers the oak we brought down together.\"", npc_meta.name)
-                }
-            } else if npc_id == CitizenId(12) && is_fraternal_matured {
-                format!("{} wipes iron grime from his leather apron, looking at you with proud defiance. \"Wren took me on at the forge. Tomas didn't need two sets of hands at the woodlot anymore—not after you showed him how quick the felling could be. Here, I'm forging my own iron.\"", npc_meta.name)
-            } else if effective_disp >= 20 {
-                format!("{} smiles. \"Good to see you again.\"", npc_meta.name)
-            } else if effective_disp >= 0 {
-                format!("{} nods. \"Hello.\"", npc_meta.name)
-            } else if effective_disp >= -20 {
-                format!("{} gives you a measured look. \"What do you want?\"", npc_meta.name)
+            // 1. Check for unconsumed epistemic return digest for this speaker (AC-208)
+            if let Some(digest) = return_digests.pop_digest_for(npc_id) {
+                (digest.message, vec![], 2i16)
             } else {
-                format!("{} turns away briefly before answering. \"Well?\"", npc_meta.name)
-            };
-            (response, vec![], 2i16)
+                // 2. Check for VS2 specific felling consequence dialogue
+                let is_fraternal_matured = consequences.consequences.iter().any(|c| {
+                    matches!(c.consequence_type, ConsequenceType::FraternalLaborStrain { .. })
+                        && c.stage == ConsequenceStage::Matured
+                });
+                let has_helped_felling = episodic_query.iter().any(|(meta, mem, _, _)| {
+                    meta.id == CitizenId(6) && mem.has_anchor_with_tag(MemoryTag::HelpedWithFelling)
+                });
+
+                let response = if npc_id == CitizenId(6) && has_helped_felling {
+                    if is_fraternal_matured {
+                        format!("{} smiles warmly at you, though his eyes look tired. \"I haven't forgotten how you stood with me felling the oak. But... Runn took it hard. He felt displaced, like he was no longer needed here. He packed his kit and apprenticed with Wren at the forge. I work alone now.\"", npc_meta.name)
+                    } else {
+                        format!("{} smiles warmly and clasps your shoulder. \"Good to see you, friend. My back still remembers the oak we brought down together.\"", npc_meta.name)
+                    }
+                } else if npc_id == CitizenId(12) && is_fraternal_matured {
+                    format!("{} wipes iron grime from his leather apron, looking at you with proud defiance. \"Wren took me on at the forge. Tomas didn't need two sets of hands at the woodlot anymore—not after you showed him how quick the felling could be. Here, I'm forging my own iron.\"", npc_meta.name)
+                } else if npc_id == CitizenId(1) && is_fraternal_matured {
+                    format!("{} nods as you approach the bar. \"Tomas is holding up at the woodlot, but timber prices haven't settled since Runn moved to the forge. Good to see you.\"", npc_meta.name)
+                } else if effective_disp >= 20 {
+                    format!("{} smiles. \"Good to see you again.\"", npc_meta.name)
+                } else if effective_disp >= 0 {
+                    format!("{} nods. \"Hello.\"", npc_meta.name)
+                } else if effective_disp >= -20 {
+                    format!("{} gives you a measured look. \"What do you want?\"", npc_meta.name)
+                } else {
+                    format!("{} turns away briefly before answering. \"Well?\"", npc_meta.name)
+                };
+                (response, vec![], 2i16)
+            }
         }
 
         TalkTopic::AskAboutWork => {

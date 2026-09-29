@@ -34,7 +34,12 @@ pub fn production_system(
             OccupationType::Farmer => (0u8, FARMER_FOOD_PER_HOUR * occ.productivity as f64),
             OccupationType::Forester => (1u8, FORESTER_TIMBER_PER_HOUR * occ.productivity as f64),
             OccupationType::Miner => (2u8, MINER_STONE_PER_HOUR * occ.productivity as f64),
-            OccupationType::Artisan => (3u8, ARTISAN_TOOLS_PER_HOUR * occ.productivity as f64),
+            OccupationType::Artisan => {
+                if let Some(settlement) = settlements.get_mut(sid) {
+                    settlement.remove_stock(1, 0.18);
+                }
+                (3u8, ARTISAN_TOOLS_PER_HOUR * occ.productivity as f64)
+            }
             OccupationType::Herbalist => (5u8, HERBALIST_HERBS_PER_HOUR * occ.productivity as f64),
             OccupationType::Laborer => {
                 if _location == crate::types::LocationId(4) || _location == crate::types::LocationId(5) {

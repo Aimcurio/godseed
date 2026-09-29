@@ -198,5 +198,17 @@ impl ReturnDigestLog {
         }
         self.entries.push_back(entry);
     }
+
+    pub fn find_digest_for(&self, speaker: CitizenId) -> Option<&EpistemicReturnDigest> {
+        self.entries.iter().rev().find(|d| d.speaker == speaker)
+    }
+
+    pub fn pop_digest_for(&mut self, speaker: CitizenId) -> Option<EpistemicReturnDigest> {
+        if let Some(pos) = self.entries.iter().rposition(|d| d.speaker == speaker) {
+            self.entries.remove(pos)
+        } else {
+            None
+        }
+    }
 }
 

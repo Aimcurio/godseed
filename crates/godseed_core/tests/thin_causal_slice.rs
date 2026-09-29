@@ -167,7 +167,7 @@ fn test_thin_causal_slice_full_loop() {
     assert!(matured_tomas_greeting[0].success);
     assert!(
         matured_tomas_greeting[0].message.contains("Runn took it hard")
-            && matured_tomas_greeting[0].message.contains("apprenticed with Wren at the forge"),
+            && matured_tomas_greeting[0].message.contains("apprenticeship with Wren at the forge"),
         "Tomas must articulate the transformed relationship and consequence: {}",
         matured_tomas_greeting[0].message
     );
