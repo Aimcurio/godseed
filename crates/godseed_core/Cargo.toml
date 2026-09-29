@@ -1,0 +1,20 @@
+[package]
+name = "godseed_core"
+version = "0.1.0"
+edition = "2021"
+description = "Godseed VS1 simulation engine — headless Bevy ECS world"
+
+[lib]
+name = "godseed_core"
+path = "src/lib.rs"
+
+[dependencies]
+bevy_ecs = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+bincode = { workspace = true }
+crc32fast = { workspace = true }
+rand = { workspace = true }
+rand_chacha = { workspace = true }
+toml = { workspace = true }
+fnv = { workspace = true }
