@@ -459,6 +459,24 @@ pub enum BehavioralMode {
     HardenedEnemy,
 }
 
+/// Knowledge domain classification (AC-204, Architecture Final Sec 8)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum KnowledgeDomain {
+    ObservationInsight, // e.g. Crop Blight Signs, Timber Stress, Herb Habitats
+    SecretTruth,        // e.g. Voss's Exiled Son, Delia's Debt, Founding Flood
+    DocumentedRecord,   // e.g. Ancient Land Charter, Signed Debt Note
+}
+
+/// Rich knowledge definition with social fallout modes (Architecture Final Sec 8)
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct KnowledgeDefinition {
+    pub id: u16,
+    pub domain: KnowledgeDomain,
+    pub title: String,
+    pub description: String,
+    pub social_fallout_mode: Option<BehavioralMode>,
+}
+
 /// Compact 4-byte Triad Relational Bond (Sentiment, Trust, Obligation)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct RelationalBond {

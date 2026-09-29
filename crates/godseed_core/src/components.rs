@@ -463,3 +463,42 @@ impl KnowledgeInventory {
 impl Default for KnowledgeInventory {
     fn default() -> Self { Self::new() }
 }
+
+/// Epistemic state tracking factual knowledge nodes and corroboration (AC-204, Sec 8)
+#[derive(Component, Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+pub struct EpistemicState {
+    /// KnowledgeId (u16) -> (AcquiredTick, CorroborationCount)
+    pub known: HashMap<u16, (u64, u8)>,
+}
+
+impl EpistemicState {
+    pub fn new() -> Self {
+        Self {
+            known: HashMap::new(),
+        }
+    }
+
+    pub fn has_knowledge(&self, id: u16) -> bool {
+        self.known.contains_key(&id)
+    }
+
+    pub fn get_corroboration(&self, id: u16) -> u8 {
+        self.known.get(&id).map(|(_, c)| *c).unwrap_or(0)
+    }
+
+    /// Learn or corroborate knowledge. Returns true if novel or corroboration increased.
+    /// Returns false if already max corroborated (no-op suppression).
+    pub fn learn(&mut self, id: u16, tick: u64) -> bool {
+        if let Some((_, count)) = self.known.get_mut(&id) {
+            if *count < 3 {
+                *count += 1;
+                true
+            } else {
+                false // No-op suppression (already saturated at max corroboration)
+            }
+        } else {
+            self.known.insert(id, (tick, 1));
+            true
+        }
+    }
+}

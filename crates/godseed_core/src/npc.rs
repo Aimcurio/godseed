@@ -3,7 +3,7 @@
 use bevy_ecs::prelude::*;
 
 use crate::components::{
-    CausalAudit, CitizenMeta, Demographics, Disposition, EpisodicMemory, HouseholdRef, Inventory,
+    CausalAudit, CitizenMeta, Demographics, Disposition, EpisodicMemory, EpistemicState, HouseholdRef, Inventory,
     Kinship, MobilityProfile, NpcGoals, NpcMemory, NpcSchedule, OccupationProfile,
     PersonalFinances, PhysicalNeeds, RelationalLedger, SettlementRef,
 };
@@ -114,11 +114,26 @@ fn spawn_npc_from_def(world: &mut World, def: &NpcDefinition) {
         Inventory::new(),
     ));
 
+    let mut epistemic = EpistemicState::new();
+    match def.citizen_id {
+        3 => { epistemic.learn(2, 0); }, // Oswin Cley: Crop Blight
+        4 => { epistemic.learn(3, 0); }, // Sera Cley: Herb Habitats
+        5 => {
+            epistemic.learn(4, 0); // Elder Voss: Archive Lore
+            epistemic.learn(5, 0); // Elder Voss: Exiled Son
+            epistemic.learn(7, 0); // Elder Voss: Founding Land Charter
+        },
+        6 => { epistemic.learn(1, 0); }, // Tomas Birch: Timber Stress
+        7 => { epistemic.learn(6, 0); }, // Delia Croft: Hidden Debt
+        _ => {}
+    }
+
     entity.insert((
         NpcMemory::new(),
         NpcGoals::new(),
         EpisodicMemory::new(),
         RelationalLedger::new(),
+        epistemic,
         schedule,
         disposition,
         CausalAudit {

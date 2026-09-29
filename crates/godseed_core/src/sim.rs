@@ -173,6 +173,11 @@ impl Simulation {
         }
     }
 
+    /// Run the weekly schedule explicitly (for testing and situational triggers)
+    pub fn step_weekly(&mut self) {
+        self.weekly_schedule.run(&mut self.world);
+    }
+
     /// Push a player action into the input buffer
     pub fn push_action(&mut self, action: PlayerAction) {
         let mut q = self.world.query_filtered::<&mut PlayerInputBuffer, With<PlayerMarker>>();

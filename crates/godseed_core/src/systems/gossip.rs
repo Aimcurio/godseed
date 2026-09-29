@@ -1,28 +1,37 @@
-/// Gossip System — weekly propagation of observations between NPCs
+/// Gossip System — weekly propagation of observations and asymmetric knowledge between NPCs
+/// (AC-13, AC-204, Architecture Final Sec 8)
 
 use bevy_ecs::prelude::*;
 
-use crate::components::{CitizenMeta, Disposition, NpcMemory, NpcSchedule, SettlementRef};
+use crate::components::{CitizenMeta, Disposition, EpistemicState, NpcMemory, NpcSchedule, SettlementRef};
 use crate::components::PlayerMarker;
 use crate::events::SimEvent;
 use crate::resources::EventRing;
 use crate::types::{CitizenId, LocationId, MemoryEvent, MemoryEventType, NpcActivity, SimClock};
 
-/// Weekly: NPCs share information about the player with others at the same location.
+/// Weekly: NPCs share information about the player and factual knowledge with others at the same location.
 /// Gossip is one-hop only (no transitive chaining within one tick).
 pub fn gossip_system(
     clock: Res<SimClock>,
     mut event_ring: ResMut<EventRing>,
     mut query: Query<
-        (&CitizenMeta, &mut NpcMemory, &mut Disposition, &SettlementRef, &NpcSchedule),
+        (
+            &CitizenMeta,
+            &mut NpcMemory,
+            &mut Disposition,
+            &mut EpistemicState,
+            &SettlementRef,
+            &NpcSchedule,
+        ),
         Without<PlayerMarker>,
     >,
 ) {
-    // Collect disposition info to share
+    // Collect disposition and knowledge info to share
     let mut disposition_snapshots: Vec<(CitizenId, LocationId, i16, bool)> = Vec::new();
+    let mut knowledge_snapshots: Vec<(CitizenId, LocationId, Vec<u16>)> = Vec::new();
 
-    // First pass: gather current dispositions from NPCs who are socializing
-    for (meta, _memory, disposition, settlement_ref, schedule) in query.iter() {
+    // First pass: gather current dispositions and knowledge from NPCs who are socializing
+    for (meta, _memory, disposition, epistemic, settlement_ref, schedule) in query.iter() {
         if !meta.alive { continue; }
         let hour = clock.hour();
         let (activity, _) = schedule.activity_at_hour(hour);
@@ -34,13 +43,23 @@ pub fn gossip_system(
                 disposition.toward_player,
                 has_strong_opinion,
             ));
+
+            let known_keys: Vec<u16> = epistemic.known.keys().copied().collect();
+            if !known_keys.is_empty() {
+                knowledge_snapshots.push((
+                    meta.id,
+                    settlement_ref.current_location,
+                    known_keys,
+                ));
+            }
         }
     }
 
     // Second pass: share with NPCs at the same location
-    for (meta, mut memory, mut disposition, settlement_ref, _schedule) in query.iter_mut() {
+    for (meta, mut memory, mut disposition, mut epistemic, settlement_ref, _schedule) in query.iter_mut() {
         if !meta.alive { continue; }
 
+        // 1. Disposition gossip
         for (speaker_id, speaker_loc, speaker_disp, strong) in &disposition_snapshots {
             if *speaker_id == meta.id { continue; }
             if *speaker_loc != settlement_ref.current_location { continue; }
@@ -66,6 +85,27 @@ pub fn gossip_system(
                 about: CitizenId::PLAYER,
                 tick: clock.tick,
             });
+        }
+
+        // 2. Asymmetric Corroborating Epistemic Gossip (AC-204)
+        for (speaker_id, speaker_loc, speaker_nodes) in &knowledge_snapshots {
+            if *speaker_id == meta.id { continue; }
+            if *speaker_loc != settlement_ref.current_location { continue; }
+
+            for &k_id in speaker_nodes {
+                // If novel or corroboration count < 3, epistemic.learn returns true.
+                // If already at max saturation (>= 3), returns false (no-op suppression).
+                if epistemic.learn(k_id, clock.tick) {
+                    let corroboration = epistemic.get_corroboration(k_id);
+                    event_ring.emit(SimEvent::KnowledgeShared {
+                        speaker: *speaker_id,
+                        listener: meta.id,
+                        knowledge_id: k_id,
+                        corroboration,
+                        tick: clock.tick,
+                    });
+                }
+            }
         }
     }
 }

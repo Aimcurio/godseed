@@ -3,9 +3,9 @@
 use bevy_ecs::prelude::*;
 
 use crate::components::{
-    CausalAudit, CapabilitySet, CitizenMeta, Demographics, HouseholdRef, Inventory,
+    CausalAudit, CapabilitySet, CitizenMeta, Demographics, EpistemicState, HouseholdRef, Inventory,
     Kinship, KnowledgeInventory, MobilityProfile, OccupationProfile, PersonalFinances,
-    PhysicalNeeds, PlayerInputBuffer, PlayerMarker, SettlementRef, TransformationState,
+    PhysicalNeeds, PlayerInputBuffer, PlayerMarker, RelationalLedger, SettlementRef, TransformationState,
 };
 use crate::household::{Household, HouseholdDirectory};
 use crate::types::{
@@ -89,6 +89,8 @@ pub fn spawn_player(world: &mut World) -> Entity {
         CapabilitySet::new(),
         TransformationState::new(),
         KnowledgeInventory::new(),
+        EpistemicState::new(),
+        RelationalLedger::new(),
         PlayerInputBuffer::new(),
         CausalAudit {
             trace: DecisionTrace::new(ReasonCode::PlayerArrival, 0, 0.0, 0.0, 0),

@@ -6,7 +6,7 @@
 use bevy_ecs::prelude::*;
 
 use crate::components::{
-    CapabilitySet, CitizenMeta, Disposition, EpisodicMemory, Inventory,
+    CapabilitySet, CitizenMeta, Disposition, EpisodicMemory, EpistemicState, Inventory,
     KnowledgeInventory, NpcSchedule, OccupationProfile, PersonalFinances,
     PhysicalNeeds, PlayerInputBuffer, PlayerMarker, RelationalLedger, SettlementRef, TransformationState,
 };
@@ -47,6 +47,7 @@ pub fn player_action_system(
             &mut CapabilitySet,
             &mut KnowledgeInventory,
             &mut TransformationState,
+            &mut EpistemicState,
         ),
         With<PlayerMarker>,
     >,
@@ -65,6 +66,7 @@ pub fn player_action_system(
             &CitizenMeta,
             &mut EpisodicMemory,
             &mut RelationalLedger,
+            &mut EpistemicState,
         ),
         Without<PlayerMarker>,
     >,
@@ -79,6 +81,7 @@ pub fn player_action_system(
         mut capabilities,
         mut knowledge_inv,
         mut transform,
+        mut player_epistemic,
     ) in player_query.iter_mut()
     {
         // Process one action per tick
@@ -94,6 +97,7 @@ pub fn player_action_system(
                 &mut capabilities,
                 &mut knowledge_inv,
                 &mut transform,
+                &mut player_epistemic,
                 &world_map,
                 &content,
                 &mut settlements,
@@ -129,6 +133,7 @@ fn resolve_action(
     capabilities: &mut CapabilitySet,
     knowledge_inv: &mut KnowledgeInventory,
     transform: &mut TransformationState,
+    player_epistemic: &mut EpistemicState,
     world_map: &WorldMap,
     content: &ContentDefinitions,
     settlements: &mut SettlementDirectory,
@@ -142,7 +147,7 @@ fn resolve_action(
         Without<PlayerMarker>,
     >,
     episodic_query: &mut Query<
-        (&CitizenMeta, &mut EpisodicMemory, &mut RelationalLedger),
+        (&CitizenMeta, &mut EpisodicMemory, &mut RelationalLedger, &mut EpistemicState),
         Without<PlayerMarker>,
     >,
 ) -> ActionResult {
@@ -151,7 +156,7 @@ fn resolve_action(
         PlayerAction::Look => resolve_look(tick, settlement_ref, world_map, npc_query),
         PlayerAction::Inspect { target } => resolve_inspect(tick, *target, content, npc_query, relationships),
         PlayerAction::Talk { npc, topic } => resolve_talk(
-            tick, *npc, topic, meta, settlement_ref, knowledge_inv,
+            tick, *npc, topic, meta, settlement_ref, knowledge_inv, player_epistemic,
             relationships, event_ring, npc_query, content, transform,
             consequences, episodic_query,
         ),
@@ -362,6 +367,7 @@ fn resolve_talk(
     _player_meta: &CitizenMeta,
     settlement_ref: &SettlementRef,
     knowledge_inv: &mut KnowledgeInventory,
+    player_epistemic: &mut EpistemicState,
     relationships: &mut RelationshipLedger,
     event_ring: &mut EventRing,
     npc_query: &Query<
@@ -371,8 +377,8 @@ fn resolve_talk(
     content: &ContentDefinitions,
     _transform: &TransformationState,
     consequences: &PendingConsequenceRegistry,
-    episodic_query: &Query<
-        (&CitizenMeta, &mut EpisodicMemory, &mut RelationalLedger),
+    episodic_query: &mut Query<
+        (&CitizenMeta, &mut EpisodicMemory, &mut RelationalLedger, &mut EpistemicState),
         Without<PlayerMarker>,
     >,
 ) -> ActionResult {
@@ -411,7 +417,7 @@ fn resolve_talk(
                 matches!(c.consequence_type, ConsequenceType::FraternalLaborStrain { .. })
                     && c.stage == ConsequenceStage::Matured
             });
-            let has_helped_felling = episodic_query.iter().any(|(meta, mem, _)| {
+            let has_helped_felling = episodic_query.iter().any(|(meta, mem, _, _)| {
                 meta.id == CitizenId(6) && mem.has_anchor_with_tag(MemoryTag::HelpedWithFelling)
             });
 
@@ -439,20 +445,26 @@ fn resolve_talk(
             let work_desc = match occ.occupation {
                 OccupationType::Innkeeper => format!("{} describes managing the inn — food, lodging, keeping the common room civil.", npc_meta.name),
                 OccupationType::Artisan => format!("{} talks about the forge, about iron and charcoal and the patience required.", npc_meta.name),
-                OccupationType::Farmer => format!("{} talks about the fields, the seasons, which crops do well in what weather.", npc_meta.name),
+                OccupationType::Farmer => {
+                    let _ = player_epistemic.learn(2, tick);
+                    format!("{} talks about the fields, the seasons, which crops do well in what weather.", npc_meta.name)
+                },
                 OccupationType::Herbalist => {
                     // Gain herb knowledge
                     let _ = knowledge_inv.learn(knowledge::HERB_LOCATIONS);
+                    let _ = player_epistemic.learn(3, tick);
                     format!("{} shows you where the herbs grow. You learn something about local plants.", npc_meta.name)
                 },
                 OccupationType::Elder => {
                     // Elder hints at the archive
                     let new = knowledge_inv.learn(knowledge::ANCIENT_ARCHIVE);
+                    let _ = player_epistemic.learn(4, tick);
                     let extra = if new { " They mention an old archive nearby, then go quiet." } else { "" };
                     format!("{} speaks of the settlement's history.{}", npc_meta.name, extra)
                 },
                 OccupationType::Forester => {
                     let _ = knowledge_inv.learn(knowledge::TIMBER_SOURCES);
+                    let _ = player_epistemic.learn(1, tick);
                     format!("{} points out where to find good timber in the forest.", npc_meta.name)
                 },
                 _ => format!("{} explains their work in general terms.", npc_meta.name),
@@ -518,7 +530,19 @@ fn resolve_talk(
             ("They tell you what they know about the location.".to_string(), vec![], 1i16)
         }
 
-        TalkTopic::ShareKnowledge { node: _ } => {
+        TalkTopic::ShareKnowledge { node } => {
+            if let Some((_, _, _, mut npc_epistemic)) = episodic_query.iter_mut().find(|(m, _, _, _)| m.id == npc_id) {
+                if npc_epistemic.learn(node.0 as u16, tick) {
+                    let corr = npc_epistemic.get_corroboration(node.0 as u16);
+                    event_ring.emit(SimEvent::KnowledgeShared {
+                        speaker: CitizenId::PLAYER,
+                        listener: npc_id,
+                        knowledge_id: node.0 as u16,
+                        corroboration: corr,
+                        tick,
+                    });
+                }
+            }
             (format!("{} listens with interest. 'That's useful to know.'", npc_meta.name), vec![], 4i16)
         }
     };
@@ -555,7 +579,7 @@ fn resolve_help_with_felling(
         Without<PlayerMarker>,
     >,
     episodic_query: &mut Query<
-        (&CitizenMeta, &mut EpisodicMemory, &mut RelationalLedger),
+        (&CitizenMeta, &mut EpisodicMemory, &mut RelationalLedger, &mut EpistemicState),
         Without<PlayerMarker>,
     >,
 ) -> ActionResult {
@@ -601,7 +625,7 @@ fn resolve_help_with_felling(
         tick,
     });
 
-    if let Some((_, mut mem, mut ledger)) = episodic_query.iter_mut().find(|(m, _, _)| m.id == npc_id) {
+    if let Some((_, mut mem, mut ledger, _)) = episodic_query.iter_mut().find(|(m, _, _, _)| m.id == npc_id) {
         mem.add_record(EpisodicRecord {
             id: causal_id,
             tick,

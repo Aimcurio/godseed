@@ -59,6 +59,61 @@ pub fn verify_invariants(world: &mut World) -> Result<(), Vec<String>> {
         }
     }
 
+    // INV-5: Dual-Stream Memory Bounds (AC-202, Sec 14)
+    {
+        use crate::components::EpisodicMemory;
+        let mut q = world.query::<(&CitizenMeta, &EpisodicMemory)>();
+        for (meta, mem) in q.iter(world) {
+            if mem.transient.len() > 12 {
+                violations.push(format!(
+                    "INV-5 FAIL: Citizen {} transient memory exceeded limit: {} > 12",
+                    meta.id.0, mem.transient.len()
+                ));
+            }
+            if mem.anchors.len() > 6 {
+                violations.push(format!(
+                    "INV-5 FAIL: Citizen {} anchor memory exceeded limit: {} > 6",
+                    meta.id.0, mem.anchors.len()
+                ));
+            }
+        }
+    }
+
+    // INV-6: Consequence Integrity (AC-206, AC-207, Sec 14)
+    {
+        use crate::resources::PendingConsequenceRegistry;
+        if let Some(reg) = world.get_resource::<PendingConsequenceRegistry>() {
+            for c in &reg.consequences {
+                if c.causal_root == 0 {
+                    violations.push(format!(
+                        "INV-6 FAIL: Consequence #{} has invalid causal_root 0",
+                        c.id
+                    ));
+                }
+            }
+        }
+    }
+
+    // INV-7: Epistemic Validity (AC-204, Sec 14)
+    {
+        use crate::components::EpistemicState;
+        use crate::content::ContentDefinitions;
+        if let Some(content) = world.get_resource::<ContentDefinitions>() {
+            let valid_ids: std::collections::HashSet<u16> = content.knowledge_definitions.iter().map(|k| k.id).collect();
+            let mut q = world.query::<(&CitizenMeta, &EpistemicState)>();
+            for (meta, epistemic) in q.iter(world) {
+                for &k_id in epistemic.known.keys() {
+                    if !valid_ids.contains(&k_id) {
+                        violations.push(format!(
+                            "INV-7 FAIL: Citizen {} holds undefined knowledge ID {}",
+                            meta.id.0, k_id
+                        ));
+                    }
+                }
+            }
+        }
+    }
+
     if violations.is_empty() {
         Ok(())
     } else {

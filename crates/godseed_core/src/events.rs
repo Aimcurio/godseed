@@ -21,6 +21,7 @@ pub enum SimEvent {
     EconomicTransaction { buyer: CitizenId, seller: CitizenId, resource: ResourceType, quantity: u32, price: f32, tick: u64 },
     CausalAction { causal: crate::types::CausalPointer, action_name: String, tick: u64 },
     ConsequenceMatured { consequence_id: u32, causal_root: u64, tick: u64 },
+    KnowledgeShared { speaker: CitizenId, listener: CitizenId, knowledge_id: u16, corroboration: u8, tick: u64 },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
