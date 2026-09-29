@@ -345,6 +345,7 @@ pub enum PlayerAction {
     Wait { ticks: u32 },
     Sleep,
     Save { path: String },
+    HelpWithFelling { npc: CitizenId },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -437,3 +438,129 @@ pub struct NpcFact {
     pub known_location: Option<LocationId>,
     pub reputation_assessment: i8, // -5 to +5
 }
+
+// ── VS2 Causal & Meaning Primitives ──────────────────────────────────────────
+
+/// Lightweight Causal Pointer for explainable causality (NC-44)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct CausalPointer {
+    pub root_event_id: u64,
+    pub parent_event_id: u64,
+    pub sequence_step: u8,
+}
+
+/// Derived behavioral mode for qualitative relational divergence (AC-201)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum BehavioralMode {
+    DevotedAlly,
+    AffectionateRefusal,
+    GrudgingDebtor,
+    WaryConsultant,
+    HardenedEnemy,
+}
+
+/// Compact 4-byte Triad Relational Bond (Sentiment, Trust, Obligation)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct RelationalBond {
+    pub sentiment: i8,    // -100 to +100 (Emotional Warmth vs. Hostility)
+    pub trust: i8,        // -100 to +100 (Reliability vs. Suspicion)
+    pub obligation: i16,  // -1000 to +1000 (Positive = owes target, Negative = target owes)
+}
+
+impl RelationalBond {
+    pub fn new(sentiment: i8, trust: i8, obligation: i16) -> Self {
+        Self {
+            sentiment: sentiment.clamp(-100, 100),
+            trust: trust.clamp(-100, 100),
+            obligation: obligation.clamp(-1000, 1000),
+        }
+    }
+
+    pub fn mode(&self) -> BehavioralMode {
+        if self.obligation >= 50 && self.sentiment < -20 {
+            BehavioralMode::GrudgingDebtor
+        } else if self.sentiment > 30 && self.trust < -20 {
+            BehavioralMode::AffectionateRefusal
+        } else if self.sentiment.abs() <= 20 && self.trust >= 50 {
+            BehavioralMode::WaryConsultant
+        } else if self.sentiment > 40 && self.trust > 40 {
+            BehavioralMode::DevotedAlly
+        } else if self.sentiment < -40 && self.trust < -30 {
+            BehavioralMode::HardenedEnemy
+        } else {
+            BehavioralMode::WaryConsultant
+        }
+    }
+}
+
+impl Default for RelationalBond {
+    fn default() -> Self {
+        Self { sentiment: 0, trust: 0, obligation: 0 }
+    }
+}
+
+/// Memory tags for episodic turning points and events (AC-202)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum MemoryTag {
+    HelpedWithFelling,
+    SavedLife,
+    Betrayal,
+    ContractSigned,
+    HeardGossipAbout(CitizenId),
+    CasualInteraction,
+    ObservationShared,
+}
+
+/// Bounded episodic record (AC-202)
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct EpisodicRecord {
+    pub id: u64,
+    pub tick: u64,
+    pub actor: CitizenId,
+    pub target: Option<CitizenId>,
+    pub tag: MemoryTag,
+    pub delta_sentiment: i8,
+    pub delta_trust: i8,
+    pub delta_obligation: i16,
+    pub is_permanent: bool,
+    pub narrative_token: u16,
+    pub causal: Option<CausalPointer>,
+}
+
+/// Consequence stage progression (AC-206, AC-207)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum ConsequenceStage {
+    Active,
+    Escalated,
+    Matured,
+    Resolved,
+}
+
+/// Typed consequence payloads for autonomous situations
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum ConsequenceType {
+    FraternalLaborStrain {
+        elder: CitizenId,
+        junior: CitizenId,
+        target_workplace: LocationId,
+    },
+}
+
+/// Composable trigger conditions (supporting SimLab 3-trigger or simple latency)
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum TriggerCondition {
+    TimeElapsed { duration_ticks: u64 },
+    Compound(Vec<TriggerCondition>),
+}
+
+/// Authoritative pending consequence tracked across time and absence
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct PendingConsequence {
+    pub id: u32,
+    pub causal_root: u64,
+    pub stage: ConsequenceStage,
+    pub trigger: TriggerCondition,
+    pub consequence_type: ConsequenceType,
+    pub created_tick: u64,
+}
+

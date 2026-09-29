@@ -6,17 +6,21 @@
 use bevy_ecs::prelude::*;
 
 use crate::components::{
-    CapabilitySet, CitizenMeta, Disposition, Inventory,
+    CapabilitySet, CitizenMeta, Disposition, EpisodicMemory, Inventory,
     KnowledgeInventory, NpcSchedule, OccupationProfile, PersonalFinances,
-    PhysicalNeeds, PlayerInputBuffer, PlayerMarker, SettlementRef, TransformationState,
+    PhysicalNeeds, PlayerInputBuffer, PlayerMarker, RelationalLedger, SettlementRef, TransformationState,
 };
 use crate::content::{caps, knowledge, ContentDefinitions};
 use crate::events::{SimEvent, TelemetryEvent};
-use crate::resources::{EventRing, RelationshipLedger, ReputationRegistry, TelemetryLog};
+use crate::resources::{
+    EventRing, NextCausalId, PendingConsequenceRegistry, RelationshipLedger, ReputationRegistry,
+    TelemetryLog,
+};
 use crate::settlement::SettlementDirectory;
 use crate::types::{
-    ActionResult, CapabilityId, CapabilityLevel, CitizenId, Exchange,
-    LocationId, OccupationType, PlayerAction, ResourceType, SideEffect, SimClock, TalkTopic,
+    ActionResult, CapabilityId, CapabilityLevel, CausalPointer, CitizenId, ConsequenceStage,
+    ConsequenceType, EpisodicRecord, Exchange, LocationId, MemoryTag, OccupationType,
+    PlayerAction, ResourceType, SideEffect, SimClock, TalkTopic, TriggerCondition,
 };
 use crate::world::WorldMap;
 
@@ -30,6 +34,8 @@ pub fn player_action_system(
     mut reputation: ResMut<ReputationRegistry>,
     mut event_ring: ResMut<EventRing>,
     mut telemetry: ResMut<TelemetryLog>,
+    mut next_causal: ResMut<NextCausalId>,
+    mut consequences: ResMut<PendingConsequenceRegistry>,
     mut player_query: Query<
         (
             &mut CitizenMeta,
@@ -51,6 +57,14 @@ pub fn player_action_system(
             &NpcSchedule,
             &SettlementRef,
             &OccupationProfile,
+        ),
+        Without<PlayerMarker>,
+    >,
+    mut episodic_query: Query<
+        (
+            &CitizenMeta,
+            &mut EpisodicMemory,
+            &mut RelationalLedger,
         ),
         Without<PlayerMarker>,
     >,
@@ -86,7 +100,10 @@ pub fn player_action_system(
                 &mut relationships,
                 &mut reputation,
                 &mut event_ring,
+                &mut next_causal,
+                &mut consequences,
                 &npc_query,
+                &mut episodic_query,
             );
 
             telemetry.emit(TelemetryEvent::player_action(
@@ -118,8 +135,14 @@ fn resolve_action(
     relationships: &mut RelationshipLedger,
     _reputation: &mut ReputationRegistry,
     event_ring: &mut EventRing,
+    next_causal: &mut NextCausalId,
+    consequences: &mut PendingConsequenceRegistry,
     npc_query: &Query<
         (&CitizenMeta, &mut Disposition, &NpcSchedule, &SettlementRef, &OccupationProfile),
+        Without<PlayerMarker>,
+    >,
+    episodic_query: &mut Query<
+        (&CitizenMeta, &mut EpisodicMemory, &mut RelationalLedger),
         Without<PlayerMarker>,
     >,
 ) -> ActionResult {
@@ -130,6 +153,11 @@ fn resolve_action(
         PlayerAction::Talk { npc, topic } => resolve_talk(
             tick, *npc, topic, meta, settlement_ref, knowledge_inv,
             relationships, event_ring, npc_query, content, transform,
+            consequences, episodic_query,
+        ),
+        PlayerAction::HelpWithFelling { npc } => resolve_help_with_felling(
+            tick, *npc, settlement_ref, relationships, event_ring,
+            next_causal, consequences, npc_query, episodic_query,
         ),
         PlayerAction::Offer { npc, exchange } => resolve_offer(
             tick, *npc, exchange, finances, inventory, capabilities,
@@ -342,6 +370,11 @@ fn resolve_talk(
     >,
     content: &ContentDefinitions,
     _transform: &TransformationState,
+    consequences: &PendingConsequenceRegistry,
+    episodic_query: &Query<
+        (&CitizenMeta, &mut EpisodicMemory, &mut RelationalLedger),
+        Without<PlayerMarker>,
+    >,
 ) -> ActionResult {
     let npc_result = npc_query.iter()
         .find(|(m, _, _, _, _)| m.id == npc_id);
@@ -373,7 +406,24 @@ fn resolve_talk(
 
     let (message, side_effects, rel_delta) = match topic {
         TalkTopic::Greeting => {
-            let response = if effective_disp >= 20 {
+            // Check for VS2 specific felling consequence dialogue
+            let is_fraternal_matured = consequences.consequences.iter().any(|c| {
+                matches!(c.consequence_type, ConsequenceType::FraternalLaborStrain { .. })
+                    && c.stage == ConsequenceStage::Matured
+            });
+            let has_helped_felling = episodic_query.iter().any(|(meta, mem, _)| {
+                meta.id == CitizenId(6) && mem.has_anchor_with_tag(MemoryTag::HelpedWithFelling)
+            });
+
+            let response = if npc_id == CitizenId(6) && has_helped_felling {
+                if is_fraternal_matured {
+                    format!("{} smiles warmly at you, though his eyes look tired. \"I haven't forgotten how you stood with me felling the oak. But... Runn took it hard. He felt displaced, like he was no longer needed here. He packed his kit and apprenticed with Wren at the forge. I work alone now.\"", npc_meta.name)
+                } else {
+                    format!("{} smiles warmly and clasps your shoulder. \"Good to see you, friend. My back still remembers the oak we brought down together.\"", npc_meta.name)
+                }
+            } else if npc_id == CitizenId(12) && is_fraternal_matured {
+                format!("{} wipes iron grime from his leather apron, looking at you with proud defiance. \"Wren took me on at the forge. Tomas didn't need two sets of hands at the woodlot anymore—not after you showed him how quick the felling could be. Here, I'm forging my own iron.\"", npc_meta.name)
+            } else if effective_disp >= 20 {
                 format!("{} smiles. \"Good to see you again.\"", npc_meta.name)
             } else if effective_disp >= 0 {
                 format!("{} nods. \"Hello.\"", npc_meta.name)
@@ -490,6 +540,103 @@ fn resolve_talk(
     }
 
     ActionResult { tick, success: true, message, side_effects: final_effects }
+}
+
+fn resolve_help_with_felling(
+    tick: u64,
+    npc_id: CitizenId,
+    settlement_ref: &SettlementRef,
+    relationships: &mut RelationshipLedger,
+    event_ring: &mut EventRing,
+    next_causal: &mut NextCausalId,
+    consequence_reg: &mut PendingConsequenceRegistry,
+    npc_query: &Query<
+        (&CitizenMeta, &mut Disposition, &NpcSchedule, &SettlementRef, &OccupationProfile),
+        Without<PlayerMarker>,
+    >,
+    episodic_query: &mut Query<
+        (&CitizenMeta, &mut EpisodicMemory, &mut RelationalLedger),
+        Without<PlayerMarker>,
+    >,
+) -> ActionResult {
+    if settlement_ref.current_location != LocationId(11) {
+        return ActionResult {
+            tick,
+            success: false,
+            message: "You can only assist with timber felling at West Woods.".to_string(),
+            side_effects: vec![],
+        };
+    }
+
+    let target_npc = npc_query.iter().find(|(meta, _, _, _, _)| meta.id == npc_id);
+    if target_npc.is_none() {
+        return ActionResult {
+            tick,
+            success: false,
+            message: "You don't see that person here.".to_string(),
+            side_effects: vec![],
+        };
+    }
+
+    let (meta, _disp, _sched, sref, _occ) = target_npc.unwrap();
+    if sref.current_location != LocationId(11) {
+        return ActionResult {
+            tick,
+            success: false,
+            message: format!("{} isn't at the felling site right now.", meta.name),
+            side_effects: vec![],
+        };
+    }
+
+    let causal_id = next_causal.next();
+    let causal_ptr = CausalPointer {
+        root_event_id: causal_id,
+        parent_event_id: causal_id,
+        sequence_step: 1,
+    };
+
+    event_ring.emit(SimEvent::CausalAction {
+        causal: causal_ptr,
+        action_name: "HelpWithFelling".to_string(),
+        tick,
+    });
+
+    if let Some((_, mut mem, mut ledger)) = episodic_query.iter_mut().find(|(m, _, _)| m.id == npc_id) {
+        mem.add_record(EpisodicRecord {
+            id: causal_id,
+            tick,
+            actor: CitizenId::PLAYER,
+            target: Some(npc_id),
+            tag: MemoryTag::HelpedWithFelling,
+            delta_sentiment: 45,
+            delta_trust: 45,
+            delta_obligation: 20,
+            is_permanent: true,
+            narrative_token: 101,
+            causal: Some(causal_ptr),
+        });
+        ledger.adjust(CitizenId::PLAYER, 45, 45, 20);
+    }
+
+    relationships.adjust(CitizenId::PLAYER, npc_id, 45);
+
+    consequence_reg.register(
+        causal_id,
+        TriggerCondition::TimeElapsed { duration_ticks: 336 },
+        ConsequenceType::FraternalLaborStrain {
+            elder: CitizenId(6),
+            junior: CitizenId(12),
+            target_workplace: LocationId(2),
+        },
+        tick,
+    );
+
+    ActionResult {
+        tick,
+        success: true,
+        message: "You spend several arduous hours helping Tomas Birch fell and clear the heavy timber at West Woods. Tomas wipes the sweat from his brow and clasps your arm in deep gratitude: 'I won't forget this. Few strangers would give their backs to another man's labor.' In the distance, young Runn watches silently, an unreadable shadow crossing his face.".to_string(),
+        side_effects: vec![SideEffect::RelationshipChanged { npc: npc_id, delta: 45 }],
+    }
 }
 
 fn resolve_offer(

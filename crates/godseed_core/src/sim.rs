@@ -20,9 +20,13 @@ use crate::npc::spawn_thornveil_npcs;
 use crate::persistence::{CitizenSnapshot, SimulationSnapshot, load_snapshot, save_snapshot};
 use crate::player::spawn_player;
 use crate::replay::compute_authoritative_state_hash;
-use crate::resources::{EventRing, NextCitizenId, RelationshipLedger, ReputationRegistry, TelemetryLog};
+use crate::resources::{
+    EventRing, NextCausalId, NextCitizenId, PendingConsequenceRegistry, RelationshipLedger,
+    ReputationRegistry, ReturnDigestLog, TelemetryLog,
+};
 use crate::settlement::{Settlement, SettlementDirectory};
 use crate::systems::{
+    consequence::pending_consequence_progression_system,
     demographics::demographics_aging_system,
     gossip::gossip_system,
     labor::labor_market_system,
@@ -66,6 +70,9 @@ impl Simulation {
         world.insert_resource(TelemetryLog::new());
         world.insert_resource(NextCitizenId(100)); // NPCs use 1–99; new births start at 100
         world.insert_resource(ContentDefinitions::thornveil());
+        world.insert_resource(PendingConsequenceRegistry::default());
+        world.insert_resource(ReturnDigestLog::default());
+        world.insert_resource(NextCausalId::default());
 
         // ── Initialize Thornveil settlement ───────────────────────────────────
         let thornveil = Settlement::new(
@@ -112,6 +119,7 @@ impl Simulation {
             physiology_system,
             npc_goal_system,
             npc_memory_system,
+            pending_consequence_progression_system,
             demographics_aging_system,
             telemetry_system,
         ));

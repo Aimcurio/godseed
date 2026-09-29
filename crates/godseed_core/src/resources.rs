@@ -114,3 +114,89 @@ impl TelemetryLog {
 
 #[derive(Resource, Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct NextCitizenId(pub u64);
+
+// ── VS2 Resources ─────────────────────────────────────────────────────────────
+
+/// Monotonically increasing causal event ID generator (NC-44)
+#[derive(Resource, Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct NextCausalId(pub u64);
+
+impl NextCausalId {
+    pub fn new(start: u64) -> Self { Self(start) }
+    pub fn next(&mut self) -> u64 {
+        let id = self.0;
+        self.0 += 1;
+        id
+    }
+}
+
+impl Default for NextCausalId {
+    fn default() -> Self { Self(100) }
+}
+
+/// Authoritative registry of active and historical consequence situations (AC-206, AC-207)
+#[derive(Resource, Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+pub struct PendingConsequenceRegistry {
+    pub consequences: Vec<crate::types::PendingConsequence>,
+    pub next_id: u32,
+}
+
+impl PendingConsequenceRegistry {
+    pub fn new() -> Self {
+        Self { consequences: Vec::new(), next_id: 1 }
+    }
+
+    pub fn register(
+        &mut self,
+        causal_root: u64,
+        trigger: crate::types::TriggerCondition,
+        consequence_type: crate::types::ConsequenceType,
+        created_tick: u64,
+    ) -> u32 {
+        let id = self.next_id;
+        self.next_id += 1;
+        self.consequences.push(crate::types::PendingConsequence {
+            id,
+            causal_root,
+            stage: crate::types::ConsequenceStage::Active,
+            trigger,
+            consequence_type,
+            created_tick,
+        });
+        id
+    }
+
+    pub fn active_count(&self) -> usize {
+        self.consequences.iter().filter(|c| {
+            c.stage == crate::types::ConsequenceStage::Active || c.stage == crate::types::ConsequenceStage::Escalated
+        }).count()
+    }
+}
+
+/// Personal narrative return digest entries generated during absence (AC-207, AC-208)
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct EpistemicReturnDigest {
+    pub tick: u64,
+    pub speaker: CitizenId,
+    pub causal_root: u64,
+    pub message: String,
+}
+
+#[derive(Resource, Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+pub struct ReturnDigestLog {
+    pub entries: VecDeque<EpistemicReturnDigest>,
+}
+
+impl ReturnDigestLog {
+    pub fn new() -> Self {
+        Self { entries: VecDeque::new() }
+    }
+
+    pub fn push(&mut self, entry: EpistemicReturnDigest) {
+        if self.entries.len() >= 8 {
+            self.entries.pop_front();
+        }
+        self.entries.push_back(entry);
+    }
+}
+

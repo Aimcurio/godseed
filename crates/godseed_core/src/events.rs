@@ -19,6 +19,8 @@ pub enum SimEvent {
     MemoryEvent { npc: CitizenId, about: CitizenId, impact: i8, tick: u64 },
     GossipEvent { speaker: CitizenId, listener: CitizenId, about: CitizenId, tick: u64 },
     EconomicTransaction { buyer: CitizenId, seller: CitizenId, resource: ResourceType, quantity: u32, price: f32, tick: u64 },
+    CausalAction { causal: crate::types::CausalPointer, action_name: String, tick: u64 },
+    ConsequenceMatured { consequence_id: u32, causal_root: u64, tick: u64 },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

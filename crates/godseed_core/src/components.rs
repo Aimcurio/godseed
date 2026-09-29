@@ -8,10 +8,10 @@ use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet, VecDeque};
 
 use crate::types::{
-    CapabilityId, CapabilityLevel, CitizenId, DecisionTrace, Gender, HouseholdId, HouseholdRole,
-    KnowledgeNodeId, LocationId, MemoryEvent, MigrationStatus, MilestoneId, NpcActivity,
-    NpcFact, NpcGoal, OccupationType, PlayerAction, ScheduleSlot, SettlementId,
-    TransformationPath,
+    CapabilityId, CapabilityLevel, CitizenId, DecisionTrace, EpisodicRecord,
+    Gender, HouseholdId, HouseholdRole, KnowledgeNodeId, LocationId, MemoryEvent, MemoryTag,
+    MigrationStatus, MilestoneId, NpcActivity, NpcFact, NpcGoal, OccupationType, PlayerAction,
+    RelationalBond, ScheduleSlot, SettlementId, TransformationPath,
 };
 
 // ── Shared Components (NPC + Player) ─────────────────────────────────────────
@@ -235,6 +235,95 @@ impl Disposition {
     pub fn effective_relationship(&self) -> i16 {
         (self.toward_player + self.base_personality as i16).clamp(-100, 100)
     }
+}
+
+// ── VS2 Relational Ledger & Episodic Memory Components ───────────────────────
+
+/// Entity-local Relational Ledger holding triad bonds (AC-201)
+#[derive(Component, Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+pub struct RelationalLedger {
+    pub bonds: HashMap<u64, RelationalBond>,
+}
+
+impl RelationalLedger {
+    pub fn new() -> Self {
+        Self { bonds: HashMap::new() }
+    }
+
+    pub fn get_bond(&self, target: CitizenId) -> RelationalBond {
+        *self.bonds.get(&target.0).unwrap_or(&RelationalBond::default())
+    }
+
+    pub fn get_bond_mut(&mut self, target: CitizenId) -> &mut RelationalBond {
+        self.bonds.entry(target.0).or_insert(RelationalBond::default())
+    }
+
+    pub fn set_bond(&mut self, target: CitizenId, bond: RelationalBond) {
+        self.bonds.insert(target.0, bond);
+    }
+
+    pub fn adjust(&mut self, target: CitizenId, delta_s: i8, delta_t: i8, delta_o: i16) {
+        let bond = self.bonds.entry(target.0).or_insert(RelationalBond::default());
+        bond.sentiment = (bond.sentiment as i16 + delta_s as i16).clamp(-100, 100) as i8;
+        bond.trust = (bond.trust as i16 + delta_t as i16).clamp(-100, 100) as i8;
+        bond.obligation = (bond.obligation + delta_o).clamp(-1000, 1000);
+    }
+}
+
+/// Dual-stream bounded episodic memory (12 transient FIFO + 6 permanent anchors) (AC-202)
+#[derive(Component, Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct EpisodicMemory {
+    pub transient: VecDeque<EpisodicRecord>,
+    pub anchors: Vec<EpisodicRecord>,
+}
+
+impl EpisodicMemory {
+    pub fn new() -> Self {
+        Self {
+            transient: VecDeque::new(),
+            anchors: Vec::new(),
+        }
+    }
+
+    pub fn add_record(&mut self, record: EpisodicRecord) {
+        if record.is_permanent {
+            if self.anchors.len() >= 6 {
+                // Evict anchor with smallest absolute delta impact into transient
+                if let Some((min_idx, _)) = self.anchors.iter().enumerate().min_by_key(|(_, r)| {
+                    r.delta_sentiment.abs() as i32 + r.delta_trust.abs() as i32
+                }) {
+                    let evicted = self.anchors.remove(min_idx);
+                    self.add_transient(evicted);
+                }
+            }
+            self.anchors.push(record);
+        } else {
+            self.add_transient(record);
+        }
+    }
+
+    fn add_transient(&mut self, record: EpisodicRecord) {
+        if self.transient.len() >= 12 {
+            self.transient.pop_front();
+        }
+        self.transient.push_back(record);
+    }
+
+    pub fn has_anchor_with_tag(&self, tag: MemoryTag) -> bool {
+        self.anchors.iter().any(|a| a.tag == tag)
+    }
+
+    pub fn find_anchor(&self, tag: MemoryTag) -> Option<&EpisodicRecord> {
+        self.anchors.iter().find(|a| a.tag == tag)
+    }
+
+    pub fn all_records(&self) -> impl Iterator<Item = &EpisodicRecord> {
+        self.anchors.iter().chain(self.transient.iter())
+    }
+}
+
+impl Default for EpisodicMemory {
+    fn default() -> Self { Self::new() }
 }
 
 // ── Player-Only Components ─────────────────────────────────────────────────────

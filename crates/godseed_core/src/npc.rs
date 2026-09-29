@@ -3,9 +3,9 @@
 use bevy_ecs::prelude::*;
 
 use crate::components::{
-    CausalAudit, CitizenMeta, Demographics, Disposition, HouseholdRef, Inventory, Kinship,
-    MobilityProfile, NpcGoals, NpcMemory, NpcSchedule, OccupationProfile, PersonalFinances,
-    PhysicalNeeds, SettlementRef,
+    CausalAudit, CitizenMeta, Demographics, Disposition, EpisodicMemory, HouseholdRef, Inventory,
+    Kinship, MobilityProfile, NpcGoals, NpcMemory, NpcSchedule, OccupationProfile,
+    PersonalFinances, PhysicalNeeds, RelationalLedger, SettlementRef,
 };
 use crate::content::{ContentDefinitions, NpcDefinition};
 use crate::household::{Household, HouseholdDirectory};
@@ -64,7 +64,7 @@ fn spawn_npc_from_def(world: &mut World, def: &NpcDefinition) {
         work_location: def.work_location,
     };
 
-    world.spawn((
+    let mut entity = world.spawn((
         CitizenMeta {
             id: CitizenId(def.citizen_id),
             name: def.name.clone(),
@@ -112,8 +112,13 @@ fn spawn_npc_from_def(world: &mut World, def: &NpcDefinition) {
             children_count: 0,
         },
         Inventory::new(),
+    ));
+
+    entity.insert((
         NpcMemory::new(),
         NpcGoals::new(),
+        EpisodicMemory::new(),
+        RelationalLedger::new(),
         schedule,
         disposition,
         CausalAudit {

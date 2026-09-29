@@ -316,6 +316,15 @@ fn parse_command(input: &str, sim: &mut Simulation) -> Result<Option<PlayerActio
             Ok(Some(PlayerAction::StudyArchive))
         }
 
+        "fell" | "felling" | "help-fell" => {
+            let target_id = if parts.len() >= 2 {
+                parts[1].parse::<u64>().map(CitizenId).unwrap_or(CitizenId(6))
+            } else {
+                CitizenId(6)
+            };
+            Ok(Some(PlayerAction::HelpWithFelling { npc: target_id }))
+        }
+
         "sleep" => Ok(Some(PlayerAction::Sleep)),
 
         "wait" => {
