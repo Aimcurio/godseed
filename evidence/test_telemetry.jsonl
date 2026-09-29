@@ -1,0 +1,6 @@
+{"tick":1,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(1), topic: Greetin","outcome":"Mira Ashbridge isn't here right now."}
+{"tick":24,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=51 health=100 transform_stage=0 progress=0"}
+{"tick":25,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Work { occupation: Laborer }","outcome":"You work for a few hours. You earn 1.5 coins and gather 2 Fo"}
+{"tick":48,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=27 health=100 transform_stage=0 progress=0"}
+{"tick":49,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(3), topic: AskAbou","outcome":"Oswin Cley isn't here right now."}
+{"tick":72,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=3 health=100 transform_stage=0 progress=0"}

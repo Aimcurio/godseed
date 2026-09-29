@@ -1,0 +1,60 @@
+{"tick":1,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Work { occupation: Laborer }","outcome":"You work for a few hours. You earn 1.5 coins and gather 2 Fo"}
+{"tick":24,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=71 health=100 transform_stage=0 progress=0"}
+{"tick":25,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Sleep","outcome":"You sleep for several hours (you rest where you can), waking"}
+{"tick":48,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=82 health=100 transform_stage=0 progress=0"}
+{"tick":49,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Wait { ticks: 1 }","outcome":"You wait for 1 hours. Time passes."}
+{"tick":72,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=78 health=100 transform_stage=0 progress=0"}
+{"tick":73,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Work { occupation: Laborer }","outcome":"You work for a few hours. You earn 1.5 coins and gather 2 Fo"}
+{"tick":96,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=74 health=100 transform_stage=0 progress=0"}
+{"tick":97,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Sleep","outcome":"You sleep for several hours (you rest where you can), waking"}
+{"tick":120,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=85 health=100 transform_stage=0 progress=0"}
+{"tick":121,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Wait { ticks: 1 }","outcome":"You wait for 1 hours. Time passes."}
+{"tick":144,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=81 health=100 transform_stage=0 progress=0"}
+{"tick":145,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Work { occupation: Laborer }","outcome":"You work for a few hours. You earn 1.5 coins and gather 2 Fo"}
+{"tick":168,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=77 health=100 transform_stage=0 progress=0"}
+{"tick":169,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Sleep","outcome":"You sleep for several hours (you rest where you can), waking"}
+{"tick":192,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=88 health=100 transform_stage=0 progress=0"}
+{"tick":193,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Wait { ticks: 1 }","outcome":"You wait for 1 hours. Time passes."}
+{"tick":216,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=84 health=100 transform_stage=0 progress=0"}
+{"tick":217,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Work { occupation: Laborer }","outcome":"You work for a few hours. You earn 1.5 coins and gather 2 Fo"}
+{"tick":240,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=80 health=100 transform_stage=0 progress=0"}
+{"tick":241,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Sleep","outcome":"You sleep for several hours (you rest where you can), waking"}
+{"tick":264,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=91 health=100 transform_stage=0 progress=0"}
+{"tick":265,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Wait { ticks: 1 }","outcome":"You wait for 1 hours. Time passes."}
+{"tick":288,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=87 health=100 transform_stage=0 progress=0"}
+{"tick":289,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Work { occupation: Laborer }","outcome":"You work for a few hours. You earn 1.5 coins and gather 2 Fo"}
+{"tick":312,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=83 health=100 transform_stage=0 progress=0"}
+{"tick":313,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Sleep","outcome":"You sleep for several hours (you rest where you can), waking"}
+{"tick":336,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=94 health=100 transform_stage=0 progress=0"}
+{"tick":337,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Wait { ticks: 1 }","outcome":"You wait for 1 hours. Time passes."}
+{"tick":360,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=90 health=100 transform_stage=0 progress=0"}
+{"tick":361,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Work { occupation: Laborer }","outcome":"You work for a few hours. You earn 1.5 coins and gather 2 Fo"}
+{"tick":384,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=86 health=100 transform_stage=0 progress=0"}
+{"tick":385,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Sleep","outcome":"You sleep for several hours (you rest where you can), waking"}
+{"tick":408,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=96 health=100 transform_stage=0 progress=0"}
+{"tick":409,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Wait { ticks: 1 }","outcome":"You wait for 1 hours. Time passes."}
+{"tick":432,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=92 health=100 transform_stage=0 progress=0"}
+{"tick":433,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Work { occupation: Laborer }","outcome":"You work for a few hours. You earn 1.5 coins and gather 2 Fo"}
+{"tick":456,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=88 health=100 transform_stage=0 progress=0"}
+{"tick":457,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Sleep","outcome":"You sleep for several hours (you rest where you can), waking"}
+{"tick":480,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=96 health=100 transform_stage=0 progress=0"}
+{"tick":481,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Wait { ticks: 1 }","outcome":"You wait for 1 hours. Time passes."}
+{"tick":504,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=92 health=100 transform_stage=0 progress=0"}
+{"tick":505,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Work { occupation: Laborer }","outcome":"You work for a few hours. You earn 1.5 coins and gather 2 Fo"}
+{"tick":528,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=88 health=100 transform_stage=0 progress=0"}
+{"tick":529,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Sleep","outcome":"You sleep for several hours (you rest where you can), waking"}
+{"tick":552,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=96 health=100 transform_stage=0 progress=0"}
+{"tick":553,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Wait { ticks: 1 }","outcome":"You wait for 1 hours. Time passes."}
+{"tick":576,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=92 health=100 transform_stage=0 progress=0"}
+{"tick":577,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Work { occupation: Laborer }","outcome":"You work for a few hours. You earn 1.5 coins and gather 2 Fo"}
+{"tick":600,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=88 health=100 transform_stage=0 progress=0"}
+{"tick":601,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Sleep","outcome":"You sleep for several hours (you rest where you can), waking"}
+{"tick":624,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=96 health=100 transform_stage=0 progress=0"}
+{"tick":625,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Wait { ticks: 1 }","outcome":"You wait for 1 hours. Time passes."}
+{"tick":648,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=92 health=100 transform_stage=0 progress=0"}
+{"tick":649,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Work { occupation: Laborer }","outcome":"You work for a few hours. You earn 1.5 coins and gather 2 Fo"}
+{"tick":672,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=88 health=100 transform_stage=0 progress=0"}
+{"tick":673,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Sleep","outcome":"You sleep for several hours (you rest where you can), waking"}
+{"tick":696,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=96 health=100 transform_stage=0 progress=0"}
+{"tick":697,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Wait { ticks: 1 }","outcome":"You wait for 1 hours. Time passes."}
+{"tick":720,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=92 health=100 transform_stage=0 progress=0"}

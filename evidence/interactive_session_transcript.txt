@@ -1,0 +1,196 @@
+﻿ΓòöΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòù
+Γòæ              G O D S E E D                          Γòæ
+Γòæ     A Persistent World Simulation RPG ΓÇö VS1         Γòæ
+Γòæ     Thornveil awaits.                                Γòæ
+ΓòÜΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓò¥
+
+You arrive at Thornveil as the sun is rising.
+You know no one. You have 5 coins, a worn tool,
+and three days of travel provisions.
+
+
+ΓòÉΓòÉΓòÉ Settlement Road ΓòÉΓòÉΓòÉ
+The packed-mud main road through Thornveil. Everything connects to it.
+
+People here:
+  ΓÇó Aldous Minner (idle ΓÇö Settlement Road)
+  ΓÇó Gwen Minner (idle ΓÇö Settlement Road)
+
+Connected to: The Slanted Timber (Inn), Wren's Forge, Market Square, North Fields, The Well
+
+ΓöÇΓöÇ Day 1 Hour 01:00 ΓöÇΓöÇΓöÇ Settlement Road ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  Satiety: 74%  Health: 100%  Rest: 80%  Coins: 5.0
+[Type 'help' for commands, 'quit' to exit]
+
+> 
+ΓòÉΓòÉΓòÉ Settlement Road ΓòÉΓòÉΓòÉ
+The packed-mud main road through Thornveil. Everything connects to it.
+
+People here:
+  ΓÇó Aldous Minner (idle ΓÇö Settlement Road)
+  ΓÇó Gwen Minner (idle ΓÇö Settlement Road)
+
+Connected to: The Slanted Timber (Inn), Wren's Forge, Market Square, North Fields, The Well
+
+ΓöÇΓöÇ Day 1 Hour 02:00 ΓöÇΓöÇΓöÇ Settlement Road ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  Satiety: 73%  Health: 100%  Rest: 80%  Coins: 5.0
+
+> 
+ΓòÉΓòÉΓòÉ THORNVEIL INHABITANTS ΓòÉΓòÉΓòÉ
+  [1] Mira Ashbridge (Innkeeper) ΓÇö idle at The Slanted Timber (
+  [2] Wren Forscythe (Artisan) ΓÇö idle at Wren's Forge
+  [3] Oswin Cley (Farmer) ΓÇö idle at North Fields
+  [4] Sera Cley (Herbalist) ΓÇö idle at Herb Garden
+  [5] Elder Voss (Elder) ΓÇö idle at Storage House
+  [6] Tomas Birch (Forester) ΓÇö idle at Forest Edge
+  [7] Delia Croft (Merchant) ΓÇö idle at Market Square
+  [8] Harwin Croft (Merchant) ΓÇö idle at Market Square
+  [9] Pella (Laborer) ΓÇö idle at The Slanted Timber (
+  [10] Aldous Minner (Miner) ΓÇö idle at Settlement Road
+  [11] Gwen Minner (Laborer) ΓÇö idle at Settlement Road
+  [12] Runn (Laborer) ΓÇö idle at Forest Edge
+  [13] Corva (Laborer) ΓÇö idle at The Slanted Timber (
+  [14] Bard Tholl (Artisan) ΓÇö idle at Storage House
+  [15] Nissa Tholl (Laborer) ΓÇö idle at Storage House
+
+> 
+ΓòÉΓòÉΓòÉ THORNVEIL MARKET PRICES ΓòÉΓòÉΓòÉ
+  Ink: 15.0 coins/unit  (stock: 5)
+  Parchment: 10.0 coins/unit  (stock: 10)
+  Stone: 8.0 coins/unit  (stock: 30)
+  Tools: 12.0 coins/unit  (stock: 20)
+  Food: 2.0 coins/unit  (stock: 200)
+  Luxury: 20.0 coins/unit  (stock: 0)
+  Timber: 5.0 coins/unit  (stock: 50)
+  Herbs: 6.0 coins/unit  (stock: 15)
+
+> 
+You move to The Slanted Timber (Inn).
+A low-roofed inn with smoke-darkened beams. Smells of woodsmoke and stew. Mira Ashbridge keeps the place running.
+
+ΓöÇΓöÇ Day 1 Hour 03:00 ΓöÇΓöÇΓöÇ The Slanted Timber (Inn) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  Satiety: 72%  Health: 100%  Rest: 80%  Coins: 5.0
+
+> 
+ΓòÉΓòÉΓòÉ The Slanted Timber (Inn) ΓòÉΓòÉΓòÉ
+A low-roofed inn with smoke-darkened beams. Smells of woodsmoke and stew. Mira Ashbridge keeps the place running.
+
+People here:
+  ΓÇó Mira Ashbridge (idle ΓÇö The Slanted Timber (Inn))
+  ΓÇó Pella (idle ΓÇö The Slanted Timber (Inn))
+  ΓÇó Corva (idle ΓÇö The Slanted Timber (Inn))
+
+Connected to: Settlement Road, Market Square, Storage House
+
+ΓöÇΓöÇ Day 1 Hour 04:00 ΓöÇΓöÇΓöÇ The Slanted Timber (Inn) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  Satiety: 71%  Health: 100%  Rest: 80%  Coins: 5.0
+
+> 
+ΓòÉΓòÉ Mira Ashbridge ΓòÉΓòÉ
+Occupation: Innkeeper
+Currently: idle
+
+A stout woman with steady eyes. She runs the inn with practiced efficiency. She watches new arrivals carefully before forming opinions.
+
+They regard you with neutral curiosity.
+
+ΓöÇΓöÇ Day 1 Hour 05:00 ΓöÇΓöÇΓöÇ The Slanted Timber (Inn) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  Satiety: 70%  Health: 100%  Rest: 80%  Coins: 5.0
+
+> 
+Mira Ashbridge smiles. "Good to see you again."
+  ΓåÆ Relationship with NPC#1: +2
+
+ΓöÇΓöÇ Day 1 Hour 06:00 ΓöÇΓöÇΓöÇ The Slanted Timber (Inn) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  Satiety: 69%  Health: 100%  Rest: 79%  Coins: 5.0
+
+> 
+Mira Ashbridge describes managing the inn ΓÇö food, lodging, keeping the common room civil.
+  ΓåÆ Relationship with NPC#1: +3
+
+ΓöÇΓöÇ Day 1 Hour 07:00 ΓöÇΓöÇΓöÇ The Slanted Timber (Inn) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  Satiety: 68%  Health: 100%  Rest: 78%  Coins: 5.0
+
+> 
+You move to Market Square.
+A packed-earth square where the settlement trades. Stalls appear in the morning and pack up by dusk.
+
+ΓöÇΓöÇ Day 1 Hour 08:00 ΓöÇΓöÇΓöÇ Market Square ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  Satiety: 67%  Health: 100%  Rest: 77%  Coins: 5.0
+
+> 
+You buy 1 Food for 1.9 coins. You now have 3.1 coins.
+
+ΓöÇΓöÇ Day 1 Hour 09:00 ΓöÇΓöÇΓöÇ Market Square ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  Satiety: 66%  Health: 100%  Rest: 76%  Coins: 3.1
+
+> 
+ΓòÉΓòÉΓòÉ THORNVEIL MARKET PRICES ΓòÉΓòÉΓòÉ
+  Ink: 14.1 coins/unit  (stock: 5)
+  Parchment: 9.4 coins/unit  (stock: 10)
+  Stone: 7.5 coins/unit  (stock: 31)
+  Tools: 11.3 coins/unit  (stock: 21)
+  Food: 1.9 coins/unit  (stock: 150)
+  Luxury: 26.0 coins/unit  (stock: 0)
+  Timber: 4.7 coins/unit  (stock: 51)
+  Herbs: 5.8 coins/unit  (stock: 16)
+
+> 
+You work for a few hours. You earn 1.5 coins and gather 2 Food.
+
+ΓöÇΓöÇ Day 1 Hour 10:00 ΓöÇΓöÇΓöÇ Market Square ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  Satiety: 65%  Health: 100%  Rest: 65%  Coins: 4.6
+
+> 
+You can't reach The Well directly from Market Square. Find a connected path.
+
+ΓöÇΓöÇ Day 1 Hour 11:00 ΓöÇΓöÇΓöÇ Market Square ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  Satiety: 64%  Health: 100%  Rest: 64%  Coins: 4.6
+
+> 
+You can't reach The Old Archive directly from Market Square. Find a connected path.
+
+ΓöÇΓöÇ Day 1 Hour 12:00 ΓöÇΓöÇΓöÇ Market Square ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  Satiety: 63%  Health: 100%  Rest: 63%  Coins: 4.6
+
+> 
+You need to be at The Old Archive to study it.
+
+ΓöÇΓöÇ Day 1 Hour 13:00 ΓöÇΓöÇΓöÇ Market Square ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  Satiety: 62%  Health: 100%  Rest: 62%  Coins: 4.6
+
+> 
+You begin practicing Inscription. You're a novice, but it's a start.
+  ΓåÆ New capability: CapabilityId(7) (Novice)
+
+ΓöÇΓöÇ Day 1 Hour 14:00 ΓöÇΓöÇΓöÇ Market Square ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  Satiety: 61%  Health: 100%  Rest: 61%  Coins: 4.6
+
+> 
+You inscribe your observation: "The stones of the old archive speak of deep history"
+
+Inscription #1 complete.
+  ΓåÆ Transformation progress: Stage 0 ΓÇö 5%
+
+ΓöÇΓöÇ Day 1 Hour 15:00 ΓöÇΓöÇΓöÇ Market Square ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  Satiety: 60%  Health: 100%  Rest: 60%  Coins: 4.6
+
+> 
+ΓòÉΓòÉΓòÉ PLAYER STATUS ΓòÉΓòÉΓòÉ
+  Alive: true
+  Satiety: 60%  Health: 100%  Rest: 60%
+  Coins: 4.6
+  Capabilities: 1
+  Knowledge nodes: 0
+  Transformation: Stage 0 (0%)
+  Inscriptions: 1
+ΓòÉΓòÉΓòÉ WORLD ΓòÉΓòÉΓòÉ
+  Day: 1  Hour: 15:00
+  Living NPCs: 15
+  State hash: 2d3340d8dc3fc8ba
+
+> Γ£ô All invariants pass.
+
+> Game saved to 'saves/session_run.gs1'
+
+> Quitting Godseed.

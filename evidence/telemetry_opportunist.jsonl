@@ -1,0 +1,60 @@
+{"tick":1,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Work { occupation: Laborer }","outcome":"You work for a few hours. You earn 1.5 coins and gather 2 Fo"}
+{"tick":24,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=71 health=100 transform_stage=0 progress=0"}
+{"tick":25,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Buy { resource: Food, quantity: 5 }","outcome":"You need 8.5 coins to buy 5 Food (at 1.7 each). You only hav"}
+{"tick":48,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=67 health=100 transform_stage=0 progress=0"}
+{"tick":49,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Sell { resource: Food, quantity: 3 }","outcome":"You don't have 3 Food to sell."}
+{"tick":72,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=63 health=100 transform_stage=0 progress=0"}
+{"tick":73,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(7), topic: AskAbou","outcome":"Delia Croft isn't here right now."}
+{"tick":96,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=59 health=100 transform_stage=0 progress=0"}
+{"tick":97,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Sleep","outcome":"You sleep for several hours (you rest where you can), waking"}
+{"tick":120,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=70 health=100 transform_stage=0 progress=0"}
+{"tick":121,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Work { occupation: Laborer }","outcome":"You work for a few hours. You earn 1.5 coins and gather 2 Fo"}
+{"tick":144,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=66 health=100 transform_stage=0 progress=0"}
+{"tick":145,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Buy { resource: Food, quantity: 5 }","outcome":"You buy 5 Food for 7.0 coins. You now have 1.0 coins."}
+{"tick":168,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=62 health=100 transform_stage=0 progress=0"}
+{"tick":169,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Sell { resource: Food, quantity: 3 }","outcome":"You sell 3 Food for 3.6 coins (market cut applied)."}
+{"tick":192,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=58 health=100 transform_stage=0 progress=0"}
+{"tick":193,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(7), topic: AskAbou","outcome":"Delia Croft isn't here right now."}
+{"tick":216,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=54 health=100 transform_stage=0 progress=0"}
+{"tick":217,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Sleep","outcome":"You sleep for several hours (you rest where you can), waking"}
+{"tick":240,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=65 health=100 transform_stage=0 progress=0"}
+{"tick":241,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Work { occupation: Laborer }","outcome":"You work for a few hours. You earn 1.5 coins and gather 2 Fo"}
+{"tick":264,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=61 health=100 transform_stage=0 progress=0"}
+{"tick":265,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Buy { resource: Food, quantity: 5 }","outcome":"You need 7.0 coins to buy 5 Food (at 1.4 each). You only hav"}
+{"tick":288,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=57 health=100 transform_stage=0 progress=0"}
+{"tick":289,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Sell { resource: Food, quantity: 3 }","outcome":"You sell 3 Food for 3.6 coins (market cut applied)."}
+{"tick":312,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=53 health=100 transform_stage=0 progress=0"}
+{"tick":313,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(7), topic: AskAbou","outcome":"Delia Croft isn't here right now."}
+{"tick":336,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=49 health=100 transform_stage=0 progress=0"}
+{"tick":337,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Sleep","outcome":"You sleep for several hours (you rest where you can), waking"}
+{"tick":360,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=60 health=100 transform_stage=0 progress=0"}
+{"tick":361,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Work { occupation: Laborer }","outcome":"You work for a few hours. You earn 1.5 coins and gather 2 Fo"}
+{"tick":384,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=56 health=100 transform_stage=0 progress=0"}
+{"tick":385,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Buy { resource: Food, quantity: 5 }","outcome":"You buy 5 Food for 7.0 coins. You now have 4.1 coins."}
+{"tick":408,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=52 health=100 transform_stage=0 progress=0"}
+{"tick":409,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Sell { resource: Food, quantity: 3 }","outcome":"You sell 3 Food for 3.6 coins (market cut applied)."}
+{"tick":432,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=48 health=100 transform_stage=0 progress=0"}
+{"tick":433,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(7), topic: AskAbou","outcome":"Delia Croft isn't here right now."}
+{"tick":456,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=44 health=100 transform_stage=0 progress=0"}
+{"tick":457,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Sleep","outcome":"You sleep for several hours (you rest where you can), waking"}
+{"tick":480,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=55 health=100 transform_stage=0 progress=0"}
+{"tick":481,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Work { occupation: Laborer }","outcome":"You work for a few hours. You earn 1.5 coins and gather 2 Fo"}
+{"tick":504,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=51 health=100 transform_stage=0 progress=0"}
+{"tick":505,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Buy { resource: Food, quantity: 5 }","outcome":"You buy 5 Food for 7.0 coins. You now have 2.2 coins."}
+{"tick":528,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=47 health=100 transform_stage=0 progress=0"}
+{"tick":529,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Sell { resource: Food, quantity: 3 }","outcome":"You sell 3 Food for 3.6 coins (market cut applied)."}
+{"tick":552,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=43 health=100 transform_stage=0 progress=0"}
+{"tick":553,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(7), topic: AskAbou","outcome":"Delia Croft isn't here right now."}
+{"tick":576,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=39 health=100 transform_stage=0 progress=0"}
+{"tick":577,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Sleep","outcome":"You sleep for several hours (you rest where you can), waking"}
+{"tick":600,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=50 health=100 transform_stage=0 progress=0"}
+{"tick":601,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Work { occupation: Laborer }","outcome":"You work for a few hours. You earn 1.5 coins and gather 2 Fo"}
+{"tick":624,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=46 health=100 transform_stage=0 progress=0"}
+{"tick":625,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Buy { resource: Food, quantity: 5 }","outcome":"You buy 5 Food for 7.0 coins. You now have 0.3 coins."}
+{"tick":648,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=42 health=100 transform_stage=0 progress=0"}
+{"tick":649,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Sell { resource: Food, quantity: 3 }","outcome":"You sell 3 Food for 3.6 coins (market cut applied)."}
+{"tick":672,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=38 health=100 transform_stage=0 progress=0"}
+{"tick":673,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(7), topic: AskAbou","outcome":"Delia Croft isn't here right now."}
+{"tick":696,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=34 health=100 transform_stage=0 progress=0"}
+{"tick":697,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Sleep","outcome":"You sleep for several hours (you rest where you can), waking"}
+{"tick":720,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=45 health=100 transform_stage=0 progress=0"}

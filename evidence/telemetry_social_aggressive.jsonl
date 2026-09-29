@@ -1,0 +1,50 @@
+{"tick":1,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(1), topic: Greetin","outcome":"Mira Ashbridge isn't here right now."}
+{"tick":24,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=71 health=100 transform_stage=0 progress=0"}
+{"tick":25,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(2), topic: Greetin","outcome":"Wren Forscythe isn't here right now."}
+{"tick":48,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=67 health=100 transform_stage=0 progress=0"}
+{"tick":49,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(3), topic: Greetin","outcome":"Oswin Cley isn't here right now."}
+{"tick":72,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=63 health=100 transform_stage=0 progress=0"}
+{"tick":73,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(4), topic: Greetin","outcome":"Sera Cley isn't here right now."}
+{"tick":96,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=59 health=100 transform_stage=0 progress=0"}
+{"tick":97,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(5), topic: Greetin","outcome":"Elder Voss isn't here right now."}
+{"tick":120,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=55 health=100 transform_stage=0 progress=0"}
+{"tick":121,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(6), topic: Greetin","outcome":"Tomas Birch isn't here right now."}
+{"tick":144,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=51 health=100 transform_stage=0 progress=0"}
+{"tick":145,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(7), topic: Greetin","outcome":"Delia Croft isn't here right now."}
+{"tick":168,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=47 health=100 transform_stage=0 progress=0"}
+{"tick":169,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(8), topic: Greetin","outcome":"Harwin Croft isn't here right now."}
+{"tick":192,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=43 health=100 transform_stage=0 progress=0"}
+{"tick":193,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(9), topic: Greetin","outcome":"Pella isn't here right now."}
+{"tick":216,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=39 health=100 transform_stage=0 progress=0"}
+{"tick":217,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(10), topic: Greeti","outcome":"Aldous Minner gives you a measured look. \"What do you want?\""}
+{"tick":240,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=35 health=100 transform_stage=0 progress=0"}
+{"tick":241,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(1), topic: Greetin","outcome":"Mira Ashbridge isn't here right now."}
+{"tick":264,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=31 health=100 transform_stage=0 progress=0"}
+{"tick":265,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(2), topic: Greetin","outcome":"Wren Forscythe isn't here right now."}
+{"tick":288,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=27 health=100 transform_stage=0 progress=0"}
+{"tick":289,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(3), topic: Greetin","outcome":"Oswin Cley isn't here right now."}
+{"tick":312,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=23 health=100 transform_stage=0 progress=0"}
+{"tick":313,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(4), topic: Greetin","outcome":"Sera Cley isn't here right now."}
+{"tick":336,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=19 health=100 transform_stage=0 progress=0"}
+{"tick":337,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(5), topic: Greetin","outcome":"Elder Voss isn't here right now."}
+{"tick":360,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=15 health=100 transform_stage=0 progress=0"}
+{"tick":361,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(6), topic: Greetin","outcome":"Tomas Birch isn't here right now."}
+{"tick":384,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=11 health=100 transform_stage=0 progress=0"}
+{"tick":385,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(7), topic: Greetin","outcome":"Delia Croft isn't here right now."}
+{"tick":408,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=7 health=100 transform_stage=0 progress=0"}
+{"tick":409,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(8), topic: Greetin","outcome":"Harwin Croft isn't here right now."}
+{"tick":432,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=3 health=100 transform_stage=0 progress=0"}
+{"tick":433,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(9), topic: Greetin","outcome":"Pella isn't here right now."}
+{"tick":456,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=0 health=86 transform_stage=0 progress=0"}
+{"tick":457,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(10), topic: Greeti","outcome":"Aldous Minner smiles. \"Good to see you again.\""}
+{"tick":480,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=0 health=38 transform_stage=0 progress=0"}
+{"tick":481,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(1), topic: Greetin","outcome":"Mira Ashbridge isn't here right now."}
+{"tick":505,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(2), topic: Greetin","outcome":"Wren Forscythe isn't here right now."}
+{"tick":529,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(3), topic: Greetin","outcome":"Oswin Cley isn't here right now."}
+{"tick":553,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(4), topic: Greetin","outcome":"Sera Cley isn't here right now."}
+{"tick":577,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(5), topic: Greetin","outcome":"Elder Voss isn't here right now."}
+{"tick":601,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(6), topic: Greetin","outcome":"Tomas Birch isn't here right now."}
+{"tick":625,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(7), topic: Greetin","outcome":"Delia Croft isn't here right now."}
+{"tick":649,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(8), topic: Greetin","outcome":"Harwin Croft isn't here right now."}
+{"tick":673,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(9), topic: Greetin","outcome":"Pella isn't here right now."}
+{"tick":697,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(10), topic: Greeti","outcome":"Aldous Minner smiles. \"Good to see you again.\""}

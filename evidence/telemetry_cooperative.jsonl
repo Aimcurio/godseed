@@ -1,0 +1,60 @@
+{"tick":1,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(1), topic: Greetin","outcome":"Mira Ashbridge isn't here right now."}
+{"tick":24,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=72 health=100 transform_stage=0 progress=0"}
+{"tick":25,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Work { occupation: Laborer }","outcome":"You work for a few hours. You earn 1.5 coins and gather 2 Fo"}
+{"tick":48,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=68 health=100 transform_stage=0 progress=0"}
+{"tick":49,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(3), topic: AskAbou","outcome":"Oswin Cley isn't here right now."}
+{"tick":72,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=64 health=100 transform_stage=0 progress=0"}
+{"tick":73,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"LearnFrom { npc: CitizenId(3), capabilit","outcome":"Oswin Cley isn't ready to teach you yet. Your relationship n"}
+{"tick":96,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=60 health=100 transform_stage=0 progress=0"}
+{"tick":97,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Work { occupation: Farmer }","outcome":"You work for a few hours. You earn 2.0 coins and gather 2 Fo"}
+{"tick":120,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=56 health=100 transform_stage=0 progress=0"}
+{"tick":121,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Sleep","outcome":"You sleep for several hours (you rest where you can), waking"}
+{"tick":144,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=67 health=100 transform_stage=0 progress=0"}
+{"tick":145,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(1), topic: Greetin","outcome":"Mira Ashbridge isn't here right now."}
+{"tick":168,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=63 health=100 transform_stage=0 progress=0"}
+{"tick":169,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(1), topic: Greetin","outcome":"Mira Ashbridge isn't here right now."}
+{"tick":192,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=59 health=100 transform_stage=0 progress=0"}
+{"tick":193,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Work { occupation: Laborer }","outcome":"You work for a few hours. You earn 1.5 coins and gather 2 Fo"}
+{"tick":216,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=55 health=100 transform_stage=0 progress=0"}
+{"tick":217,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(3), topic: AskAbou","outcome":"Oswin Cley isn't here right now."}
+{"tick":240,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=51 health=100 transform_stage=0 progress=0"}
+{"tick":241,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"LearnFrom { npc: CitizenId(3), capabilit","outcome":"Oswin Cley isn't ready to teach you yet. Your relationship n"}
+{"tick":264,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=47 health=100 transform_stage=0 progress=0"}
+{"tick":265,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Work { occupation: Farmer }","outcome":"You work for a few hours. You earn 2.0 coins and gather 2 Fo"}
+{"tick":288,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=43 health=100 transform_stage=0 progress=0"}
+{"tick":289,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Sleep","outcome":"You sleep for several hours (you rest where you can), waking"}
+{"tick":312,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=54 health=100 transform_stage=0 progress=0"}
+{"tick":313,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(1), topic: Greetin","outcome":"Mira Ashbridge isn't here right now."}
+{"tick":336,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=50 health=100 transform_stage=0 progress=0"}
+{"tick":337,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(1), topic: Greetin","outcome":"Mira Ashbridge isn't here right now."}
+{"tick":360,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=46 health=100 transform_stage=0 progress=0"}
+{"tick":361,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Work { occupation: Laborer }","outcome":"You work for a few hours. You earn 1.5 coins and gather 2 Fo"}
+{"tick":384,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=42 health=100 transform_stage=0 progress=0"}
+{"tick":385,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(3), topic: AskAbou","outcome":"Oswin Cley isn't here right now."}
+{"tick":408,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=38 health=100 transform_stage=0 progress=0"}
+{"tick":409,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"LearnFrom { npc: CitizenId(3), capabilit","outcome":"Oswin Cley isn't ready to teach you yet. Your relationship n"}
+{"tick":432,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=34 health=100 transform_stage=0 progress=0"}
+{"tick":433,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Work { occupation: Farmer }","outcome":"You work for a few hours. You earn 2.0 coins and gather 2 Fo"}
+{"tick":456,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=30 health=100 transform_stage=0 progress=0"}
+{"tick":457,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Sleep","outcome":"You sleep for several hours (you rest where you can), waking"}
+{"tick":480,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=41 health=100 transform_stage=0 progress=0"}
+{"tick":481,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(1), topic: Greetin","outcome":"Mira Ashbridge isn't here right now."}
+{"tick":504,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=37 health=100 transform_stage=0 progress=0"}
+{"tick":505,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(1), topic: Greetin","outcome":"Mira Ashbridge isn't here right now."}
+{"tick":528,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=33 health=100 transform_stage=0 progress=0"}
+{"tick":529,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Work { occupation: Laborer }","outcome":"You work for a few hours. You earn 1.5 coins and gather 2 Fo"}
+{"tick":552,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=29 health=100 transform_stage=0 progress=0"}
+{"tick":553,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(3), topic: AskAbou","outcome":"Oswin Cley isn't here right now."}
+{"tick":576,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=25 health=100 transform_stage=0 progress=0"}
+{"tick":577,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"LearnFrom { npc: CitizenId(3), capabilit","outcome":"Oswin Cley isn't ready to teach you yet. Your relationship n"}
+{"tick":600,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=21 health=100 transform_stage=0 progress=0"}
+{"tick":601,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Work { occupation: Farmer }","outcome":"You work for a few hours. You earn 2.0 coins and gather 2 Fo"}
+{"tick":624,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=17 health=100 transform_stage=0 progress=0"}
+{"tick":625,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Sleep","outcome":"You sleep for several hours (you rest where you can), waking"}
+{"tick":648,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=28 health=100 transform_stage=0 progress=0"}
+{"tick":649,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(1), topic: Greetin","outcome":"Mira Ashbridge isn't here right now."}
+{"tick":672,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=24 health=100 transform_stage=0 progress=0"}
+{"tick":673,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(1), topic: Greetin","outcome":"Mira Ashbridge isn't here right now."}
+{"tick":696,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=20 health=100 transform_stage=0 progress=0"}
+{"tick":697,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Work { occupation: Laborer }","outcome":"You work for a few hours. You earn 1.5 coins and gather 2 Fo"}
+{"tick":720,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=16 health=100 transform_stage=0 progress=0"}

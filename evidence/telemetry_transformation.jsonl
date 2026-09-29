@@ -1,0 +1,60 @@
+{"tick":1,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(5), topic: AskAbou","outcome":"Elder Voss isn't here right now."}
+{"tick":24,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=72 health=100 transform_stage=0 progress=0"}
+{"tick":25,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Move { to: LocationId(8) }","outcome":"You can't reach The Old Archive directly from Settlement Roa"}
+{"tick":48,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=68 health=100 transform_stage=0 progress=0"}
+{"tick":49,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"StudyArchive","outcome":"You need to be at The Old Archive to study it."}
+{"tick":72,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=64 health=100 transform_stage=0 progress=0"}
+{"tick":73,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Practice { capability: CapabilityId(7) }","outcome":"You begin practicing Inscription. You're a novice, but it's "}
+{"tick":96,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=60 health=100 transform_stage=1 progress=10"}
+{"tick":97,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Inscribe { observation: \"Day 4 in Thornv","outcome":"You inscribe your observation: \"Day 4 in Thornveil. I observ"}
+{"tick":120,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=56 health=100 transform_stage=1 progress=10"}
+{"tick":121,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(5), topic: AskAbou","outcome":"Elder Voss isn't here right now."}
+{"tick":144,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=52 health=100 transform_stage=1 progress=10"}
+{"tick":145,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Work { occupation: Laborer }","outcome":"You work for a few hours. You earn 1.5 coins and gather 2 Fo"}
+{"tick":168,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=48 health=100 transform_stage=1 progress=10"}
+{"tick":169,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Sleep","outcome":"You sleep for several hours (you rest where you can), waking"}
+{"tick":192,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=59 health=100 transform_stage=1 progress=10"}
+{"tick":193,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(5), topic: AskAbou","outcome":"Elder Voss isn't here right now."}
+{"tick":216,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=55 health=100 transform_stage=1 progress=10"}
+{"tick":217,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Move { to: LocationId(8) }","outcome":"You can't reach The Old Archive directly from Settlement Roa"}
+{"tick":240,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=51 health=100 transform_stage=1 progress=10"}
+{"tick":241,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"StudyArchive","outcome":"You need to be at The Old Archive to study it."}
+{"tick":264,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=47 health=100 transform_stage=1 progress=10"}
+{"tick":265,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Practice { capability: CapabilityId(7) }","outcome":"You practice Inscription. Progress: 20/100 toward next level"}
+{"tick":288,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=43 health=100 transform_stage=1 progress=10"}
+{"tick":289,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Inscribe { observation: \"Day 12 in Thorn","outcome":"You inscribe your observation: \"Day 12 in Thornveil. I obser"}
+{"tick":312,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=39 health=100 transform_stage=1 progress=10"}
+{"tick":313,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(5), topic: AskAbou","outcome":"Elder Voss isn't here right now."}
+{"tick":336,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=35 health=100 transform_stage=1 progress=10"}
+{"tick":337,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Work { occupation: Laborer }","outcome":"You work for a few hours. You earn 1.5 coins and gather 2 Fo"}
+{"tick":360,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=31 health=100 transform_stage=1 progress=10"}
+{"tick":361,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Sleep","outcome":"You sleep for several hours (you rest where you can), waking"}
+{"tick":384,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=42 health=100 transform_stage=1 progress=10"}
+{"tick":385,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(5), topic: AskAbou","outcome":"Elder Voss isn't here right now."}
+{"tick":408,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=38 health=100 transform_stage=1 progress=10"}
+{"tick":409,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Move { to: LocationId(8) }","outcome":"You can't reach The Old Archive directly from Settlement Roa"}
+{"tick":432,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=34 health=100 transform_stage=1 progress=10"}
+{"tick":433,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"StudyArchive","outcome":"You need to be at The Old Archive to study it."}
+{"tick":456,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=30 health=100 transform_stage=1 progress=10"}
+{"tick":457,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Practice { capability: CapabilityId(7) }","outcome":"You practice Inscription. Progress: 30/100 toward next level"}
+{"tick":480,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=26 health=100 transform_stage=1 progress=10"}
+{"tick":481,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Inscribe { observation: \"Day 20 in Thorn","outcome":"You inscribe your observation: \"Day 20 in Thornveil. I obser"}
+{"tick":504,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=22 health=100 transform_stage=1 progress=10"}
+{"tick":505,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(5), topic: AskAbou","outcome":"Elder Voss isn't here right now."}
+{"tick":528,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=18 health=100 transform_stage=1 progress=10"}
+{"tick":529,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Work { occupation: Laborer }","outcome":"You work for a few hours. You earn 1.5 coins and gather 2 Fo"}
+{"tick":552,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=14 health=100 transform_stage=1 progress=10"}
+{"tick":553,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Sleep","outcome":"You sleep for several hours (you rest where you can), waking"}
+{"tick":576,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=25 health=100 transform_stage=1 progress=10"}
+{"tick":577,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(5), topic: AskAbou","outcome":"Elder Voss isn't here right now."}
+{"tick":600,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=21 health=100 transform_stage=1 progress=10"}
+{"tick":601,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Move { to: LocationId(8) }","outcome":"You can't reach The Old Archive directly from Settlement Roa"}
+{"tick":624,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=17 health=100 transform_stage=1 progress=10"}
+{"tick":625,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"StudyArchive","outcome":"You need to be at The Old Archive to study it."}
+{"tick":648,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=13 health=100 transform_stage=1 progress=10"}
+{"tick":649,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Practice { capability: CapabilityId(7) }","outcome":"You practice Inscription. Progress: 40/100 toward next level"}
+{"tick":672,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=9 health=100 transform_stage=1 progress=10"}
+{"tick":673,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Inscribe { observation: \"Day 28 in Thorn","outcome":"You inscribe your observation: \"Day 28 in Thornveil. I obser"}
+{"tick":696,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=5 health=100 transform_stage=1 progress=10"}
+{"tick":697,"scenario_id":null,"event_type":"PlayerAction","actor":0,"target":null,"location":null,"action":"Talk { npc: CitizenId(5), topic: AskAbou","outcome":"Elder Voss isn't here right now."}
+{"tick":720,"scenario_id":null,"event_type":"PhysiologyEvent","actor":0,"target":null,"location":null,"action":null,"outcome":"satiety=1 health=100 transform_stage=1 progress=10"}

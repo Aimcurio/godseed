@@ -1,0 +1,16 @@
+{
+  "total_ticks": 2160,
+  "duration_ms": 3,
+  "ticks_per_sec": 598619.8,
+  "checkpoints": [
+    {"day": 10, "tick": 240, "hash": "ab7f031efe09fe33", "invariants_pass": true, "living_npcs": 15},
+    {"day": 20, "tick": 480, "hash": "b697ac4f3db95c64", "invariants_pass": true, "living_npcs": 15},
+    {"day": 30, "tick": 720, "hash": "7a91e576a77cc5cc", "invariants_pass": true, "living_npcs": 15},
+    {"day": 40, "tick": 960, "hash": "287c31779e40ed96", "invariants_pass": true, "living_npcs": 15},
+    {"day": 50, "tick": 1200, "hash": "d848c6534629f3c3", "invariants_pass": true, "living_npcs": 15},
+    {"day": 60, "tick": 1440, "hash": "8bb20435287c083e", "invariants_pass": true, "living_npcs": 15},
+    {"day": 70, "tick": 1680, "hash": "e4c3a5488047e997", "invariants_pass": true, "living_npcs": 15},
+    {"day": 80, "tick": 1920, "hash": "8ad9354ebb7f64b1", "invariants_pass": true, "living_npcs": 15},
+    {"day": 90, "tick": 2160, "hash": "8f9803596b391761", "invariants_pass": true, "living_npcs": 15}
+  ]
+}
