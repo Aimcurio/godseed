@@ -1,15 +1,15 @@
 use godseed_core::{
     components::{
-        CapabilitySet, CitizenMeta, EpisodicMemory, EpistemicState,
-        PlayerMarker, RelationalLedger, TransformationState,
+        CapabilitySet, CitizenMeta, EpisodicMemory, EpistemicState, PlayerMarker, RelationalLedger,
+        TransformationState,
     },
     content::{caps, milestones},
     invariants::verify_invariants,
     resources::{DocumentRegistry, PendingConsequenceRegistry},
     sim::Simulation,
     types::{
-        CapabilityLevel, CitizenId, ConsequenceStage, ConsequenceType,
-        DocumentType, LocationId, MemoryTag, PlayerAction, TriggerCondition,
+        CapabilityLevel, CitizenId, ConsequenceStage, ConsequenceType, DocumentType, LocationId,
+        MemoryTag, PlayerAction, RelationalBond, TriggerCondition,
     },
 };
 
@@ -34,7 +34,9 @@ fn test_scholar_stage2_diagnosis_and_dispute_arbitration() {
     assert!(archive_res[0].success, "Studying archive should succeed");
 
     // Step 2: Practice and acquire Inscription capability
-    sim.push_action(PlayerAction::Practice { capability: caps::INSCRIPTION });
+    sim.push_action(PlayerAction::Practice {
+        capability: caps::INSCRIPTION,
+    });
     sim.step();
     sim.drain_results();
 
@@ -43,25 +45,34 @@ fn test_scholar_stage2_diagnosis_and_dispute_arbitration() {
     {
         let summary = sim.summary();
         let player = summary.player.unwrap();
-        assert_eq!(player.transformation_stage, 1, "Player must advance to Scholar Stage 1");
+        assert_eq!(
+            player.transformation_stage, 1,
+            "Player must advance to Scholar Stage 1"
+        );
     }
 
     // Step 3: Complete 5 inscriptions
     for i in 1..=5 {
         sim.push_action(PlayerAction::Inscribe {
-            observation: format!("Field observation #{}: Inscribing communal dynamics in Thornveil.", i),
+            observation: format!(
+                "Field observation #{}: Inscribing communal dynamics in Thornveil.",
+                i
+            ),
         });
         sim.step();
         let inscribe_res = sim.drain_results();
         assert!(inscribe_res[0].success);
     }
 
-    // Step 4: Build relationship with Elder Voss (CitizenId 5) > 60
+    // Step 4: Build canonical VS2 relationship with Elder Voss (CitizenId 5) > 60
     // Elder Voss is at Location 3 (Market) or Location 1 (Inn) depending on hour
     {
-        use godseed_core::resources::RelationshipLedger;
-        let mut rels = sim.world.resource_mut::<RelationshipLedger>();
-        rels.set(CitizenId::PLAYER, CitizenId(5), 75);
+        let mut q = sim.world.query::<(&CitizenMeta, &mut RelationalLedger)>();
+        let (_, mut ledger) = q
+            .iter_mut(&mut sim.world)
+            .find(|(meta, _)| meta.id == CitizenId(5))
+            .expect("Elder Voss should have a canonical relational ledger");
+        ledger.set_bond(CitizenId::PLAYER, RelationalBond::new(75, 75, 0));
     }
 
     // Advance 30 ticks to trigger monthly check -> Stage 2 (The Settlement Chronicler)
@@ -76,13 +87,18 @@ fn test_scholar_stage2_diagnosis_and_dispute_arbitration() {
 
         let mut q = sim.world.query_filtered::<(&CapabilitySet, &TransformationState), bevy_ecs::query::With<PlayerMarker>>();
         let (caps_set, transform) = q.iter(&sim.world).next().unwrap();
-        assert!(caps_set.has(caps::DIAGNOSIS), "Stage 2 Chronicler must possess DIAGNOSIS capability");
+        assert!(
+            caps_set.has(caps::DIAGNOSIS),
+            "Stage 2 Chronicler must possess DIAGNOSIS capability"
+        );
         assert!(
             caps_set.level(caps::INSCRIPTION) >= CapabilityLevel::JOURNEYMAN,
             "Chronicler must have Journeyman-level Inscription"
         );
         assert!(
-            transform.milestones.contains(&milestones::SCHOLAR_RECOGNIZED),
+            transform
+                .milestones
+                .contains(&milestones::SCHOLAR_RECOGNIZED),
             "Must possess SCHOLAR_RECOGNIZED milestone"
         );
     }
@@ -107,18 +123,23 @@ fn test_scholar_stage2_diagnosis_and_dispute_arbitration() {
     sim.drain_results();
 
     // Perform diagnostic examination
-    sim.push_action(PlayerAction::Diagnose { location: LocationId(5) });
+    sim.push_action(PlayerAction::Diagnose {
+        location: LocationId(5),
+    });
     sim.step();
     let diag_res = sim.drain_results();
     assert!(diag_res[0].success, "Diagnosing South Fields must succeed");
     assert!(
-        diag_res[0].message.contains("fungal blight vulnerability") || diag_res[0].message.contains("Agricultural Diagnosis"),
+        diag_res[0].message.contains("fungal blight vulnerability")
+            || diag_res[0].message.contains("Agricultural Diagnosis"),
         "Diagnostic message must articulate systemic agrarian condition"
     );
 
     // Verify player learned knowledge node 2 (Crop Blight Vulnerability)
     {
-        let mut q = sim.world.query_filtered::<&EpistemicState, bevy_ecs::query::With<PlayerMarker>>();
+        let mut q = sim
+            .world
+            .query_filtered::<&EpistemicState, bevy_ecs::query::With<PlayerMarker>>();
         let epistemic = q.iter(&sim.world).next().unwrap();
         assert!(
             epistemic.has_knowledge(2),
@@ -133,16 +154,28 @@ fn test_scholar_stage2_diagnosis_and_dispute_arbitration() {
         finding: 2,
     };
 
-    sim.push_action(PlayerAction::DraftDocument { doc_type: doc_type.clone() });
+    sim.push_action(PlayerAction::DraftDocument {
+        doc_type: doc_type.clone(),
+    });
     sim.step();
     let draft_res = sim.drain_results();
-    assert!(draft_res[0].success, "Drafting harvest diagnosis report must succeed: {}", draft_res[0].message);
-    assert!(draft_res[0].message.contains("Inscribed Document #1"), "Got: {}", draft_res[0].message);
+    assert!(
+        draft_res[0].success,
+        "Drafting harvest diagnosis report must succeed: {}",
+        draft_res[0].message
+    );
+    assert!(
+        draft_res[0].message.contains("Inscribed Document #1"),
+        "Got: {}",
+        draft_res[0].message
+    );
 
     // Verify DocumentRegistry contains document #1
     {
         let doc_reg = sim.world.resource::<DocumentRegistry>();
-        let doc = doc_reg.get(1).expect("Document #1 must exist in DocumentRegistry");
+        let doc = doc_reg
+            .get(1)
+            .expect("Document #1 must exist in DocumentRegistry");
         assert_eq!(doc.id, 1);
         assert_eq!(doc.drafter, CitizenId::PLAYER);
         assert!(doc.signers.contains(&CitizenId::PLAYER));
@@ -172,7 +205,11 @@ fn test_scholar_stage2_diagnosis_and_dispute_arbitration() {
     // Verify dispute is Active before arbitration
     {
         let cons_reg = sim.world.resource::<PendingConsequenceRegistry>();
-        let dispute = cons_reg.consequences.iter().find(|c| c.id == dispute_id).unwrap();
+        let dispute = cons_reg
+            .consequences
+            .iter()
+            .find(|c| c.id == dispute_id)
+            .unwrap();
         assert_eq!(dispute.stage, ConsequenceStage::Active);
     }
 
@@ -194,7 +231,11 @@ fn test_scholar_stage2_diagnosis_and_dispute_arbitration() {
     // 1. Consequence stage must be Resolved
     {
         let cons_reg = sim.world.resource::<PendingConsequenceRegistry>();
-        let dispute = cons_reg.consequences.iter().find(|c| c.id == dispute_id).unwrap();
+        let dispute = cons_reg
+            .consequences
+            .iter()
+            .find(|c| c.id == dispute_id)
+            .unwrap();
         assert_eq!(
             dispute.stage,
             ConsequenceStage::Resolved,
@@ -208,20 +249,32 @@ fn test_scholar_stage2_diagnosis_and_dispute_arbitration() {
         let doc = doc_reg.get(1).unwrap();
         assert_eq!(doc.related_consequence_id, Some(dispute_id));
         assert!(doc.signers.contains(&CitizenId::PLAYER));
-        assert!(doc.signers.contains(&CitizenId(3)), "Citizen 3 must have affixed mark");
-        assert!(doc.signers.contains(&CitizenId(13)), "Citizen 13 must have affixed mark");
+        assert!(
+            doc.signers.contains(&CitizenId(3)),
+            "Citizen 3 must have affixed mark"
+        );
+        assert!(
+            doc.signers.contains(&CitizenId(13)),
+            "Citizen 13 must have affixed mark"
+        );
     }
 
     // 3. Both citizens must hold permanent turning point episodic memory
     {
-        let mut q = sim.world.query::<(&CitizenMeta, &EpisodicMemory, &RelationalLedger)>();
+        let mut q = sim
+            .world
+            .query::<(&CitizenMeta, &EpisodicMemory, &RelationalLedger)>();
         let mut found_3 = false;
         let mut found_13 = false;
 
         for (meta, mem, ledger) in q.iter(&sim.world) {
             if meta.id == CitizenId(3) || meta.id == CitizenId(13) {
-                if meta.id == CitizenId(3) { found_3 = true; }
-                if meta.id == CitizenId(13) { found_13 = true; }
+                if meta.id == CitizenId(3) {
+                    found_3 = true;
+                }
+                if meta.id == CitizenId(13) {
+                    found_13 = true;
+                }
 
                 // Must have permanent ContractSigned anchor memory
                 let has_contract_anchor = mem.anchors.iter().any(|a| {
@@ -238,16 +291,21 @@ fn test_scholar_stage2_diagnosis_and_dispute_arbitration() {
                 assert!(
                     bond.trust >= 30,
                     "Citizen {} trust toward player must be elevated (got {})",
-                    meta.id.0, bond.trust
+                    meta.id.0,
+                    bond.trust
                 );
                 assert!(
                     bond.sentiment >= 20,
                     "Citizen {} sentiment toward player must be positive (got {})",
-                    meta.id.0, bond.sentiment
+                    meta.id.0,
+                    bond.sentiment
                 );
             }
         }
-        assert!(found_3 && found_13, "Both citizens 3 and 13 must have been evaluated");
+        assert!(
+            found_3 && found_13,
+            "Both citizens 3 and 13 must have been evaluated"
+        );
     }
 
     // ── Phase 6: Long-term Stability (720 ticks / 30 simulated days) ─────────
@@ -257,7 +315,11 @@ fn test_scholar_stage2_diagnosis_and_dispute_arbitration() {
     // Consequence must remain Resolved (not re-escalated or broken)
     {
         let cons_reg = sim.world.resource::<PendingConsequenceRegistry>();
-        let dispute = cons_reg.consequences.iter().find(|c| c.id == dispute_id).unwrap();
+        let dispute = cons_reg
+            .consequences
+            .iter()
+            .find(|c| c.id == dispute_id)
+            .unwrap();
         assert_eq!(dispute.stage, ConsequenceStage::Resolved);
     }
 

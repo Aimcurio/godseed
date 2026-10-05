@@ -1,10 +1,11 @@
 /// Godseed Systems — Pending Consequence Progression & Maturation (AC-206, AC-207)
-
 use bevy_ecs::prelude::*;
 
 use crate::components::{CitizenMeta, NpcSchedule, OccupationProfile, PlayerMarker};
 use crate::events::SimEvent;
-use crate::resources::{EventRing, EpistemicReturnDigest, PendingConsequenceRegistry, ReturnDigestLog};
+use crate::resources::{
+    EpistemicReturnDigest, EventRing, PendingConsequenceRegistry, ReturnDigestLog,
+};
 use crate::types::{
     CitizenId, ConsequenceStage, ConsequenceType, OccupationType, SimClock, TriggerCondition,
 };
@@ -23,7 +24,9 @@ pub fn pending_consequence_progression_system(
     let current_tick = clock.tick;
 
     for consequence in consequences.consequences.iter_mut() {
-        if consequence.stage != ConsequenceStage::Active && consequence.stage != ConsequenceStage::Escalated {
+        if consequence.stage != ConsequenceStage::Active
+            && consequence.stage != ConsequenceStage::Escalated
+        {
             continue;
         }
 
@@ -31,21 +34,23 @@ pub fn pending_consequence_progression_system(
             TriggerCondition::TimeElapsed { duration_ticks } => {
                 current_tick >= consequence.created_tick + duration_ticks
             }
-            TriggerCondition::Compound(conditions) => {
-                conditions.iter().all(|c| match c {
-                    TriggerCondition::TimeElapsed { duration_ticks } => {
-                        current_tick >= consequence.created_tick + duration_ticks
-                    }
-                    _ => false,
-                })
-            }
+            TriggerCondition::Compound(conditions) => conditions.iter().all(|c| match c {
+                TriggerCondition::TimeElapsed { duration_ticks } => {
+                    current_tick >= consequence.created_tick + duration_ticks
+                }
+                _ => false,
+            }),
         };
 
         if is_triggered {
             consequence.stage = ConsequenceStage::Matured;
 
             match consequence.consequence_type {
-                ConsequenceType::FraternalLaborStrain { elder, junior, target_workplace } => {
+                ConsequenceType::FraternalLaborStrain {
+                    elder,
+                    junior,
+                    target_workplace,
+                } => {
                     // 1. Mutate junior's schedule and occupation to new workplace if alive
                     for (meta, mut schedule, mut occ) in npc_query.iter_mut() {
                         if meta.id == junior && meta.alive {
@@ -81,7 +86,11 @@ pub fn pending_consequence_progression_system(
                         message: "Mira Ashbridge wipes down the bar counter and looks up with a knowing nod: 'You've been gone a spell. Word from the woods is Tomas works alone now—young Runn moved his kit over to Wren's forge. Timber's gotten dearer in the market since.'".to_string(),
                     });
                 }
-                ConsequenceType::CropBlightDispute { farmer_a, farmer_b: _, location } => {
+                ConsequenceType::CropBlightDispute {
+                    farmer_a,
+                    farmer_b: _,
+                    location,
+                } => {
                     event_ring.emit(SimEvent::ConsequenceMatured {
                         consequence_id: consequence.id,
                         causal_root: consequence.causal_root,
@@ -94,7 +103,11 @@ pub fn pending_consequence_progression_system(
                         message: format!("Blight in the lower furrows of Location #{} caused harvest loss and finger-pointing over field borders.", location.0),
                     });
                 }
-                ConsequenceType::DebtDispute { creditor, debtor, amount } => {
+                ConsequenceType::DebtDispute {
+                    creditor,
+                    debtor,
+                    amount,
+                } => {
                     event_ring.emit(SimEvent::ConsequenceMatured {
                         consequence_id: consequence.id,
                         causal_root: consequence.causal_root,

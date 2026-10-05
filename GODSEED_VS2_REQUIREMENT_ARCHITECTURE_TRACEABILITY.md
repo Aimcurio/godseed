@@ -153,10 +153,33 @@ Every major architectural subsystem maps directly to an approved product require
 | `RelationalLedger` & `RelationalBond` | AC-201 (Qualitative Relational Divergence) |
 | `EpisodicMemory` (Anchors & Transient) | AC-202 (Episodic Recall), AC-203 (Gossip) |
 | `EpistemicState` & Tripartite Knowledge | AC-204 (Knowledge Leverage), AC-205 (Scholar Agency) |
-| `SocialVectorRegistry` | AC-206 (Delayed Consequence), AC-207 (Absence Continuation) |
+| `PendingConsequenceRegistry` | AC-206 (Delayed Consequence), AC-207 (Absence Continuation) |
 | `ReturnDigestLog` | AC-207 (Absence Return Experience), AC-208 (Kill Test) |
 | `DocumentRegistry` | AC-205 (Documentary Authority & Scholar Stage 2) |
 | `PlaytestFlightRecorder` | AC-208 (Human Playtest Gate & Causal Audit) |
 | `migrate_v1_to_v2` | Persistence integrity, backward compatibility |
 
 **Zero unmapped architectural subsystems exist.** The architecture is strictly product-bound.
+
+---
+
+## 4. Social Authority Remediation Trace
+
+Remediation candidate after predecessor `3312a814ce3cdcbe4907b190c64854fc706e9f01` makes the VS2 social model canonical for runtime gameplay.
+
+| Legacy Authority | V2 Disposition |
+| :--- | :--- |
+| `resources::RelationshipLedger` | Removed from V2 runtime world insertion and gameplay system signatures. Retained only in V1/V2 snapshot compatibility structs so old saves can migrate relationship values into `components::RelationalLedger`. |
+| `components::NpcMemory` | No longer spawned for fresh V2 NPCs and no longer processed by scheduled gameplay systems. Retained for V1 deserialization compatibility. |
+| Dynamic `components::Disposition::toward_player` | No longer used for gameplay relationship decisions. Static teaching metadata remains pending a later `TeachingProfile` split. |
+
+Canonical runtime social decisions now derive from:
+
+- `components::RelationalLedger`
+- `components::EpisodicMemory`
+- `components::EpistemicState`
+- `resources::DocumentRegistry`
+- `resources::PendingConsequenceRegistry`
+- `resources::ReturnDigestLog`
+
+AC-201 through AC-207 remain deterministic technical criteria. AC-208 remains deferred to supervised human evaluation.

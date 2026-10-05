@@ -16,7 +16,9 @@ fn main() {
         let mut cons_reg = sim.world.resource_mut::<PendingConsequenceRegistry>();
         cons_reg.register(
             101,
-            TriggerCondition::TimeElapsed { duration_ticks: 336 }, // 14 days
+            TriggerCondition::TimeElapsed {
+                duration_ticks: 336,
+            }, // 14 days
             ConsequenceType::FraternalLaborStrain {
                 elder: CitizenId(6),
                 junior: CitizenId(12),
@@ -26,7 +28,9 @@ fn main() {
         );
         cons_reg.register(
             202,
-            TriggerCondition::TimeElapsed { duration_ticks: 720 }, // 30 days
+            TriggerCondition::TimeElapsed {
+                duration_ticks: 720,
+            }, // 30 days
             ConsequenceType::CropBlightDispute {
                 farmer_a: CitizenId(3),
                 farmer_b: CitizenId(13),
@@ -103,10 +107,27 @@ fn main() {
         );
 
         // Strict bound assertions
-        assert!(is_ok, "Invariant failure at checkpoint {}: {:?}", i + 1, inv_res);
-        assert!(max_transient <= 12, "INV-5 FAIL: Transient memory exceeded limit of 12 (got {})", max_transient);
-        assert!(max_anchors <= 6, "INV-5 FAIL: Anchor memory exceeded limit of 6 (got {})", max_anchors);
-        assert!(max_epistemic <= 32, "INV-7 FAIL: Epistemic state exceeded limit of 32 (got {})", max_epistemic);
+        assert!(
+            is_ok,
+            "Invariant failure at checkpoint {}: {:?}",
+            i + 1,
+            inv_res
+        );
+        assert!(
+            max_transient <= 12,
+            "INV-5 FAIL: Transient memory exceeded limit of 12 (got {})",
+            max_transient
+        );
+        assert!(
+            max_anchors <= 6,
+            "INV-5 FAIL: Anchor memory exceeded limit of 6 (got {})",
+            max_anchors
+        );
+        assert!(
+            max_epistemic <= 32,
+            "INV-7 FAIL: Epistemic state exceeded limit of 32 (got {})",
+            max_epistemic
+        );
 
         checkpoints.push(format!(
             "{{\"day\": {}, \"tick\": {}, \"hash\": \"{:016x}\", \"invariants_pass\": {}, \"living_npcs\": {}, \"max_transient_mem\": {}, \"max_anchor_mem\": {}, \"max_epistemic_nodes\": {}, \"active_consequences\": {}, \"matured_consequences\": {}, \"resolved_consequences\": {}, \"step_duration_us\": {}}}",
@@ -119,7 +140,10 @@ fn main() {
 
     let total_duration = start.elapsed();
     let tps = (total_ticks as f64) / total_duration.as_secs_f64();
-    println!("[SOAK] COMPLETED {} ticks in {:?} ({:.0} ticks/sec)", total_ticks, total_duration, tps);
+    println!(
+        "[SOAK] COMPLETED {} ticks in {:?} ({:.0} ticks/sec)",
+        total_ticks, total_duration, tps
+    );
 
     let json = format!(
         "{{\n  \"campaign\": \"GODSEED_VS2\",\n  \"total_ticks\": {},\n  \"simulated_days\": {:.1},\n  \"duration_ms\": {},\n  \"ticks_per_sec\": {:.1},\n  \"invariants_all_passed\": true,\n  \"memory_bounds_strictly_held\": true,\n  \"checkpoints\": [\n    {}\n  ]\n}}\n",

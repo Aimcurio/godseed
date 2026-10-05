@@ -2,7 +2,6 @@
 ///
 /// Newtype IDs, enums, and value types shared across all modules.
 /// Derived from CIVITAS-1M types.rs with Godseed extensions.
-
 use serde::{Deserialize, Serialize};
 
 // ── ID Types ─────────────────────────────────────────────────────────────────
@@ -17,7 +16,11 @@ impl CitizenId {
 
 impl std::fmt::Display for CitizenId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if self.0 == 0 { write!(f, "PLAYER") } else { write!(f, "NPC#{}", self.0) }
+        if self.0 == 0 {
+            write!(f, "PLAYER")
+        } else {
+            write!(f, "NPC#{}", self.0)
+        }
     }
 }
 
@@ -102,9 +105,14 @@ pub enum ResourceType {
 
 impl ResourceType {
     pub const ALL: [ResourceType; 8] = [
-        ResourceType::Food, ResourceType::Timber, ResourceType::Stone,
-        ResourceType::Tools, ResourceType::Luxury, ResourceType::Herbs,
-        ResourceType::Ink, ResourceType::Parchment,
+        ResourceType::Food,
+        ResourceType::Timber,
+        ResourceType::Stone,
+        ResourceType::Tools,
+        ResourceType::Luxury,
+        ResourceType::Herbs,
+        ResourceType::Ink,
+        ResourceType::Parchment,
     ];
 
     pub fn display_name(&self) -> &'static str {
@@ -229,7 +237,13 @@ pub struct DecisionTrace {
 
 impl DecisionTrace {
     pub fn new(reason: ReasonCode, tick: u64, primary: f32, secondary: f32, ctx: u32) -> Self {
-        Self { reason, tick, primary_metric: primary, secondary_metric: secondary, context_id: ctx }
+        Self {
+            reason,
+            tick,
+            primary_metric: primary,
+            secondary_metric: secondary,
+            context_id: ctx,
+        }
     }
 }
 
@@ -267,11 +281,22 @@ pub enum TransformationPath {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum KnowledgeCategory {
-    NpcFact { about: CitizenId },
-    LocationFact { location: LocationId },
-    ResourceFact { resource: ResourceType, location: LocationId },
-    CapabilityPrerequisite { capability: CapabilityId },
-    TransformationClue { stage: u8 },
+    NpcFact {
+        about: CitizenId,
+    },
+    LocationFact {
+        location: LocationId,
+    },
+    ResourceFact {
+        resource: ResourceType,
+        location: LocationId,
+    },
+    CapabilityPrerequisite {
+        capability: CapabilityId,
+    },
+    TransformationClue {
+        stage: u8,
+    },
     SettlementHistory,
 }
 
@@ -301,8 +326,8 @@ pub enum MemoryEventType {
 pub struct MemoryEvent {
     pub tick: u64,
     pub event_type: MemoryEventType,
-    pub subject: CitizenId,   // who the event was about
-    pub impact: i8,            // -5 to +5 disposition impact
+    pub subject: CitizenId, // who the event was about
+    pub impact: i8,         // -5 to +5 disposition impact
     pub description: String,
 }
 
@@ -323,33 +348,76 @@ pub struct ReputationRecord {
     pub known_by_count: u32,
 }
 
-
 // ── Player Actions ────────────────────────────────────────────────────────────
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum PlayerAction {
-    Move { to: LocationId },
+    Move {
+        to: LocationId,
+    },
     Look,
-    Inspect { target: CitizenId },
-    InspectObject { object: ObjectId },
-    Talk { npc: CitizenId, topic: TalkTopic },
-    Offer { npc: CitizenId, exchange: Exchange },
-    Buy { resource: ResourceType, quantity: u32 },
-    Sell { resource: ResourceType, quantity: u32 },
-    PickUp { object: ObjectId },
-    Drop { object: ObjectId },
-    Work { occupation: OccupationType },
-    Practice { capability: CapabilityId },
-    LearnFrom { npc: CitizenId, capability: CapabilityId },
-    Inscribe { observation: String },
+    Inspect {
+        target: CitizenId,
+    },
+    InspectObject {
+        object: ObjectId,
+    },
+    Talk {
+        npc: CitizenId,
+        topic: TalkTopic,
+    },
+    Offer {
+        npc: CitizenId,
+        exchange: Exchange,
+    },
+    Buy {
+        resource: ResourceType,
+        quantity: u32,
+    },
+    Sell {
+        resource: ResourceType,
+        quantity: u32,
+    },
+    PickUp {
+        object: ObjectId,
+    },
+    Drop {
+        object: ObjectId,
+    },
+    Work {
+        occupation: OccupationType,
+    },
+    Practice {
+        capability: CapabilityId,
+    },
+    LearnFrom {
+        npc: CitizenId,
+        capability: CapabilityId,
+    },
+    Inscribe {
+        observation: String,
+    },
     StudyArchive,
-    Wait { ticks: u32 },
+    Wait {
+        ticks: u32,
+    },
     Sleep,
-    Save { path: String },
-    HelpWithFelling { npc: CitizenId },
-    Diagnose { location: LocationId },
-    DraftDocument { doc_type: DocumentType },
-    ArbitrateDispute { document_id: u32, consequence_id: u32 },
+    Save {
+        path: String,
+    },
+    HelpWithFelling {
+        npc: CitizenId,
+    },
+    Diagnose {
+        location: LocationId,
+    },
+    DraftDocument {
+        doc_type: DocumentType,
+    },
+    ArbitrateDispute {
+        document_id: u32,
+        consequence_id: u32,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -384,18 +452,45 @@ pub struct ActionResult {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum SideEffect {
-    RelationshipChanged { npc: CitizenId, delta: i16 },
-    ResourceGained { resource: ResourceType, quantity: u32 },
-    ResourceLost { resource: ResourceType, quantity: u32 },
+    RelationshipChanged {
+        npc: CitizenId,
+        delta: i16,
+    },
+    ResourceGained {
+        resource: ResourceType,
+        quantity: u32,
+    },
+    ResourceLost {
+        resource: ResourceType,
+        quantity: u32,
+    },
     CoinsGained(f64),
     CoinsLost(f64),
-    CapabilityGained { capability: CapabilityId, level: CapabilityLevel },
-    KnowledgeGained { node: KnowledgeNodeId },
-    TransformationProgress { stage: u8, progress: u16 },
-    ReputationChanged { group: SocialGroupId, delta: i16 },
-    PlayerMoved { to: LocationId },
-    DocumentCreated { id: u32 },
-    DisputeArbitrated { consequence_id: u32, document_id: u32 },
+    CapabilityGained {
+        capability: CapabilityId,
+        level: CapabilityLevel,
+    },
+    KnowledgeGained {
+        node: KnowledgeNodeId,
+    },
+    TransformationProgress {
+        stage: u8,
+        progress: u16,
+    },
+    ReputationChanged {
+        group: SocialGroupId,
+        delta: i16,
+    },
+    PlayerMoved {
+        to: LocationId,
+    },
+    DocumentCreated {
+        id: u32,
+    },
+    DisputeArbitrated {
+        consequence_id: u32,
+        document_id: u32,
+    },
 }
 
 // ── Sim Clock ─────────────────────────────────────────────────────────────────
@@ -406,14 +501,24 @@ pub struct SimClock {
 }
 
 impl SimClock {
-    pub fn new() -> Self { Self { tick: 0 } }
-    pub fn day(&self) -> u64 { self.tick / 24 }
-    pub fn hour(&self) -> u64 { self.tick % 24 }
-    pub fn month(&self) -> u64 { self.day() / 30 }
+    pub fn new() -> Self {
+        Self { tick: 0 }
+    }
+    pub fn day(&self) -> u64 {
+        self.tick / 24
+    }
+    pub fn hour(&self) -> u64 {
+        self.tick % 24
+    }
+    pub fn month(&self) -> u64 {
+        self.day() / 30
+    }
 }
 
 impl Default for SimClock {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 // ── Map Cell ──────────────────────────────────────────────────────────────────
@@ -486,9 +591,9 @@ pub struct KnowledgeDefinition {
 /// Compact 4-byte Triad Relational Bond (Sentiment, Trust, Obligation)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct RelationalBond {
-    pub sentiment: i8,    // -100 to +100 (Emotional Warmth vs. Hostility)
-    pub trust: i8,        // -100 to +100 (Reliability vs. Suspicion)
-    pub obligation: i16,  // -1000 to +1000 (Positive = owes target, Negative = target owes)
+    pub sentiment: i8,   // -100 to +100 (Emotional Warmth vs. Hostility)
+    pub trust: i8,       // -100 to +100 (Reliability vs. Suspicion)
+    pub obligation: i16, // -1000 to +1000 (Positive = owes target, Negative = target owes)
 }
 
 impl RelationalBond {
@@ -519,7 +624,11 @@ impl RelationalBond {
 
 impl Default for RelationalBond {
     fn default() -> Self {
-        Self { sentiment: 0, trust: 0, obligation: 0 }
+        Self {
+            sentiment: 0,
+            trust: 0,
+            obligation: 0,
+        }
     }
 }
 
@@ -583,19 +692,38 @@ pub enum ConsequenceType {
 /// Typed inscribed documents created through scholar documentary authority (AC-205, Architecture Sec 12)
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum DocumentType {
-    DebtReliefCharter { creditor: CitizenId, debtor: CitizenId, terms: u32 },
-    HarvestDiagnosisReport { location: LocationId, finding: u16 },
-    FoundingArchiveTranslation { secret_id: u16 },
+    DebtReliefCharter {
+        creditor: CitizenId,
+        debtor: CitizenId,
+        terms: u32,
+    },
+    HarvestDiagnosisReport {
+        location: LocationId,
+        finding: u16,
+    },
+    FoundingArchiveTranslation {
+        secret_id: u16,
+    },
 }
 
 impl DocumentType {
     pub fn title(&self) -> String {
         match self {
-            DocumentType::DebtReliefCharter { creditor, debtor, terms } => {
-                format!("Charter of Debt Relief: Citizen {} to Citizen {} ({} coins)", creditor.0, debtor.0, terms)
+            DocumentType::DebtReliefCharter {
+                creditor,
+                debtor,
+                terms,
+            } => {
+                format!(
+                    "Charter of Debt Relief: Citizen {} to Citizen {} ({} coins)",
+                    creditor.0, debtor.0, terms
+                )
             }
             DocumentType::HarvestDiagnosisReport { location, finding } => {
-                format!("Official Harvest & Soil Diagnosis for Location #{} (Finding #{})", location.0, finding)
+                format!(
+                    "Official Harvest & Soil Diagnosis for Location #{} (Finding #{})",
+                    location.0, finding
+                )
             }
             DocumentType::FoundingArchiveTranslation { secret_id } => {
                 format!("Ancient Inscription Translation: Record #{}", secret_id)
@@ -632,4 +760,3 @@ pub struct PendingConsequence {
     pub consequence_type: ConsequenceType,
     pub created_tick: u64,
 }
-

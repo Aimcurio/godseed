@@ -1,9 +1,8 @@
 /// Market System — weekly price discovery and household consumption
-
 use bevy_ecs::prelude::*;
 
-use crate::components::{CitizenMeta, PhysicalNeeds, SettlementRef};
 use crate::components::PlayerMarker;
+use crate::components::{CitizenMeta, PhysicalNeeds, SettlementRef};
 use crate::events::SimEvent;
 use crate::resources::EventRing;
 use crate::settlement::SettlementDirectory;
@@ -55,8 +54,12 @@ pub fn household_consumption_system(
 
     // Each NPC consumes 0.15 food units per 7-tick cycle (~0.5/day, 3.5/week)
     for (meta, mut needs, settlement_ref) in query.iter_mut() {
-        if !meta.alive { continue; }
-        if settlement_ref.settlement_id != sid { continue; }
+        if !meta.alive {
+            continue;
+        }
+        if settlement_ref.settlement_id != sid {
+            continue;
+        }
 
         if let Some(settlement) = settlements.get_mut(sid) {
             if settlement.remove_stock(0, 0.15) {
@@ -66,8 +69,6 @@ pub fn household_consumption_system(
         }
     }
 }
-
-
 
 fn resource_from_ordinal(ordinal: usize) -> ResourceType {
     match ordinal {

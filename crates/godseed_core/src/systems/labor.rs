@@ -1,9 +1,8 @@
 /// Labor System — weekly wage payments to NPCs
-
 use bevy_ecs::prelude::*;
 
-use crate::components::{CitizenMeta, OccupationProfile, PersonalFinances};
 use crate::components::PlayerMarker;
+use crate::components::{CitizenMeta, OccupationProfile, PersonalFinances};
 use crate::settlement::SettlementDirectory;
 use crate::types::OccupationType;
 
@@ -25,13 +24,18 @@ fn base_daily_wage(occ: OccupationType) -> f32 {
 
 /// Weekly: pay wages to working NPCs from settlement economy
 pub fn labor_market_system(
-    mut query: Query<(&CitizenMeta, &OccupationProfile, &mut PersonalFinances), Without<PlayerMarker>>,
+    mut query: Query<
+        (&CitizenMeta, &OccupationProfile, &mut PersonalFinances),
+        Without<PlayerMarker>,
+    >,
     mut settlements: ResMut<SettlementDirectory>,
 ) {
     let sid = SettlementDirectory::thornveil_id();
 
     for (meta, occ, mut finances) in query.iter_mut() {
-        if !meta.alive { continue; }
+        if !meta.alive {
+            continue;
+        }
 
         let daily_wage = base_daily_wage(occ.occupation) * occ.skill_level as f32;
         let periodic_wage = daily_wage * (7.0 / 24.0);
@@ -43,6 +47,5 @@ pub fn labor_market_system(
                 finances.last_income = periodic_wage;
             }
         }
-
     }
 }

@@ -1,5 +1,4 @@
 /// Godseed — TelemetryEventType (in types to break circular deps)
-
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

@@ -27,8 +27,14 @@ fn test_epistemic_state_and_corroborating_gossip() {
                 assert!(epistemic.has_knowledge(7));
             }
         }
-        assert!(tomas_knows_timber, "Tomas Birch must start with Timber Stress knowledge (ID 1)");
-        assert!(voss_knows_exile, "Elder Voss must start with Exiled Son knowledge (ID 5)");
+        assert!(
+            tomas_knows_timber,
+            "Tomas Birch must start with Timber Stress knowledge (ID 1)"
+        );
+        assert!(
+            voss_knows_exile,
+            "Elder Voss must start with Exiled Son knowledge (ID 5)"
+        );
     }
 
     // 2. Direct Player Discovery: Player learns from Forester Tomas Birch
@@ -59,7 +65,10 @@ fn test_epistemic_state_and_corroborating_gossip() {
     // Verify Player has learned Knowledge ID 1 (Timber Stress)
     {
         let mut query = sim.world.query_filtered::<&EpistemicState, bevy_ecs::prelude::With<godseed_core::components::PlayerMarker>>();
-        let player_epistemic = query.iter(&sim.world).next().expect("Player must have EpistemicState");
+        let player_epistemic = query
+            .iter(&sim.world)
+            .next()
+            .expect("Player must have EpistemicState");
         assert!(
             player_epistemic.has_knowledge(1),
             "Player must acquire Timber Stress (ID 1) after discussing forestry work"
@@ -85,7 +94,9 @@ fn test_epistemic_state_and_corroborating_gossip() {
     // Share Knowledge ID 1 with Mira
     sim.push_action(PlayerAction::Talk {
         npc: CitizenId(1),
-        topic: TalkTopic::ShareKnowledge { node: KnowledgeNodeId(1) },
+        topic: TalkTopic::ShareKnowledge {
+            node: KnowledgeNodeId(1),
+        },
     });
     sim.step();
     assert!(sim.drain_results()[0].success);
@@ -100,7 +111,10 @@ fn test_epistemic_state_and_corroborating_gossip() {
                 assert_eq!(epistemic.get_corroboration(1), 1);
             }
         }
-        assert!(mira_learned, "Mira Ashbridge must have acquired Knowledge ID 1 from player");
+        assert!(
+            mira_learned,
+            "Mira Ashbridge must have acquired Knowledge ID 1 from player"
+        );
     }
 
     // 4. Asymmetric Autonomous Gossip & Corroboration Cycle:
@@ -122,7 +136,11 @@ fn test_epistemic_state_and_corroborating_gossip() {
         let mut query = gossip_sim.world.query::<(&CitizenMeta, &EpistemicState)>();
         for (meta, epistemic) in query.iter(&gossip_sim.world) {
             if meta.id == CitizenId(10) {
-                assert_eq!(epistemic.known.len(), 0, "Aldous must start with 0 knowledge nodes");
+                assert_eq!(
+                    epistemic.known.len(),
+                    0,
+                    "Aldous must start with 0 knowledge nodes"
+                );
             }
         }
     }
@@ -135,8 +153,11 @@ fn test_epistemic_state_and_corroborating_gossip() {
         let mut query = gossip_sim.world.query::<(&CitizenMeta, &EpistemicState)>();
         for (meta, epistemic) in query.iter(&gossip_sim.world) {
             if meta.id == CitizenId(10) {
-                assert!(epistemic.known.len() > 0, "Aldous must have received knowledge from Voss");
-                for (_, (_, corr)) in &epistemic.known {
+                assert!(
+                    !epistemic.known.is_empty(),
+                    "Aldous must have received knowledge from Voss"
+                );
+                for (_, corr) in epistemic.known.values() {
                     assert_eq!(*corr, 1, "Novel transfer must establish corroboration = 1");
                 }
             }
@@ -151,8 +172,11 @@ fn test_epistemic_state_and_corroborating_gossip() {
         let mut query = gossip_sim.world.query::<(&CitizenMeta, &EpistemicState)>();
         for (meta, epistemic) in query.iter(&gossip_sim.world) {
             if meta.id == CitizenId(10) {
-                for (_, (_, corr)) in &epistemic.known {
-                    assert_eq!(*corr, 2, "Second transfer must increment corroboration to 2");
+                for (_, corr) in epistemic.known.values() {
+                    assert_eq!(
+                        *corr, 2,
+                        "Second transfer must increment corroboration to 2"
+                    );
                 }
             }
         }
@@ -165,7 +189,7 @@ fn test_epistemic_state_and_corroborating_gossip() {
         let mut query = gossip_sim.world.query::<(&CitizenMeta, &EpistemicState)>();
         for (meta, epistemic) in query.iter(&gossip_sim.world) {
             if meta.id == CitizenId(10) {
-                for (_, (_, corr)) in &epistemic.known {
+                for (_, corr) in epistemic.known.values() {
                     assert_eq!(*corr, 3, "Third transfer must reach saturation at 3");
                 }
             }
@@ -175,7 +199,10 @@ fn test_epistemic_state_and_corroborating_gossip() {
     // Record event count before fourth transmission
     let events_before = {
         let ring = gossip_sim.world.resource::<EventRing>();
-        ring.events.iter().filter(|e| matches!(e, SimEvent::KnowledgeShared { .. })).count()
+        ring.events
+            .iter()
+            .filter(|e| matches!(e, SimEvent::KnowledgeShared { .. }))
+            .count()
     };
 
     // Step 4: Fourth gossip transmission — should trigger No-Op Suppression (AC-204)
@@ -183,7 +210,10 @@ fn test_epistemic_state_and_corroborating_gossip() {
 
     let events_after = {
         let ring = gossip_sim.world.resource::<EventRing>();
-        ring.events.iter().filter(|e| matches!(e, SimEvent::KnowledgeShared { .. })).count()
+        ring.events
+            .iter()
+            .filter(|e| matches!(e, SimEvent::KnowledgeShared { .. }))
+            .count()
     };
 
     assert_eq!(

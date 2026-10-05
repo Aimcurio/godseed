@@ -1,20 +1,18 @@
+use crc32fast::Hasher as CrcHasher;
 /// Godseed — Persistence (bincode + CRC32, Version 2 with V1 upward migration)
-
 use serde::{Deserialize, Serialize};
 use std::io::{self, Read, Write};
-use crc32fast::Hasher as CrcHasher;
 
 use crate::components::{
-    CausalAudit, CapabilitySet, CitizenMeta, Demographics, Disposition,
-    EpisodicMemory, EpistemicState, HouseholdRef,
-    Inventory, Kinship, KnowledgeInventory, MobilityProfile, NpcGoals, NpcMemory, NpcSchedule,
-    OccupationProfile, PersonalFinances, PhysicalNeeds, RelationalLedger, SettlementRef,
-    TransformationState,
+    CapabilitySet, CausalAudit, CitizenMeta, Demographics, Disposition, EpisodicMemory,
+    EpistemicState, HouseholdRef, Inventory, Kinship, KnowledgeInventory, MobilityProfile,
+    NpcGoals, NpcMemory, NpcSchedule, OccupationProfile, PersonalFinances, PhysicalNeeds,
+    RelationalLedger, SettlementRef, TransformationState,
 };
 use crate::household::HouseholdDirectory;
 use crate::resources::{
-    DocumentRegistry, EventRing, PendingConsequenceRegistry,
-    RelationshipLedger, ReputationRegistry, ReturnDigestLog,
+    DocumentRegistry, EventRing, PendingConsequenceRegistry, RelationshipLedger,
+    ReputationRegistry, ReturnDigestLog,
 };
 use crate::settlement::SettlementDirectory;
 use crate::types::SimClock;
@@ -133,16 +131,19 @@ pub fn migrate_v1_to_v2(v1: SimulationSnapshotV1) -> SimulationSnapshot {
                     ep.known.insert(node as u16, (v1.clock.tick, 1));
                 }
             }
-            (
-                None,
-                Some(RelationalLedger::new()),
-                Some(ep),
-            )
+            (None, Some(RelationalLedger::new()), Some(ep))
         } else {
             let mut ledger = RelationalLedger::new();
-            let base_rel = v1.relationships.get(c.meta.id, crate::types::CitizenId::PLAYER);
+            let base_rel = v1
+                .relationships
+                .get(c.meta.id, crate::types::CitizenId::PLAYER);
             if base_rel != 0 {
-                ledger.adjust(crate::types::CitizenId::PLAYER, base_rel.clamp(-100, 100) as i8, 0, 0);
+                ledger.adjust(
+                    crate::types::CitizenId::PLAYER,
+                    base_rel.clamp(-100, 100) as i8,
+                    0,
+                    0,
+                );
             }
             (
                 Some(EpisodicMemory::new()),
@@ -198,12 +199,8 @@ pub fn migrate_v1_to_v2(v1: SimulationSnapshotV1) -> SimulationSnapshot {
 
 /// Serialize and write a simulation snapshot (Version 2) to a writer.
 /// Format: MAGIC_V2(8) + VERSION(4) + DATA(n) + CRC32(4)
-pub fn save_snapshot<W: Write>(
-    snapshot: &SimulationSnapshot,
-    writer: &mut W,
-) -> io::Result<()> {
-    let data = bincode::serialize(snapshot)
-        .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+pub fn save_snapshot<W: Write>(snapshot: &SimulationSnapshot, writer: &mut W) -> io::Result<()> {
+    let data = bincode::serialize(snapshot).map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
 
     let mut hasher = CrcHasher::new();
     hasher.update(&data);
@@ -221,8 +218,7 @@ pub fn save_snapshot_v1<W: Write>(
     snapshot: &SimulationSnapshotV1,
     writer: &mut W,
 ) -> io::Result<()> {
-    let data = bincode::serialize(snapshot)
-        .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+    let data = bincode::serialize(snapshot).map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
 
     let mut hasher = CrcHasher::new();
     hasher.update(&data);
@@ -241,7 +237,10 @@ pub fn load_snapshot<R: Read>(reader: &mut R) -> io::Result<SimulationSnapshot> 
     let mut header = [0u8; 12]; // 8 bytes magic + 4 bytes version
     reader.read_exact(&mut header).map_err(|e| {
         if e.kind() == io::ErrorKind::UnexpectedEof {
-            io::Error::new(io::ErrorKind::InvalidData, "Save file truncated or too short")
+            io::Error::new(
+                io::ErrorKind::InvalidData,
+                "Save file truncated or too short",
+            )
         } else {
             e
         }
@@ -253,14 +252,22 @@ pub fn load_snapshot<R: Read>(reader: &mut R) -> io::Result<SimulationSnapshot> 
     if magic != MAGIC_V2 && magic != MAGIC_V1 {
         return Err(io::Error::new(
             io::ErrorKind::InvalidData,
-            format!("Invalid save file magic: {:?}", String::from_utf8_lossy(magic)),
+            format!(
+                "Invalid save file magic: {:?}",
+                String::from_utf8_lossy(magic)
+            ),
         ));
     }
 
-    if (magic == MAGIC_V2 && version > FORMAT_VERSION_V2) || (magic == MAGIC_V1 && version > FORMAT_VERSION_V1) {
+    if (magic == MAGIC_V2 && version > FORMAT_VERSION_V2)
+        || (magic == MAGIC_V1 && version > FORMAT_VERSION_V1)
+    {
         return Err(io::Error::new(
             io::ErrorKind::InvalidData,
-            format!("Unsupported future save format version {} (expected at most {})", version, FORMAT_VERSION_V2),
+            format!(
+                "Unsupported future save format version {} (expected at most {})",
+                version, FORMAT_VERSION_V2
+            ),
         ));
     }
 
@@ -269,7 +276,10 @@ pub fn load_snapshot<R: Read>(reader: &mut R) -> io::Result<SimulationSnapshot> 
     reader.read_to_end(&mut all_bytes)?;
 
     if all_bytes.len() < 4 {
-        return Err(io::Error::new(io::ErrorKind::InvalidData, "Save file truncated or too short"));
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            "Save file truncated or too short",
+        ));
     }
 
     let (data_bytes, crc_bytes) = all_bytes.split_at(all_bytes.len() - 4);
@@ -282,7 +292,10 @@ pub fn load_snapshot<R: Read>(reader: &mut R) -> io::Result<SimulationSnapshot> 
     if stored_crc != computed_crc {
         return Err(io::Error::new(
             io::ErrorKind::InvalidData,
-            format!("CRC32 mismatch: stored={:#x} computed={:#x}", stored_crc, computed_crc),
+            format!(
+                "CRC32 mismatch: stored={:#x} computed={:#x}",
+                stored_crc, computed_crc
+            ),
         ));
     }
 
@@ -312,4 +325,3 @@ pub fn load_snapshot<R: Read>(reader: &mut R) -> io::Result<SimulationSnapshot> 
         unreachable!()
     }
 }
-

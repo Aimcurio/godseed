@@ -1,5 +1,4 @@
 /// Godseed — State hash for replay verification (FNV-1a, inherited from CIVITAS-1M)
-
 use bevy_ecs::prelude::*;
 use fnv::FnvHasher;
 use std::hash::{Hash, Hasher};
@@ -19,7 +18,12 @@ pub fn compute_authoritative_state_hash(world: &mut World) -> u64 {
     // Hash all citizen states (sorted by CitizenId for determinism)
     let mut citizen_states: Vec<(u64, u8, u64, i64)> = Vec::new();
 
-    let mut query = world.query::<(&CitizenMeta, &Demographics, &PhysicalNeeds, &PersonalFinances)>();
+    let mut query = world.query::<(
+        &CitizenMeta,
+        &Demographics,
+        &PhysicalNeeds,
+        &PersonalFinances,
+    )>();
     for (meta, demo, _needs, finances) in query.iter(world) {
         citizen_states.push((
             meta.id.0,

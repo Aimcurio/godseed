@@ -1,20 +1,22 @@
-use std::fs;
-use std::io::Cursor;
 use godseed_core::{
-    components::{CitizenMeta, Demographics, NpcSchedule, OccupationProfile, PhysicalNeeds, PlayerMarker},
+    components::{
+        CitizenMeta, Demographics, NpcSchedule, OccupationProfile, PhysicalNeeds, PlayerMarker,
+        RelationalLedger,
+    },
     content::caps,
     persistence::{
-        load_snapshot, save_snapshot, save_snapshot_v1, CitizenSnapshotV1,
-        SimulationSnapshotV1, FORMAT_VERSION_V1, FORMAT_VERSION_V2, MAGIC_V2,
+        load_snapshot, save_snapshot, save_snapshot_v1, CitizenSnapshotV1, SimulationSnapshotV1,
+        FORMAT_VERSION_V1, FORMAT_VERSION_V2, MAGIC_V2,
     },
     resources::{DocumentRegistry, PendingConsequenceRegistry, ReturnDigestLog},
     sim::Simulation,
     types::{
-        CitizenId, ConsequenceStage, ConsequenceType, DocumentType,
-        InscribedDocument, LocationId, OccupationType, PlayerAction,
-        ResourceType, TalkTopic, TriggerCondition,
+        CitizenId, ConsequenceStage, ConsequenceType, DocumentType, InscribedDocument, LocationId,
+        OccupationType, PlayerAction, RelationalBond, ResourceType, TalkTopic, TriggerCondition,
     },
 };
+use std::fs;
+use std::io::Cursor;
 
 // ── 1. Causal Continuity Across Save/Load (Section 11) ──────────────────────────
 
@@ -91,7 +93,9 @@ fn test_causal_continuity_across_save_load() {
 
     // Verify Runn Birch is now an Artisan working at Forge (Location 2)
     {
-        let mut query = loaded_sim.world.query::<(&CitizenMeta, &NpcSchedule, &OccupationProfile)>();
+        let mut query = loaded_sim
+            .world
+            .query::<(&CitizenMeta, &NpcSchedule, &OccupationProfile)>();
         let mut found_runn = false;
         for (meta, sched, occ) in query.iter(&loaded_sim.world) {
             if meta.id == CitizenId(12) {
@@ -106,7 +110,10 @@ fn test_causal_continuity_across_save_load() {
     // Verify ReturnDigestLog contains digest for Mira
     {
         let digest_log = loaded_sim.world.resource::<ReturnDigestLog>();
-        assert!(digest_log.find_digest_for(CitizenId(1)).is_some(), "Mira digest must exist");
+        assert!(
+            digest_log.find_digest_for(CitizenId(1)).is_some(),
+            "Mira digest must exist"
+        );
     }
 
     // Wait until hour 14 when Mira is behind the bar
@@ -165,11 +172,19 @@ fn test_proof_a_save_load_continuity() {
 
     // Verify Tomas recorded episodic memory anchor and relational delta
     let anchor_count_before = {
-        let mut q = sim.world.query::<(&CitizenMeta, &godseed_core::components::EpisodicMemory)>();
-        let (_, mem) = q.iter(&sim.world).find(|(m, _)| m.id == CitizenId(6)).unwrap();
+        let mut q = sim
+            .world
+            .query::<(&CitizenMeta, &godseed_core::components::EpisodicMemory)>();
+        let (_, mem) = q
+            .iter(&sim.world)
+            .find(|(m, _)| m.id == CitizenId(6))
+            .unwrap();
         mem.anchors.len()
     };
-    assert!(anchor_count_before >= 1, "Tomas must have an episodic memory anchor");
+    assert!(
+        anchor_count_before >= 1,
+        "Tomas must have an episodic memory anchor"
+    );
 
     // Save simulation
     let save_path = "saves/test_proof_a_save.gs2";
@@ -182,11 +197,25 @@ fn test_proof_a_save_load_continuity() {
 
     // Verify anchor and relational delta survived intact in loaded sim
     {
-        let mut q = loaded_sim.world.query::<(&CitizenMeta, &godseed_core::components::EpisodicMemory, &godseed_core::components::RelationalLedger)>();
-        let (_, mem, rel) = q.iter(&loaded_sim.world).find(|(m, _, _)| m.id == CitizenId(6)).unwrap();
-        assert_eq!(mem.anchors.len(), anchor_count_before, "Anchor count must survive save/load");
+        let mut q = loaded_sim.world.query::<(
+            &CitizenMeta,
+            &godseed_core::components::EpisodicMemory,
+            &godseed_core::components::RelationalLedger,
+        )>();
+        let (_, mem, rel) = q
+            .iter(&loaded_sim.world)
+            .find(|(m, _, _)| m.id == CitizenId(6))
+            .unwrap();
+        assert_eq!(
+            mem.anchors.len(),
+            anchor_count_before,
+            "Anchor count must survive save/load"
+        );
         let bond = rel.get_bond(CitizenId::PLAYER);
-        assert!(bond.sentiment > 40 && bond.trust > 40, "Tomas relational bond toward player must survive save/load");
+        assert!(
+            bond.sentiment > 40 && bond.trust > 40,
+            "Tomas relational bond toward player must survive save/load"
+        );
     }
 
     // Greet Tomas again: memory-aware response
@@ -198,7 +227,9 @@ fn test_proof_a_save_load_continuity() {
     let second_res = loaded_sim.drain_results();
     assert!(second_res[0].success);
     assert!(
-        second_res[0].message.contains("oak we brought down together"),
+        second_res[0]
+            .message
+            .contains("oak we brought down together"),
         "Tomas must acknowledge joint felling upon greeting: {}",
         second_res[0].message
     );
@@ -223,7 +254,9 @@ fn test_proof_b_save_load_continuity() {
     sim.step();
 
     // Practice Inscription
-    sim.push_action(PlayerAction::Practice { capability: caps::INSCRIPTION });
+    sim.push_action(PlayerAction::Practice {
+        capability: caps::INSCRIPTION,
+    });
     sim.step();
     sim.drain_results();
 
@@ -233,17 +266,23 @@ fn test_proof_b_save_load_continuity() {
     // Inscribe 5 observations
     for i in 1..=5 {
         sim.push_action(PlayerAction::Inscribe {
-            observation: format!("Field observation #{}: Inscribing communal dynamics in Thornveil.", i),
+            observation: format!(
+                "Field observation #{}: Inscribing communal dynamics in Thornveil.",
+                i
+            ),
         });
         sim.step();
     }
     sim.drain_results();
 
-    // Set relationship with Elder Voss > 60
+    // Set canonical VS2 relationship with Elder Voss > 60
     {
-        use godseed_core::resources::RelationshipLedger;
-        let mut rels = sim.world.resource_mut::<RelationshipLedger>();
-        rels.set(CitizenId::PLAYER, CitizenId(5), 75);
+        let mut q = sim.world.query::<(&CitizenMeta, &mut RelationalLedger)>();
+        let (_, mut ledger) = q
+            .iter_mut(&mut sim.world)
+            .find(|(meta, _)| meta.id == CitizenId(5))
+            .expect("Elder Voss should have a canonical relational ledger");
+        ledger.set_bond(CitizenId::PLAYER, RelationalBond::new(75, 75, 0));
     }
 
     // Advance 30 ticks to trigger Stage 2 (The Settlement Chronicler)
@@ -262,7 +301,9 @@ fn test_proof_b_save_load_continuity() {
     sim.drain_results();
 
     // Diagnose South Fields (loc 5)
-    sim.push_action(PlayerAction::Diagnose { location: LocationId(5) });
+    sim.push_action(PlayerAction::Diagnose {
+        location: LocationId(5),
+    });
     sim.step();
     let diag_res = sim.drain_results();
     assert!(diag_res[0].success);
@@ -272,7 +313,9 @@ fn test_proof_b_save_load_continuity() {
         location: LocationId(5),
         finding: 2,
     };
-    sim.push_action(PlayerAction::DraftDocument { doc_type: doc_type.clone() });
+    sim.push_action(PlayerAction::DraftDocument {
+        doc_type: doc_type.clone(),
+    });
     sim.step();
     let draft_res = sim.drain_results();
     assert!(draft_res[0].success);
@@ -295,7 +338,11 @@ fn test_proof_b_save_load_continuity() {
     // Verify DocumentRegistry survived save/load intact
     {
         let docs = loaded_sim.world.resource::<DocumentRegistry>();
-        assert_eq!(docs.documents.len(), 1, "DocumentRegistry must have 1 document after reload");
+        assert_eq!(
+            docs.documents.len(),
+            1,
+            "DocumentRegistry must have 1 document after reload"
+        );
         assert_eq!(docs.documents[0].doc_type, doc_type);
         assert!(docs.documents[0].signers.contains(&CitizenId::PLAYER));
     }
@@ -303,7 +350,9 @@ fn test_proof_b_save_load_continuity() {
     // Register active CropBlightDispute consequence
     let consequence_id = {
         let current_tick = loaded_sim.tick();
-        let mut reg = loaded_sim.world.resource_mut::<PendingConsequenceRegistry>();
+        let mut reg = loaded_sim
+            .world
+            .resource_mut::<PendingConsequenceRegistry>();
         reg.register(
             201,
             TriggerCondition::TimeElapsed { duration_ticks: 72 },
@@ -323,12 +372,20 @@ fn test_proof_b_save_load_continuity() {
     });
     loaded_sim.step();
     let arb_res = loaded_sim.drain_results();
-    assert!(arb_res[0].success, "Arbitration must succeed: {:?}", arb_res);
+    assert!(
+        arb_res[0].success,
+        "Arbitration must succeed: {:?}",
+        arb_res
+    );
 
     // Verify consequence resolved
     {
         let reg = loaded_sim.world.resource::<PendingConsequenceRegistry>();
-        let c = reg.consequences.iter().find(|c| c.id == consequence_id).unwrap();
+        let c = reg
+            .consequences
+            .iter()
+            .find(|c| c.id == consequence_id)
+            .unwrap();
         assert_eq!(c.stage, ConsequenceStage::Resolved);
     }
 
@@ -394,7 +451,10 @@ fn test_proof_c_save_load_continuity() {
     // Verify ReturnDigestLog is preserved across save/load
     {
         let digests = loaded_sim.world.resource::<ReturnDigestLog>();
-        assert!(digests.find_digest_for(CitizenId(1)).is_some(), "Mira digest must exist after load");
+        assert!(
+            digests.find_digest_for(CitizenId(1)).is_some(),
+            "Mira digest must exist after load"
+        );
     }
 
     // Wait until hour 14
@@ -421,7 +481,10 @@ fn test_proof_c_save_load_continuity() {
     // Verify digest consumed
     {
         let digests = loaded_sim.world.resource::<ReturnDigestLog>();
-        assert!(digests.find_digest_for(CitizenId(1)).is_none(), "Mira digest must be consumed");
+        assert!(
+            digests.find_digest_for(CitizenId(1)).is_none(),
+            "Mira digest must be consumed"
+        );
     }
 
     // Second greeting is steady-state
@@ -495,7 +558,8 @@ fn test_v1_to_v2_migration_verification() {
 
     // Load buffer using load_snapshot
     let mut cursor = Cursor::new(buffer);
-    let migrated_v2 = load_snapshot(&mut cursor).expect("load_snapshot must migrate V1 to V2 without error");
+    let migrated_v2 =
+        load_snapshot(&mut cursor).expect("load_snapshot must migrate V1 to V2 without error");
 
     assert_eq!(migrated_v2.version, FORMAT_VERSION_V2);
     assert_eq!(migrated_v2.citizens.len(), 16);
@@ -513,7 +577,10 @@ fn test_v1_to_v2_migration_verification() {
 
     // Load into Simulation and verify invariants pass
     let mut loaded_sim = Simulation::from_snapshot(migrated_v2);
-    assert!(loaded_sim.check_invariants().is_ok(), "Migrated V1 state must satisfy all invariants");
+    assert!(
+        loaded_sim.check_invariants().is_ok(),
+        "Migrated V1 state must satisfy all invariants"
+    );
 
     // Advance 24 ticks on loaded simulation without panic
     loaded_sim.advance(24);
@@ -545,7 +612,8 @@ fn test_malformed_and_future_header_rejections() {
         let mut cursor = Cursor::new(bytes);
         let err = load_snapshot(&mut cursor).unwrap_err();
         assert!(
-            err.to_string().contains("Unsupported future save format version"),
+            err.to_string()
+                .contains("Unsupported future save format version"),
             "Error must specify future version rejection, got: {}",
             err
         );
@@ -612,7 +680,9 @@ fn test_ghost_player_actions_fail_closed() {
 
     // Mark player as deceased
     {
-        let mut q = sim.world.query_filtered::<&mut CitizenMeta, bevy_ecs::prelude::With<PlayerMarker>>();
+        let mut q = sim
+            .world
+            .query_filtered::<&mut CitizenMeta, bevy_ecs::prelude::With<PlayerMarker>>();
         for mut meta in q.iter_mut(&mut sim.world) {
             meta.alive = false;
         }
@@ -674,7 +744,9 @@ fn test_ghost_player_actions_fail_closed() {
     assert_eq!(res[0].message, expected_msg);
 
     // 7. Practice
-    sim.push_action(PlayerAction::Practice { capability: caps::INSCRIPTION });
+    sim.push_action(PlayerAction::Practice {
+        capability: caps::INSCRIPTION,
+    });
     sim.step();
     let res = sim.drain_results();
     assert!(!res[0].success);
@@ -686,6 +758,23 @@ fn test_ghost_player_actions_fail_closed() {
     let res = sim.drain_results();
     assert!(!res[0].success);
     assert_eq!(res[0].message, expected_msg);
+}
+
+#[test]
+fn test_legacy_relationship_ledger_is_migration_only() {
+    let mut sim = Simulation::new();
+    assert!(
+        sim.world
+            .get_resource::<godseed_core::resources::RelationshipLedger>()
+            .is_none(),
+        "V2 runtime must not install legacy RelationshipLedger as a gameplay resource"
+    );
+
+    let snapshot = sim.build_snapshot();
+    assert!(
+        snapshot.relationships.values.is_empty(),
+        "V2 snapshots preserve the legacy field only as an inert compatibility shell"
+    );
 }
 
 // ── 8. Consequence Guard & Arbitration Mismatch (Section 19) ────────────────────
@@ -720,7 +809,10 @@ fn test_consequence_guard_and_arbitration_mismatch() {
     sim.step();
     let res2 = sim.drain_results();
     assert!(!res2[0].success);
-    assert!(res2[0].message.contains("already assisted") || res2[0].message.contains("already unfolding"));
+    assert!(
+        res2[0].message.contains("already assisted")
+            || res2[0].message.contains("already unfolding")
+    );
 
     // Verify exactly one consequence registered
     {
@@ -773,7 +865,9 @@ fn test_consequence_guard_and_arbitration_mismatch() {
     assert!(!mismatch_res[0].success);
     assert!(
         mismatch_res[0].message.contains("not legally applicable")
-            || mismatch_res[0].message.contains("does not address this dispute"),
+            || mismatch_res[0]
+                .message
+                .contains("does not address this dispute"),
         "Arbitration with mismatched document must fail closed: {}",
         mismatch_res[0].message
     );

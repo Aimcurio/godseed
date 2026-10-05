@@ -81,7 +81,10 @@ fn test_adversarial_overspending_coins() {
     sim.step();
     let res = sim.drain_results();
 
-    assert!(!res[0].success, "Purchasing beyond available coins must fail");
+    assert!(
+        !res[0].success,
+        "Purchasing beyond available coins must fail"
+    );
     assert_eq!(
         sim.summary().player.unwrap().coins,
         initial_coins,
@@ -129,7 +132,11 @@ fn test_adversarial_invalid_magic_header() {
     let load_res = load_snapshot(&mut cursor);
 
     assert!(load_res.is_err());
-    assert!(load_res.err().unwrap().to_string().contains("Invalid save file magic"));
+    assert!(load_res
+        .err()
+        .unwrap()
+        .to_string()
+        .contains("Invalid save file magic"));
 }
 
 #[test]
@@ -143,7 +150,10 @@ fn test_performance_tick_rate() {
     let duration = start.elapsed();
     let ticks_per_sec = (ticks as f64) / duration.as_secs_f64();
 
-    println!("Performance: {} ticks in {:?} ({:.0} ticks/sec)", ticks, duration, ticks_per_sec);
+    println!(
+        "Performance: {} ticks in {:?} ({:.0} ticks/sec)",
+        ticks, duration, ticks_per_sec
+    );
     assert!(
         ticks_per_sec > 500.0,
         "Simulation throughput must exceed 500 ticks/sec (measured: {:.0})",

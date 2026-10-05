@@ -1,5 +1,4 @@
 /// Godseed — Household management
-
 use bevy_ecs::system::Resource;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -8,7 +7,6 @@ use crate::types::{CitizenId, HouseholdId, SettlementId};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Household {
-
     pub id: HouseholdId,
     pub settlement_id: SettlementId,
     pub head: CitizenId,
@@ -41,20 +39,24 @@ impl Household {
         self.members.retain(|m| *m != member);
     }
 
-    pub fn size(&self) -> usize { self.members.len() }
+    pub fn size(&self) -> usize {
+        self.members.len()
+    }
 }
 
 /// Resource holding all households
 #[derive(Resource, Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 pub struct HouseholdDirectory {
-
     pub households: HashMap<u32, Household>, // HouseholdId.0 → Household
     pub next_id: u32,
 }
 
 impl HouseholdDirectory {
     pub fn new() -> Self {
-        Self { households: HashMap::new(), next_id: 1 }
+        Self {
+            households: HashMap::new(),
+            next_id: 1,
+        }
     }
 
     pub fn get(&self, id: HouseholdId) -> Option<&Household> {

@@ -1,5 +1,4 @@
 /// Godseed — Machine-Checkable Invariants
-
 use bevy_ecs::prelude::*;
 
 use crate::components::{CitizenMeta, HouseholdRef, PlayerMarker};
@@ -14,7 +13,10 @@ pub fn verify_invariants(world: &mut World) -> Result<(), Vec<String>> {
         let mut q = world.query::<&PlayerMarker>();
         let count = q.iter(world).count();
         if count != 1 {
-            violations.push(format!("INV-1 FAIL: Expected exactly 1 PlayerMarker, found {}", count));
+            violations.push(format!(
+                "INV-1 FAIL: Expected exactly 1 PlayerMarker, found {}",
+                count
+            ));
         }
     }
 
@@ -23,7 +25,9 @@ pub fn verify_invariants(world: &mut World) -> Result<(), Vec<String>> {
         let mut q = world.query::<(&CitizenMeta, &HouseholdRef)>();
         let households = world.resource::<HouseholdDirectory>();
         for (meta, hh_ref) in q.iter(world) {
-            if !meta.alive { continue; }
+            if !meta.alive {
+                continue;
+            }
             if households.get(hh_ref.household_id).is_none() {
                 violations.push(format!(
                     "INV-2 FAIL: Living citizen {} references non-existent household {}",
@@ -67,13 +71,15 @@ pub fn verify_invariants(world: &mut World) -> Result<(), Vec<String>> {
             if mem.transient.len() > 12 {
                 violations.push(format!(
                     "INV-5 FAIL: Citizen {} transient memory exceeded limit: {} > 12",
-                    meta.id.0, mem.transient.len()
+                    meta.id.0,
+                    mem.transient.len()
                 ));
             }
             if mem.anchors.len() > 6 {
                 violations.push(format!(
                     "INV-5 FAIL: Citizen {} anchor memory exceeded limit: {} > 6",
-                    meta.id.0, mem.anchors.len()
+                    meta.id.0,
+                    mem.anchors.len()
                 ));
             }
         }
@@ -99,7 +105,8 @@ pub fn verify_invariants(world: &mut World) -> Result<(), Vec<String>> {
         use crate::components::EpistemicState;
         use crate::content::ContentDefinitions;
         if let Some(content) = world.get_resource::<ContentDefinitions>() {
-            let valid_ids: std::collections::HashSet<u16> = content.knowledge_definitions.iter().map(|k| k.id).collect();
+            let valid_ids: std::collections::HashSet<u16> =
+                content.knowledge_definitions.iter().map(|k| k.id).collect();
             let mut q = world.query::<(&CitizenMeta, &EpistemicState)>();
             for (meta, epistemic) in q.iter(world) {
                 for &k_id in epistemic.known.keys() {

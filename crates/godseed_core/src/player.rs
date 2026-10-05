@@ -1,16 +1,16 @@
 /// Godseed — Player entity spawning
-
 use bevy_ecs::prelude::*;
 
 use crate::components::{
-    CausalAudit, CapabilitySet, CitizenMeta, Demographics, EpistemicState, HouseholdRef, Inventory,
+    CapabilitySet, CausalAudit, CitizenMeta, Demographics, EpistemicState, HouseholdRef, Inventory,
     Kinship, KnowledgeInventory, MobilityProfile, OccupationProfile, PersonalFinances,
-    PhysicalNeeds, PlayerInputBuffer, PlayerMarker, RelationalLedger, SettlementRef, TransformationState,
+    PhysicalNeeds, PlayerInputBuffer, PlayerMarker, RelationalLedger, SettlementRef,
+    TransformationState,
 };
 use crate::household::{Household, HouseholdDirectory};
 use crate::types::{
-    CitizenId, DecisionTrace, Gender, HouseholdRole, MigrationStatus,
-    OccupationType, ReasonCode, SettlementId,
+    CitizenId, DecisionTrace, Gender, HouseholdRole, MigrationStatus, OccupationType, ReasonCode,
+    SettlementId,
 };
 use crate::world::WorldMap;
 
@@ -99,4 +99,3 @@ pub fn spawn_player(world: &mut World) -> Entity {
 
     entity.id()
 }
-

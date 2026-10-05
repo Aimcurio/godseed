@@ -2,20 +2,22 @@
 ///
 /// Text-terminal RPG interface for the Godseed simulation.
 /// Renders simulation state; reads player commands; drives simulation ticks.
-
 use std::io::{self, BufRead, Write};
 
 use clap::Parser;
 use godseed_core::{
     sim::Simulation,
     types::{
-        CapabilityId, CitizenId, DocumentType, LocationId, OccupationType,
-        PlayerAction, ResourceType, SideEffect, TalkTopic,
+        CapabilityId, CitizenId, DocumentType, LocationId, OccupationType, PlayerAction,
+        ResourceType, SideEffect, TalkTopic,
     },
 };
 
 #[derive(Parser, Debug)]
-#[command(name = "godseed", about = "Godseed — A persistent world simulation RPG")]
+#[command(
+    name = "godseed",
+    about = "Godseed — A persistent world simulation RPG"
+)]
 struct Args {
     /// Load a save file
     #[arg(short, long)]
@@ -64,7 +66,12 @@ fn main() -> io::Result<()> {
 
     // Headless persona mode (for life tests)
     if let Some(persona_name) = &args.persona {
-        return run_headless_persona(&mut sim, persona_name, args.headless_ticks, args.telemetry_out.as_deref());
+        return run_headless_persona(
+            &mut sim,
+            persona_name,
+            args.headless_ticks,
+            args.telemetry_out.as_deref(),
+        );
     }
 
     // Interactive terminal mode
@@ -75,7 +82,7 @@ fn main() -> io::Result<()> {
 
 fn run_interactive(sim: &mut Simulation) -> io::Result<()> {
     print_banner();
-    
+
     // Initial Look
     sim.push_action(PlayerAction::Look);
     sim.step();
@@ -97,7 +104,9 @@ fn run_interactive(sim: &mut Simulation) -> io::Result<()> {
         }
 
         let raw = input_line.trim().to_string();
-        if raw.is_empty() { continue; }
+        if raw.is_empty() {
+            continue;
+        }
 
         match parse_command(&raw, sim) {
             Ok(Some(action)) => {
@@ -145,20 +154,28 @@ fn print_status(sim: &mut Simulation) {
     if let Some(player) = &summary.player {
         let loc_name = {
             let world_map = sim.world.resource::<godseed_core::world::WorldMap>();
-            world_map.get_location(player.location)
+            world_map
+                .get_location(player.location)
                 .map(|l| l.name.clone())
                 .unwrap_or_else(|| format!("Location {}", player.location.0))
         };
 
-        println!("\n── Day {} Hour {:02}:00 ─── {} ──────────────────────",
-            day + 1, hour, loc_name);
-        println!("  Satiety: {}%  Health: {}%  Rest: {}%  Coins: {:.1}",
-            player.satiety, player.health, player.rest, player.coins);
+        println!(
+            "\n── Day {} Hour {:02}:00 ─── {} ──────────────────────",
+            day + 1,
+            hour,
+            loc_name
+        );
+        println!(
+            "  Satiety: {}%  Health: {}%  Rest: {}%  Coins: {:.1}",
+            player.satiety, player.health, player.rest, player.coins
+        );
 
         if player.transformation_stage > 0 {
-            println!("  [Scholar — Stage {} — Progress {}%  Inscriptions: {}]",
-                player.transformation_stage, player.transformation_progress,
-                player.inscriptions);
+            println!(
+                "  [Scholar — Stage {} — Progress {}%  Inscriptions: {}]",
+                player.transformation_stage, player.transformation_progress, player.inscriptions
+            );
         }
 
         if player.satiety < 20 {
@@ -190,7 +207,10 @@ fn print_results(sim: &mut Simulation) {
                     println!("  → Knowledge gained: node #{}", node.0);
                 }
                 SideEffect::TransformationProgress { stage, progress } => {
-                    println!("  → Transformation progress: Stage {} — {}%", stage, progress);
+                    println!(
+                        "  → Transformation progress: Stage {} — {}%",
+                        stage, progress
+                    );
                 }
                 _ => {} // Don't clutter output with every coin/resource change
             }
@@ -200,7 +220,9 @@ fn print_results(sim: &mut Simulation) {
 
 fn parse_command(input: &str, sim: &mut Simulation) -> Result<Option<PlayerAction>, String> {
     let parts: Vec<&str> = input.split_whitespace().collect();
-    if parts.is_empty() { return Ok(None); }
+    if parts.is_empty() {
+        return Ok(None);
+    }
 
     let cmd = parts[0].to_lowercase();
 
@@ -229,16 +251,22 @@ fn parse_command(input: &str, sim: &mut Simulation) -> Result<Option<PlayerActio
             if parts.len() < 2 {
                 return Err("Usage: inspect <npc_id>".to_string());
             }
-            let npc_id = parts[1].parse::<u64>()
+            let npc_id = parts[1]
+                .parse::<u64>()
                 .map_err(|_| "NPC ID must be a number".to_string())?;
-            Ok(Some(PlayerAction::Inspect { target: CitizenId(npc_id) }))
+            Ok(Some(PlayerAction::Inspect {
+                target: CitizenId(npc_id),
+            }))
         }
 
         "talk" | "t" => {
             if parts.len() < 2 {
-                return Err("Usage: talk <npc_id> [greet|work|request|transform|about <id>]".to_string());
+                return Err(
+                    "Usage: talk <npc_id> [greet|work|request|transform|about <id>]".to_string(),
+                );
             }
-            let npc_id = parts[1].parse::<u64>()
+            let npc_id = parts[1]
+                .parse::<u64>()
                 .map_err(|_| "NPC ID must be a number".to_string())?;
             let topic = if parts.len() >= 3 {
                 match parts[2].to_lowercase().as_str() {
@@ -247,34 +275,50 @@ fn parse_command(input: &str, sim: &mut Simulation) -> Result<Option<PlayerActio
                     "request" | "job" => TalkTopic::RequestWork,
                     "transform" | "inscription" | "archive" => TalkTopic::AskAboutTransformation,
                     "about" if parts.len() >= 4 => {
-                        let subject_id = parts[3].parse::<u64>()
+                        let subject_id = parts[3]
+                            .parse::<u64>()
                             .map_err(|_| "Subject ID must be a number".to_string())?;
-                        TalkTopic::AskAbout { subject: CitizenId(subject_id) }
+                        TalkTopic::AskAbout {
+                            subject: CitizenId(subject_id),
+                        }
                     }
                     _ => TalkTopic::Greeting,
                 }
             } else {
                 TalkTopic::Greeting
             };
-            Ok(Some(PlayerAction::Talk { npc: CitizenId(npc_id), topic }))
+            Ok(Some(PlayerAction::Talk {
+                npc: CitizenId(npc_id),
+                topic,
+            }))
         }
 
         "buy" => {
             if parts.len() < 3 {
                 return Err("Usage: buy <quantity> <resource>".to_string());
             }
-            let qty = parts[1].parse::<u32>().map_err(|_| "Quantity must be a number".to_string())?;
+            let qty = parts[1]
+                .parse::<u32>()
+                .map_err(|_| "Quantity must be a number".to_string())?;
             let resource = parse_resource(parts[2])?;
-            Ok(Some(PlayerAction::Buy { resource, quantity: qty }))
+            Ok(Some(PlayerAction::Buy {
+                resource,
+                quantity: qty,
+            }))
         }
 
         "sell" => {
             if parts.len() < 3 {
                 return Err("Usage: sell <quantity> <resource>".to_string());
             }
-            let qty = parts[1].parse::<u32>().map_err(|_| "Quantity must be a number".to_string())?;
+            let qty = parts[1]
+                .parse::<u32>()
+                .map_err(|_| "Quantity must be a number".to_string())?;
             let resource = parse_resource(parts[2])?;
-            Ok(Some(PlayerAction::Sell { resource, quantity: qty }))
+            Ok(Some(PlayerAction::Sell {
+                resource,
+                quantity: qty,
+            }))
         }
 
         "work" | "w" => {
@@ -290,18 +334,28 @@ fn parse_command(input: &str, sim: &mut Simulation) -> Result<Option<PlayerActio
             if parts.len() < 2 {
                 return Err("Usage: practice <capability_id>".to_string());
             }
-            let cap_id = parts[1].parse::<u16>()
-                .map_err(|_| "Capability ID must be a number (e.g., 7 for Inscription)".to_string())?;
-            Ok(Some(PlayerAction::Practice { capability: CapabilityId(cap_id) }))
+            let cap_id = parts[1].parse::<u16>().map_err(|_| {
+                "Capability ID must be a number (e.g., 7 for Inscription)".to_string()
+            })?;
+            Ok(Some(PlayerAction::Practice {
+                capability: CapabilityId(cap_id),
+            }))
         }
 
         "learn" => {
             if parts.len() < 3 {
                 return Err("Usage: learn <npc_id> <capability_id>".to_string());
             }
-            let npc_id = parts[1].parse::<u64>().map_err(|_| "NPC ID must be a number".to_string())?;
-            let cap_id = parts[2].parse::<u16>().map_err(|_| "Capability ID must be a number".to_string())?;
-            Ok(Some(PlayerAction::LearnFrom { npc: CitizenId(npc_id), capability: CapabilityId(cap_id) }))
+            let npc_id = parts[1]
+                .parse::<u64>()
+                .map_err(|_| "NPC ID must be a number".to_string())?;
+            let cap_id = parts[2]
+                .parse::<u16>()
+                .map_err(|_| "Capability ID must be a number".to_string())?;
+            Ok(Some(PlayerAction::LearnFrom {
+                npc: CitizenId(npc_id),
+                capability: CapabilityId(cap_id),
+            }))
         }
 
         "inscribe" => {
@@ -312,13 +366,14 @@ fn parse_command(input: &str, sim: &mut Simulation) -> Result<Option<PlayerActio
             Ok(Some(PlayerAction::Inscribe { observation }))
         }
 
-        "study" | "archive" => {
-            Ok(Some(PlayerAction::StudyArchive))
-        }
+        "study" | "archive" => Ok(Some(PlayerAction::StudyArchive)),
 
         "fell" | "felling" | "help-fell" => {
             let target_id = if parts.len() >= 2 {
-                parts[1].parse::<u64>().map(CitizenId).unwrap_or(CitizenId(6))
+                parts[1]
+                    .parse::<u64>()
+                    .map(CitizenId)
+                    .unwrap_or(CitizenId(6))
             } else {
                 CitizenId(6)
             };
@@ -327,9 +382,15 @@ fn parse_command(input: &str, sim: &mut Simulation) -> Result<Option<PlayerActio
 
         "diagnose" => {
             let loc_id = if parts.len() >= 2 {
-                parts[1].parse::<u16>().map(LocationId).map_err(|_| "Location ID must be a number".to_string())?
+                parts[1]
+                    .parse::<u16>()
+                    .map(LocationId)
+                    .map_err(|_| "Location ID must be a number".to_string())?
             } else {
-                sim.summary().player.map(|p| p.location).unwrap_or(LocationId(5))
+                sim.summary()
+                    .player
+                    .map(|p| p.location)
+                    .unwrap_or(LocationId(5))
             };
             Ok(Some(PlayerAction::Diagnose { location: loc_id }))
         }
@@ -340,21 +401,51 @@ fn parse_command(input: &str, sim: &mut Simulation) -> Result<Option<PlayerActio
             }
             let doc_type = match parts[1].to_lowercase().as_str() {
                 "harvest" | "crop" | "report" => {
-                    let loc_id = parts.get(2).and_then(|s| s.parse::<u16>().ok()).map(LocationId).unwrap_or(LocationId(5));
-                    let finding = parts.get(3).and_then(|s| s.parse::<u16>().ok()).unwrap_or(2);
-                    DocumentType::HarvestDiagnosisReport { location: loc_id, finding }
+                    let loc_id = parts
+                        .get(2)
+                        .and_then(|s| s.parse::<u16>().ok())
+                        .map(LocationId)
+                        .unwrap_or(LocationId(5));
+                    let finding = parts
+                        .get(3)
+                        .and_then(|s| s.parse::<u16>().ok())
+                        .unwrap_or(2);
+                    DocumentType::HarvestDiagnosisReport {
+                        location: loc_id,
+                        finding,
+                    }
                 }
                 "debt" | "charter" => {
-                    let creditor = parts.get(2).and_then(|s| s.parse::<u64>().ok()).map(CitizenId).unwrap_or(CitizenId(4));
-                    let debtor = parts.get(3).and_then(|s| s.parse::<u64>().ok()).map(CitizenId).unwrap_or(CitizenId(2));
-                    let terms = parts.get(4).and_then(|s| s.parse::<u32>().ok()).unwrap_or(50);
-                    DocumentType::DebtReliefCharter { creditor, debtor, terms }
+                    let creditor = parts
+                        .get(2)
+                        .and_then(|s| s.parse::<u64>().ok())
+                        .map(CitizenId)
+                        .unwrap_or(CitizenId(4));
+                    let debtor = parts
+                        .get(3)
+                        .and_then(|s| s.parse::<u64>().ok())
+                        .map(CitizenId)
+                        .unwrap_or(CitizenId(2));
+                    let terms = parts
+                        .get(4)
+                        .and_then(|s| s.parse::<u32>().ok())
+                        .unwrap_or(50);
+                    DocumentType::DebtReliefCharter {
+                        creditor,
+                        debtor,
+                        terms,
+                    }
                 }
                 "archive" | "history" => {
-                    let secret = parts.get(2).and_then(|s| s.parse::<u16>().ok()).unwrap_or(7);
+                    let secret = parts
+                        .get(2)
+                        .and_then(|s| s.parse::<u16>().ok())
+                        .unwrap_or(7);
                     DocumentType::FoundingArchiveTranslation { secret_id: secret }
                 }
-                _ => return Err("Unknown document type. Use harvest, debt, or archive.".to_string()),
+                _ => {
+                    return Err("Unknown document type. Use harvest, debt, or archive.".to_string())
+                }
             };
             Ok(Some(PlayerAction::DraftDocument { doc_type }))
         }
@@ -363,9 +454,16 @@ fn parse_command(input: &str, sim: &mut Simulation) -> Result<Option<PlayerActio
             if parts.len() < 3 {
                 return Err("Usage: arbitrate <document_id> <consequence_id>".to_string());
             }
-            let doc_id = parts[1].parse::<u32>().map_err(|_| "Document ID must be a number".to_string())?;
-            let cons_id = parts[2].parse::<u32>().map_err(|_| "Consequence ID must be a number".to_string())?;
-            Ok(Some(PlayerAction::ArbitrateDispute { document_id: doc_id, consequence_id: cons_id }))
+            let doc_id = parts[1]
+                .parse::<u32>()
+                .map_err(|_| "Document ID must be a number".to_string())?;
+            let cons_id = parts[2]
+                .parse::<u32>()
+                .map_err(|_| "Consequence ID must be a number".to_string())?;
+            Ok(Some(PlayerAction::ArbitrateDispute {
+                document_id: doc_id,
+                consequence_id: cons_id,
+            }))
         }
 
         "sleep" => Ok(Some(PlayerAction::Sleep)),
@@ -409,11 +507,17 @@ fn parse_command(input: &str, sim: &mut Simulation) -> Result<Option<PlayerActio
             println!("\n═══ PLAYER STATUS ═══");
             if let Some(p) = &summary.player {
                 println!("  Alive: {}", p.alive);
-                println!("  Satiety: {}%  Health: {}%  Rest: {}%", p.satiety, p.health, p.rest);
+                println!(
+                    "  Satiety: {}%  Health: {}%  Rest: {}%",
+                    p.satiety, p.health, p.rest
+                );
                 println!("  Coins: {:.1}", p.coins);
                 println!("  Capabilities: {}", p.capability_count);
                 println!("  Knowledge nodes: {}", p.knowledge_count);
-                println!("  Transformation: Stage {} ({}%)", p.transformation_stage, p.transformation_progress);
+                println!(
+                    "  Transformation: Stage {} ({}%)",
+                    p.transformation_stage, p.transformation_progress
+                );
                 println!("  Inscriptions: {}", p.inscriptions);
             }
             println!("═══ WORLD ═══");
@@ -428,7 +532,9 @@ fn parse_command(input: &str, sim: &mut Simulation) -> Result<Option<PlayerActio
                 Ok(()) => println!("✓ All invariants pass."),
                 Err(violations) => {
                     println!("✗ Invariant violations:");
-                    for v in violations { println!("  {}", v); }
+                    for v in violations {
+                        println!("  {}", v);
+                    }
                 }
             }
             Ok(None)
@@ -442,7 +548,9 @@ fn parse_command(input: &str, sim: &mut Simulation) -> Result<Option<PlayerActio
 
         "prices" | "market" => {
             let sid = godseed_core::settlement::SettlementDirectory::thornveil_id();
-            let settlements = sim.world.resource::<godseed_core::settlement::SettlementDirectory>();
+            let settlements = sim
+                .world
+                .resource::<godseed_core::settlement::SettlementDirectory>();
             if let Some(s) = settlements.get(sid) {
                 println!("\n═══ THORNVEIL MARKET PRICES ═══");
                 for (ordinal, price) in &s.market_prices {
@@ -460,7 +568,10 @@ fn parse_command(input: &str, sim: &mut Simulation) -> Result<Option<PlayerActio
             Ok(None)
         }
 
-        _ => Err(format!("Unknown command: '{}'. Type 'help' for commands.", cmd)),
+        _ => Err(format!(
+            "Unknown command: '{}'. Type 'help' for commands.",
+            cmd
+        )),
     }
 }
 
@@ -469,7 +580,9 @@ fn print_help() {
     println!("  look / l           — Look around your current location");
     println!("  go <id_or_name>    — Move to an adjacent location (e.g., 'go 1' or 'go inn')");
     println!("  inspect <npc_id>   — Inspect an NPC");
-    println!("  talk <id> [topic]  — Talk to NPC (topics: greet, work, request, transform, about <id>)");
+    println!(
+        "  talk <id> [topic]  — Talk to NPC (topics: greet, work, request, transform, about <id>)"
+    );
     println!("  buy <qty> <res>    — Buy resources (e.g., 'buy 3 food')");
     println!("  sell <qty> <res>   — Sell resources");
     println!("  work [occupation]  — Do work (farmer, laborer, forester, artisan, herbalist)");
@@ -500,13 +613,23 @@ fn print_help() {
 fn list_npcs(sim: &mut Simulation) {
     let mut npcs: Vec<(u64, String, String, String)> = Vec::new();
     {
-        use godseed_core::components::{CitizenMeta, NpcSchedule, OccupationProfile, SettlementRef};
-        
-        let mut q = sim.world.query::<(&CitizenMeta, &OccupationProfile, &NpcSchedule, &SettlementRef)>();
+        use godseed_core::components::{
+            CitizenMeta, NpcSchedule, OccupationProfile, SettlementRef,
+        };
+
+        let mut q = sim.world.query::<(
+            &CitizenMeta,
+            &OccupationProfile,
+            &NpcSchedule,
+            &SettlementRef,
+        )>();
         for (meta, occ, schedule, sref) in q.iter(&sim.world) {
-            if !meta.alive { continue; }
+            if !meta.alive {
+                continue;
+            }
             let world_map = sim.world.resource::<godseed_core::world::WorldMap>();
-            let loc_name = world_map.get_location(sref.current_location)
+            let loc_name = world_map
+                .get_location(sref.current_location)
                 .map(|l| l.name.as_str().chars().take(20).collect::<String>())
                 .unwrap_or_default();
             npcs.push((
@@ -524,13 +647,18 @@ fn list_npcs(sim: &mut Simulation) {
 }
 
 fn list_relationships(sim: &mut Simulation) {
-    let ledger = sim.world.resource::<godseed_core::resources::RelationshipLedger>();
-    let mut rels: Vec<(u64, i16)> = ledger.values.iter()
-        .filter(|((a, b), _)| *a == 0 || *b == 0)
-        .map(|((a, b), &v)| {
-            let other = if *a == 0 { *b } else { *a };
-            (other, v)
+    use godseed_core::components::{CitizenMeta, RelationalLedger};
+    use godseed_core::types::CitizenId;
+
+    let mut q = sim.world.query::<(&CitizenMeta, &RelationalLedger)>();
+    let mut rels: Vec<(u64, i16)> = q
+        .iter(&sim.world)
+        .map(|(meta, ledger)| {
+            let bond = ledger.get_bond(CitizenId::PLAYER);
+            let value = ((bond.sentiment as i16 + bond.trust as i16) / 2).clamp(-100, 100);
+            (meta.id.0, value)
         })
+        .filter(|(_, value)| *value != 0)
         .collect();
     rels.sort_by_key(|(id, _)| *id);
 
@@ -540,12 +668,19 @@ fn list_relationships(sim: &mut Simulation) {
     }
 
     for (npc_id, value) in rels {
-        let label = if value > 60 { "Trusted"
-        } else if value > 30 { "Friendly"
-        } else if value > 10 { "Acquaintance"
-        } else if value > -10 { "Neutral"
-        } else if value > -30 { "Wary"
-        } else { "Hostile" };
+        let label = if value > 60 {
+            "Trusted"
+        } else if value > 30 {
+            "Friendly"
+        } else if value > 10 {
+            "Acquaintance"
+        } else if value > -10 {
+            "Neutral"
+        } else if value > -30 {
+            "Wary"
+        } else {
+            "Hostile"
+        };
         println!("  NPC#{}: {} ({:+})", npc_id, label, value);
     }
 }
@@ -578,7 +713,12 @@ fn parse_location(s: &str, sim: &mut Simulation) -> Result<LocationId, String> {
         "road" | "main" => 9,
         "storage" | "store" => 10,
         "forest" | "edge" | "trees" => 11,
-        _ => return Err(format!("Unknown location: '{}'. Use a number (1–11) or name fragment.", s)),
+        _ => {
+            return Err(format!(
+                "Unknown location: '{}'. Use a number (1–11) or name fragment.",
+                s
+            ))
+        }
     };
     Ok(LocationId(id))
 }
@@ -593,7 +733,10 @@ fn parse_resource(s: &str) -> Result<ResourceType, String> {
         "herbs" | "herb" => Ok(ResourceType::Herbs),
         "ink" => Ok(ResourceType::Ink),
         "parchment" | "paper" => Ok(ResourceType::Parchment),
-        _ => Err(format!("Unknown resource: '{}'. Try: food timber stone tools luxury herbs ink parchment", s)),
+        _ => Err(format!(
+            "Unknown resource: '{}'. Try: food timber stone tools luxury herbs ink parchment",
+            s
+        )),
     }
 }
 
@@ -605,14 +748,23 @@ fn parse_occupation(s: &str) -> Result<OccupationType, String> {
         "artisan" | "smith" | "craft" => Ok(OccupationType::Artisan),
         "herbalist" | "herb" => Ok(OccupationType::Herbalist),
         "laborer" | "labor" | "labour" => Ok(OccupationType::Laborer),
-        _ => Err(format!("Unknown occupation: '{}'. Try: farmer forester artisan herbalist laborer", s)),
+        _ => Err(format!(
+            "Unknown occupation: '{}'. Try: farmer forester artisan herbalist laborer",
+            s
+        )),
     }
 }
 
 fn resource_name_from_ordinal(ordinal: u8) -> &'static str {
     match ordinal {
-        0 => "Food", 1 => "Timber", 2 => "Stone", 3 => "Tools",
-        4 => "Luxury", 5 => "Herbs", 6 => "Ink", 7 => "Parchment",
+        0 => "Food",
+        1 => "Timber",
+        2 => "Stone",
+        3 => "Tools",
+        4 => "Luxury",
+        5 => "Herbs",
+        6 => "Ink",
+        7 => "Parchment",
         _ => "Unknown",
     }
 }
@@ -632,7 +784,8 @@ fn run_headless_persona(
 
     for t in 0..ticks {
         // Inject persona-specific actions at intervals
-        if t % 24 == 0 { // Once per game-day
+        if t % 24 == 0 {
+            // Once per game-day
             if let Some(action) = action_iter.next() {
                 sim.push_action(action);
             }
@@ -646,7 +799,9 @@ fn run_headless_persona(
 
     // Output telemetry
     let telemetry_json = {
-        let log = sim.world.resource::<godseed_core::resources::TelemetryLog>();
+        let log = sim
+            .world
+            .resource::<godseed_core::resources::TelemetryLog>();
         log.to_jsonl()
     };
 
@@ -657,10 +812,15 @@ fn run_headless_persona(
 
     // Print final summary
     let summary = sim.summary();
-    eprintln!("[HEADLESS] Final state: tick={} day={}", summary.tick, summary.day);
+    eprintln!(
+        "[HEADLESS] Final state: tick={} day={}",
+        summary.tick, summary.day
+    );
     if let Some(p) = &summary.player {
-        eprintln!("[HEADLESS] Player: alive={} satiety={} health={} coins={:.1} transform_stage={}",
-            p.alive, p.satiety, p.health, p.coins, p.transformation_stage);
+        eprintln!(
+            "[HEADLESS] Player: alive={} satiety={} health={} coins={:.1} transform_stage={}",
+            p.alive, p.satiety, p.health, p.coins, p.transformation_stage
+        );
     }
     eprintln!("[HEADLESS] Living NPCs: {}", summary.living_npcs);
     eprintln!("[HEADLESS] State hash: {:016x}", sim.state_hash());
@@ -677,13 +837,29 @@ fn generate_persona_actions(persona: &str, ticks: u64) -> Vec<PlayerAction> {
             // Works for NPCs, builds relationships, learns farming
             for d in 0..days {
                 match d % 7 {
-                    0 => actions.push(PlayerAction::Talk { npc: CitizenId(1), topic: TalkTopic::Greeting }),
-                    1 => actions.push(PlayerAction::Work { occupation: OccupationType::Laborer }),
-                    2 => actions.push(PlayerAction::Talk { npc: CitizenId(3), topic: TalkTopic::AskAboutWork }),
-                    3 => actions.push(PlayerAction::LearnFrom { npc: CitizenId(3), capability: CapabilityId(8) }),
-                    4 => actions.push(PlayerAction::Work { occupation: OccupationType::Farmer }),
+                    0 => actions.push(PlayerAction::Talk {
+                        npc: CitizenId(1),
+                        topic: TalkTopic::Greeting,
+                    }),
+                    1 => actions.push(PlayerAction::Work {
+                        occupation: OccupationType::Laborer,
+                    }),
+                    2 => actions.push(PlayerAction::Talk {
+                        npc: CitizenId(3),
+                        topic: TalkTopic::AskAboutWork,
+                    }),
+                    3 => actions.push(PlayerAction::LearnFrom {
+                        npc: CitizenId(3),
+                        capability: CapabilityId(8),
+                    }),
+                    4 => actions.push(PlayerAction::Work {
+                        occupation: OccupationType::Farmer,
+                    }),
                     5 => actions.push(PlayerAction::Sleep),
-                    6 => actions.push(PlayerAction::Talk { npc: CitizenId(1), topic: TalkTopic::Greeting }),
+                    6 => actions.push(PlayerAction::Talk {
+                        npc: CitizenId(1),
+                        topic: TalkTopic::Greeting,
+                    }),
                     _ => {}
                 }
             }
@@ -692,10 +868,21 @@ fn generate_persona_actions(persona: &str, ticks: u64) -> Vec<PlayerAction> {
             // Buys low, sells high, maximizes coins
             for d in 0..days {
                 match d % 5 {
-                    0 => actions.push(PlayerAction::Work { occupation: OccupationType::Laborer }),
-                    1 => actions.push(PlayerAction::Buy { resource: ResourceType::Food, quantity: 5 }),
-                    2 => actions.push(PlayerAction::Sell { resource: ResourceType::Food, quantity: 3 }),
-                    3 => actions.push(PlayerAction::Talk { npc: CitizenId(7), topic: TalkTopic::AskAboutWork }),
+                    0 => actions.push(PlayerAction::Work {
+                        occupation: OccupationType::Laborer,
+                    }),
+                    1 => actions.push(PlayerAction::Buy {
+                        resource: ResourceType::Food,
+                        quantity: 5,
+                    }),
+                    2 => actions.push(PlayerAction::Sell {
+                        resource: ResourceType::Food,
+                        quantity: 3,
+                    }),
+                    3 => actions.push(PlayerAction::Talk {
+                        npc: CitizenId(7),
+                        topic: TalkTopic::AskAboutWork,
+                    }),
                     4 => actions.push(PlayerAction::Sleep),
                     _ => {}
                 }
@@ -705,13 +892,25 @@ fn generate_persona_actions(persona: &str, ticks: u64) -> Vec<PlayerAction> {
             // Pursues the Inscription path deliberately
             for d in 0..days {
                 match d % 8 {
-                    0 => actions.push(PlayerAction::Talk { npc: CitizenId(5), topic: TalkTopic::AskAboutTransformation }),
+                    0 => actions.push(PlayerAction::Talk {
+                        npc: CitizenId(5),
+                        topic: TalkTopic::AskAboutTransformation,
+                    }),
                     1 => actions.push(PlayerAction::Move { to: LocationId(8) }),
                     2 => actions.push(PlayerAction::StudyArchive),
-                    3 => actions.push(PlayerAction::Practice { capability: CapabilityId(7) }),
-                    4 => actions.push(PlayerAction::Inscribe { observation: format!("Day {} in Thornveil. I observe the world.", d) }),
-                    5 => actions.push(PlayerAction::Talk { npc: CitizenId(5), topic: TalkTopic::AskAboutTransformation }),
-                    6 => actions.push(PlayerAction::Work { occupation: OccupationType::Laborer }),
+                    3 => actions.push(PlayerAction::Practice {
+                        capability: CapabilityId(7),
+                    }),
+                    4 => actions.push(PlayerAction::Inscribe {
+                        observation: format!("Day {} in Thornveil. I observe the world.", d),
+                    }),
+                    5 => actions.push(PlayerAction::Talk {
+                        npc: CitizenId(5),
+                        topic: TalkTopic::AskAboutTransformation,
+                    }),
+                    6 => actions.push(PlayerAction::Work {
+                        occupation: OccupationType::Laborer,
+                    }),
                     7 => actions.push(PlayerAction::Sleep),
                     _ => {}
                 }
@@ -721,7 +920,10 @@ fn generate_persona_actions(persona: &str, ticks: u64) -> Vec<PlayerAction> {
             // Builds relationships fast, sometimes too pushy
             for d in 0..days {
                 let npc_id = (d % 10 + 1) as u64;
-                actions.push(PlayerAction::Talk { npc: CitizenId(npc_id), topic: TalkTopic::Greeting });
+                actions.push(PlayerAction::Talk {
+                    npc: CitizenId(npc_id),
+                    topic: TalkTopic::Greeting,
+                });
             }
         }
         "knowledge_seeker" => {
@@ -729,9 +931,17 @@ fn generate_persona_actions(persona: &str, ticks: u64) -> Vec<PlayerAction> {
             for d in 0..days {
                 let npc_id = (d % 10 + 1) as u64;
                 match d % 3 {
-                    0 => actions.push(PlayerAction::Talk { npc: CitizenId(npc_id), topic: TalkTopic::AskAboutWork }),
-                    1 => actions.push(PlayerAction::Talk { npc: CitizenId(npc_id), topic: TalkTopic::Greeting }),
-                    2 => actions.push(PlayerAction::Work { occupation: OccupationType::Laborer }),
+                    0 => actions.push(PlayerAction::Talk {
+                        npc: CitizenId(npc_id),
+                        topic: TalkTopic::AskAboutWork,
+                    }),
+                    1 => actions.push(PlayerAction::Talk {
+                        npc: CitizenId(npc_id),
+                        topic: TalkTopic::Greeting,
+                    }),
+                    2 => actions.push(PlayerAction::Work {
+                        occupation: OccupationType::Laborer,
+                    }),
                     _ => {}
                 }
             }
@@ -740,7 +950,9 @@ fn generate_persona_actions(persona: &str, ticks: u64) -> Vec<PlayerAction> {
             // Ignores NPC interactions; just works and sleeps
             for d in 0..days {
                 match d % 3 {
-                    0 => actions.push(PlayerAction::Work { occupation: OccupationType::Laborer }),
+                    0 => actions.push(PlayerAction::Work {
+                        occupation: OccupationType::Laborer,
+                    }),
                     1 => actions.push(PlayerAction::Sleep),
                     2 => actions.push(PlayerAction::Wait { ticks: 1 }),
                     _ => {}
@@ -764,7 +976,9 @@ fn generate_persona_actions(persona: &str, ticks: u64) -> Vec<PlayerAction> {
         _ => {
             // Default: random mix
             for _d in 0..days {
-                actions.push(PlayerAction::Work { occupation: OccupationType::Laborer });
+                actions.push(PlayerAction::Work {
+                    occupation: OccupationType::Laborer,
+                });
             }
         }
     }

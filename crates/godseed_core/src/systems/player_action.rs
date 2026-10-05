@@ -2,18 +2,17 @@
 ///
 /// This is the bridge between UI input and simulation state.
 /// Actions are validated, executed, and produce ActionResults.
-
 use bevy_ecs::prelude::*;
 
 use crate::components::{
     CapabilitySet, CitizenMeta, Disposition, EpisodicMemory, EpistemicState, Inventory,
-    KnowledgeInventory, NpcSchedule, OccupationProfile, PersonalFinances,
-    PhysicalNeeds, PlayerInputBuffer, PlayerMarker, RelationalLedger, SettlementRef, TransformationState,
+    KnowledgeInventory, NpcSchedule, OccupationProfile, PersonalFinances, PhysicalNeeds,
+    PlayerInputBuffer, PlayerMarker, RelationalLedger, SettlementRef, TransformationState,
 };
 use crate::content::{caps, knowledge, ContentDefinitions};
 use crate::events::{SimEvent, TelemetryEvent};
 use crate::resources::{
-    DocumentRegistry, EventRing, NextCausalId, PendingConsequenceRegistry, RelationshipLedger, ReputationRegistry,
+    DocumentRegistry, EventRing, NextCausalId, PendingConsequenceRegistry, ReputationRegistry,
     ReturnDigestLog, TelemetryLog,
 };
 use crate::settlement::SettlementDirectory;
@@ -31,7 +30,6 @@ pub fn player_action_system(
     world_map: Res<WorldMap>,
     content: Res<ContentDefinitions>,
     mut settlements: ResMut<SettlementDirectory>,
-    mut relationships: ResMut<RelationshipLedger>,
     mut reputation: ResMut<ReputationRegistry>,
     mut event_ring: ResMut<EventRing>,
     mut telemetry: ResMut<TelemetryLog>,
@@ -104,7 +102,6 @@ pub fn player_action_system(
                 &world_map,
                 &content,
                 &mut settlements,
-                &mut relationships,
                 &mut reputation,
                 &mut event_ring,
                 &mut next_causal,
@@ -142,7 +139,6 @@ fn resolve_action(
     world_map: &WorldMap,
     content: &ContentDefinitions,
     settlements: &mut SettlementDirectory,
-    relationships: &mut RelationshipLedger,
     _reputation: &mut ReputationRegistry,
     event_ring: &mut EventRing,
     next_causal: &mut NextCausalId,
@@ -150,11 +146,22 @@ fn resolve_action(
     return_digests: &mut ReturnDigestLog,
     documents: &mut DocumentRegistry,
     npc_query: &Query<
-        (&CitizenMeta, &mut Disposition, &NpcSchedule, &SettlementRef, &OccupationProfile),
+        (
+            &CitizenMeta,
+            &mut Disposition,
+            &NpcSchedule,
+            &SettlementRef,
+            &OccupationProfile,
+        ),
         Without<PlayerMarker>,
     >,
     episodic_query: &mut Query<
-        (&CitizenMeta, &mut EpisodicMemory, &mut RelationalLedger, &mut EpistemicState),
+        (
+            &CitizenMeta,
+            &mut EpisodicMemory,
+            &mut RelationalLedger,
+            &mut EpistemicState,
+        ),
         Without<PlayerMarker>,
     >,
 ) -> ActionResult {
@@ -162,7 +169,8 @@ fn resolve_action(
         return ActionResult {
             tick,
             success: false,
-            message: "You are deceased. The dead cannot act in the realm of the living.".to_string(),
+            message: "You are deceased. The dead cannot act in the realm of the living."
+                .to_string(),
             side_effects: vec![],
         };
     }
@@ -170,52 +178,141 @@ fn resolve_action(
     match action {
         PlayerAction::Move { to } => resolve_move(tick, settlement_ref, world_map, *to),
         PlayerAction::Look => resolve_look(tick, settlement_ref, world_map, npc_query),
-        PlayerAction::Inspect { target } => resolve_inspect(tick, *target, content, npc_query, relationships),
+        PlayerAction::Inspect { target } => {
+            resolve_inspect(tick, *target, content, npc_query, episodic_query)
+        }
         PlayerAction::Talk { npc, topic } => resolve_talk(
-            tick, *npc, topic, meta, settlement_ref, knowledge_inv, player_epistemic,
-            relationships, event_ring, return_digests, npc_query, content, transform,
-            consequences, episodic_query,
+            tick,
+            *npc,
+            topic,
+            meta,
+            settlement_ref,
+            knowledge_inv,
+            player_epistemic,
+            event_ring,
+            return_digests,
+            npc_query,
+            content,
+            transform,
+            consequences,
+            episodic_query,
         ),
         PlayerAction::HelpWithFelling { npc } => resolve_help_with_felling(
-            tick, *npc, settlement_ref, relationships, event_ring,
-            next_causal, consequences, npc_query, episodic_query,
+            tick,
+            *npc,
+            settlement_ref,
+            event_ring,
+            next_causal,
+            consequences,
+            npc_query,
+            episodic_query,
         ),
         PlayerAction::Diagnose { location } => resolve_diagnose(
-            tick, *location, capabilities, transform, settlement_ref, player_epistemic, event_ring,
+            tick,
+            *location,
+            capabilities,
+            transform,
+            settlement_ref,
+            player_epistemic,
+            event_ring,
         ),
         PlayerAction::DraftDocument { doc_type } => resolve_draft_document(
-            tick, doc_type, capabilities, transform, player_epistemic, documents, event_ring,
+            tick,
+            doc_type,
+            capabilities,
+            transform,
+            player_epistemic,
+            documents,
+            event_ring,
         ),
-        PlayerAction::ArbitrateDispute { document_id, consequence_id } => resolve_arbitrate_dispute(
-            tick, *document_id, *consequence_id, documents, consequences, relationships,
-            episodic_query, next_causal, event_ring,
+        PlayerAction::ArbitrateDispute {
+            document_id,
+            consequence_id,
+        } => resolve_arbitrate_dispute(
+            tick,
+            *document_id,
+            *consequence_id,
+            documents,
+            consequences,
+            episodic_query,
+            next_causal,
+            event_ring,
         ),
         PlayerAction::Offer { npc, exchange } => resolve_offer(
-            tick, *npc, exchange, finances, inventory, capabilities,
-            relationships, settlements, event_ring,
+            tick,
+            *npc,
+            exchange,
+            finances,
+            inventory,
+            capabilities,
+            episodic_query,
+            settlements,
+            event_ring,
         ),
         PlayerAction::Buy { resource, quantity } => resolve_buy(
-            tick, *resource, *quantity, finances, inventory, settlements, event_ring,
+            tick,
+            *resource,
+            *quantity,
+            finances,
+            inventory,
+            settlements,
+            event_ring,
         ),
         PlayerAction::Sell { resource, quantity } => resolve_sell(
-            tick, *resource, *quantity, finances, inventory, settlements, event_ring,
+            tick,
+            *resource,
+            *quantity,
+            finances,
+            inventory,
+            settlements,
+            event_ring,
         ),
         PlayerAction::Work { occupation } => resolve_work(
-            tick, *occupation, finances, needs, inventory, capabilities,
-            settlement_ref, settlements, event_ring,
+            tick,
+            *occupation,
+            finances,
+            needs,
+            inventory,
+            capabilities,
+            settlement_ref,
+            settlements,
+            event_ring,
         ),
         PlayerAction::Practice { capability } => resolve_practice(
-            tick, *capability, capabilities, content, event_ring, inventory,
+            tick,
+            *capability,
+            capabilities,
+            content,
+            event_ring,
+            inventory,
         ),
         PlayerAction::LearnFrom { npc, capability } => resolve_learn_from(
-            tick, *npc, *capability, capabilities, knowledge_inv,
-            relationships, event_ring, npc_query, content,
+            tick,
+            *npc,
+            *capability,
+            capabilities,
+            knowledge_inv,
+            event_ring,
+            npc_query,
+            content,
+            episodic_query,
         ),
         PlayerAction::Inscribe { observation } => resolve_inscribe(
-            tick, observation, transform, capabilities, knowledge_inv, event_ring,
+            tick,
+            observation,
+            transform,
+            capabilities,
+            knowledge_inv,
+            event_ring,
         ),
         PlayerAction::StudyArchive => resolve_study_archive(
-            tick, transform, capabilities, knowledge_inv, settlement_ref, event_ring, content,
+            tick,
+            transform,
+            capabilities,
+            knowledge_inv,
+            settlement_ref,
+            event_ring,
+            content,
         ),
         PlayerAction::Wait { ticks } => ActionResult {
             tick,
@@ -251,6 +348,56 @@ fn resolve_action(
     }
 }
 
+fn canonical_relationship_score(
+    npc_id: CitizenId,
+    episodic_query: &mut Query<
+        (
+            &CitizenMeta,
+            &mut EpisodicMemory,
+            &mut RelationalLedger,
+            &mut EpistemicState,
+        ),
+        Without<PlayerMarker>,
+    >,
+) -> i16 {
+    episodic_query
+        .iter_mut()
+        .find(|(meta, _, _, _)| meta.id == npc_id)
+        .map(|(_, _, ledger, _)| {
+            let bond = ledger.get_bond(CitizenId::PLAYER);
+            ((bond.sentiment as i16 + bond.trust as i16) / 2).clamp(-100, 100)
+        })
+        .unwrap_or(0)
+}
+
+fn adjust_canonical_relationship(
+    npc_id: CitizenId,
+    delta_sentiment: i8,
+    delta_trust: i8,
+    delta_obligation: i16,
+    episodic_query: &mut Query<
+        (
+            &CitizenMeta,
+            &mut EpisodicMemory,
+            &mut RelationalLedger,
+            &mut EpistemicState,
+        ),
+        Without<PlayerMarker>,
+    >,
+) {
+    if let Some((_, _, mut ledger, _)) = episodic_query
+        .iter_mut()
+        .find(|(meta, _, _, _)| meta.id == npc_id)
+    {
+        ledger.adjust(
+            CitizenId::PLAYER,
+            delta_sentiment,
+            delta_trust,
+            delta_obligation,
+        );
+    }
+}
+
 // ── Action Resolvers ──────────────────────────────────────────────────────────
 
 fn resolve_move(
@@ -263,22 +410,31 @@ fn resolve_move(
 
     // Check adjacency
     if !world_map.are_adjacent(from, to) && from != to {
-        let from_name = world_map.get_location(from)
-            .map(|l| l.name.as_str()).unwrap_or("here");
-        let to_name = world_map.get_location(to)
-            .map(|l| l.name.as_str()).unwrap_or("there");
+        let from_name = world_map
+            .get_location(from)
+            .map(|l| l.name.as_str())
+            .unwrap_or("here");
+        let to_name = world_map
+            .get_location(to)
+            .map(|l| l.name.as_str())
+            .unwrap_or("there");
         return ActionResult {
             tick,
             success: false,
-            message: format!("You can't reach {} directly from {}. Find a connected path.", to_name, from_name),
+            message: format!(
+                "You can't reach {} directly from {}. Find a connected path.",
+                to_name, from_name
+            ),
             side_effects: vec![],
         };
     }
 
-    let to_name = world_map.get_location(to)
+    let to_name = world_map
+        .get_location(to)
         .map(|l| l.name.clone())
         .unwrap_or_else(|| format!("Location {}", to.0));
-    let desc = world_map.get_location(to)
+    let desc = world_map
+        .get_location(to)
         .map(|l| l.description.clone())
         .unwrap_or_default();
 
@@ -297,34 +453,52 @@ fn resolve_look(
     settlement_ref: &SettlementRef,
     world_map: &WorldMap,
     npc_query: &Query<
-        (&CitizenMeta, &mut Disposition, &NpcSchedule, &SettlementRef, &OccupationProfile),
+        (
+            &CitizenMeta,
+            &mut Disposition,
+            &NpcSchedule,
+            &SettlementRef,
+            &OccupationProfile,
+        ),
         Without<PlayerMarker>,
     >,
 ) -> ActionResult {
     let loc = settlement_ref.current_location;
     let location = world_map.get_location(loc);
 
-    let loc_name = location.map(|l| l.name.as_str()).unwrap_or("Unknown location");
+    let loc_name = location
+        .map(|l| l.name.as_str())
+        .unwrap_or("Unknown location");
     let loc_desc = location.map(|l| l.description.as_str()).unwrap_or("");
 
     // Find NPCs at this location
-    let npcs_here: Vec<String> = npc_query.iter()
+    let npcs_here: Vec<String> = npc_query
+        .iter()
         .filter(|(meta, _, _, sref, _)| meta.alive && sref.current_location == loc)
-        .map(|(meta, _, schedule, _, _)| format!(
-            "  • {} ({} — {})",
-            meta.name,
-            schedule.current_activity.display(),
-            loc_name
-        ))
+        .map(|(meta, _, schedule, _, _)| {
+            format!(
+                "  • {} ({} — {})",
+                meta.name,
+                schedule.current_activity.display(),
+                loc_name
+            )
+        })
         .collect();
 
     // Adjacent locations
-    let adjacent = location.map(|l| {
-        l.adjacent.iter()
-            .filter_map(|id| world_map.get_location(*id).map(|nl| nl.name.as_str().to_string()))
-            .collect::<Vec<_>>()
-            .join(", ")
-    }).unwrap_or_default();
+    let adjacent = location
+        .map(|l| {
+            l.adjacent
+                .iter()
+                .filter_map(|id| {
+                    world_map
+                        .get_location(*id)
+                        .map(|nl| nl.name.as_str().to_string())
+                })
+                .collect::<Vec<_>>()
+                .join(", ")
+        })
+        .unwrap_or_default();
 
     let mut msg = format!("═══ {} ═══\n{}\n", loc_name, loc_desc);
     if !npcs_here.is_empty() {
@@ -337,7 +511,12 @@ fn resolve_look(
         msg.push_str(&format!("\n\nConnected to: {}", adjacent));
     }
 
-    ActionResult { tick, success: true, message: msg, side_effects: vec![] }
+    ActionResult {
+        tick,
+        success: true,
+        message: msg,
+        side_effects: vec![],
+    }
 }
 
 fn resolve_inspect(
@@ -345,25 +524,50 @@ fn resolve_inspect(
     target: CitizenId,
     content: &ContentDefinitions,
     npc_query: &Query<
-        (&CitizenMeta, &mut Disposition, &NpcSchedule, &SettlementRef, &OccupationProfile),
+        (
+            &CitizenMeta,
+            &mut Disposition,
+            &NpcSchedule,
+            &SettlementRef,
+            &OccupationProfile,
+        ),
         Without<PlayerMarker>,
     >,
-    relationships: &RelationshipLedger,
+    episodic_query: &mut Query<
+        (
+            &CitizenMeta,
+            &mut EpisodicMemory,
+            &mut RelationalLedger,
+            &mut EpistemicState,
+        ),
+        Without<PlayerMarker>,
+    >,
 ) -> ActionResult {
-    if let Some((meta, _disposition, schedule, _sref, occ)) = npc_query.iter()
-        .find(|(m, _, _, _, _)| m.id == target)
+    if let Some((meta, _disposition, schedule, _sref, occ)) =
+        npc_query.iter().find(|(m, _, _, _, _)| m.id == target)
     {
-        let rel = relationships.get(CitizenId::PLAYER, target);
-        let def = content.npc_definitions.iter().find(|d| d.citizen_id == target.0);
+        let rel = canonical_relationship_score(target, episodic_query);
+        let def = content
+            .npc_definitions
+            .iter()
+            .find(|d| d.citizen_id == target.0);
 
-        let description = def.map(|d| d.description.as_str()).unwrap_or("A person you don't know much about.");
+        let description = def
+            .map(|d| d.description.as_str())
+            .unwrap_or("A person you don't know much about.");
         let occ_name = occ.occupation.display_name();
 
-        let disposition_note = if rel > 50 { "They seem friendly toward you."
-        } else if rel > 20 { "They regard you with mild goodwill."
-        } else if rel < -50 { "They look at you with clear hostility."
-        } else if rel < -20 { "They seem wary of you."
-        } else { "They regard you with neutral curiosity." };
+        let disposition_note = if rel > 50 {
+            "They seem friendly toward you."
+        } else if rel > 20 {
+            "They regard you with mild goodwill."
+        } else if rel < -50 {
+            "They look at you with clear hostility."
+        } else if rel < -20 {
+            "They seem wary of you."
+        } else {
+            "They regard you with neutral curiosity."
+        };
 
         let activity = schedule.current_activity.display();
 
@@ -394,23 +598,32 @@ fn resolve_talk(
     settlement_ref: &SettlementRef,
     knowledge_inv: &mut KnowledgeInventory,
     player_epistemic: &mut EpistemicState,
-    relationships: &mut RelationshipLedger,
     event_ring: &mut EventRing,
     return_digests: &mut ReturnDigestLog,
     npc_query: &Query<
-        (&CitizenMeta, &mut Disposition, &NpcSchedule, &SettlementRef, &OccupationProfile),
+        (
+            &CitizenMeta,
+            &mut Disposition,
+            &NpcSchedule,
+            &SettlementRef,
+            &OccupationProfile,
+        ),
         Without<PlayerMarker>,
     >,
     content: &ContentDefinitions,
     _transform: &TransformationState,
     consequences: &PendingConsequenceRegistry,
     episodic_query: &mut Query<
-        (&CitizenMeta, &mut EpisodicMemory, &mut RelationalLedger, &mut EpistemicState),
+        (
+            &CitizenMeta,
+            &mut EpisodicMemory,
+            &mut RelationalLedger,
+            &mut EpistemicState,
+        ),
         Without<PlayerMarker>,
     >,
 ) -> ActionResult {
-    let npc_result = npc_query.iter()
-        .find(|(m, _, _, _, _)| m.id == npc_id);
+    let npc_result = npc_query.iter().find(|(m, _, _, _, _)| m.id == npc_id);
 
     if npc_result.is_none() {
         return ActionResult {
@@ -421,7 +634,7 @@ fn resolve_talk(
         };
     }
 
-    let (npc_meta, disposition, _schedule, npc_sref, occ) = npc_result.unwrap();
+    let (npc_meta, _disposition, _schedule, npc_sref, occ) = npc_result.unwrap();
 
     // Check if NPC is accessible (same location)
     if npc_sref.current_location != settlement_ref.current_location {
@@ -433,9 +646,11 @@ fn resolve_talk(
         };
     }
 
-    let rel = relationships.get(CitizenId::PLAYER, npc_id);
-    let effective_disp = disposition.effective_relationship();
-    let _def = content.npc_definitions.iter().find(|d| d.citizen_id == npc_id.0);
+    let rel = canonical_relationship_score(npc_id, episodic_query);
+    let _def = content
+        .npc_definitions
+        .iter()
+        .find(|d| d.citizen_id == npc_id.0);
 
     let (message, side_effects, rel_delta) = match topic {
         TalkTopic::Greeting => {
@@ -445,8 +660,10 @@ fn resolve_talk(
             } else {
                 // 2. Check for VS2 specific felling consequence dialogue
                 let is_fraternal_matured = consequences.consequences.iter().any(|c| {
-                    matches!(c.consequence_type, ConsequenceType::FraternalLaborStrain { .. })
-                        && c.stage == ConsequenceStage::Matured
+                    matches!(
+                        c.consequence_type,
+                        ConsequenceType::FraternalLaborStrain { .. }
+                    ) && c.stage == ConsequenceStage::Matured
                 });
                 let has_helped_felling = episodic_query.iter().any(|(meta, mem, _, _)| {
                     meta.id == CitizenId(6) && mem.has_anchor_with_tag(MemoryTag::HelpedWithFelling)
@@ -462,14 +679,20 @@ fn resolve_talk(
                     format!("{} wipes iron grime from his leather apron, looking at you with proud defiance. \"Wren took me on at the forge. Tomas didn't need two sets of hands at the woodlot anymore—not after you showed him how quick the felling could be. Here, I'm forging my own iron.\"", npc_meta.name)
                 } else if npc_id == CitizenId(1) && is_fraternal_matured {
                     format!("{} nods as you approach the bar. \"Tomas is holding up at the woodlot, but timber prices haven't settled since Runn moved to the forge. Good to see you.\"", npc_meta.name)
-                } else if effective_disp >= 20 {
+                } else if rel >= 20 {
                     format!("{} smiles. \"Good to see you again.\"", npc_meta.name)
-                } else if effective_disp >= 0 {
+                } else if rel >= 0 {
                     format!("{} nods. \"Hello.\"", npc_meta.name)
-                } else if effective_disp >= -20 {
-                    format!("{} gives you a measured look. \"What do you want?\"", npc_meta.name)
+                } else if rel >= -20 {
+                    format!(
+                        "{} gives you a measured look. \"What do you want?\"",
+                        npc_meta.name
+                    )
                 } else {
-                    format!("{} turns away briefly before answering. \"Well?\"", npc_meta.name)
+                    format!(
+                        "{} turns away briefly before answering. \"Well?\"",
+                        npc_meta.name
+                    )
                 };
                 (response, vec![], 2i16)
             }
@@ -477,44 +700,67 @@ fn resolve_talk(
 
         TalkTopic::AskAboutWork => {
             let work_desc = match occ.occupation {
-                OccupationType::Innkeeper => format!("{} describes managing the inn — food, lodging, keeping the common room civil.", npc_meta.name),
-                OccupationType::Artisan => format!("{} talks about the forge, about iron and charcoal and the patience required.", npc_meta.name),
+                OccupationType::Innkeeper => format!(
+                    "{} describes managing the inn — food, lodging, keeping the common room civil.",
+                    npc_meta.name
+                ),
+                OccupationType::Artisan => format!(
+                    "{} talks about the forge, about iron and charcoal and the patience required.",
+                    npc_meta.name
+                ),
                 OccupationType::Farmer => {
                     let _ = player_epistemic.learn(2, tick);
                     format!("{} talks about the fields, the seasons, which crops do well in what weather.", npc_meta.name)
-                },
+                }
                 OccupationType::Herbalist => {
                     // Gain herb knowledge
                     let _ = knowledge_inv.learn(knowledge::HERB_LOCATIONS);
                     let _ = player_epistemic.learn(3, tick);
                     format!("{} shows you where the herbs grow. You learn something about local plants.", npc_meta.name)
-                },
+                }
                 OccupationType::Elder => {
                     // Elder hints at the archive
                     let new = knowledge_inv.learn(knowledge::ANCIENT_ARCHIVE);
                     let _ = player_epistemic.learn(4, tick);
-                    let extra = if new { " They mention an old archive nearby, then go quiet." } else { "" };
-                    format!("{} speaks of the settlement's history.{}", npc_meta.name, extra)
-                },
+                    let extra = if new {
+                        " They mention an old archive nearby, then go quiet."
+                    } else {
+                        ""
+                    };
+                    format!(
+                        "{} speaks of the settlement's history.{}",
+                        npc_meta.name, extra
+                    )
+                }
                 OccupationType::Forester => {
                     let _ = knowledge_inv.learn(knowledge::TIMBER_SOURCES);
                     let _ = player_epistemic.learn(1, tick);
-                    format!("{} points out where to find good timber in the forest.", npc_meta.name)
-                },
+                    format!(
+                        "{} points out where to find good timber in the forest.",
+                        npc_meta.name
+                    )
+                }
                 _ => format!("{} explains their work in general terms.", npc_meta.name),
             };
             (work_desc, vec![], 3i16)
         }
 
         TalkTopic::RequestWork => {
-            if effective_disp >= 0 {
+            if rel >= 0 {
                 let work_msg = format!(
                     "{} looks you over. \"I could use some help. Come back when you're ready to work.\"",
                     npc_meta.name
                 );
                 (work_msg, vec![], 1i16)
             } else {
-                (format!("{} shakes their head. \"Not from you. Not right now.\"", npc_meta.name), vec![], 0i16)
+                (
+                    format!(
+                        "{} shakes their head. \"Not from you. Not right now.\"",
+                        npc_meta.name
+                    ),
+                    vec![],
+                    0i16,
+                )
             }
         }
 
@@ -528,44 +774,80 @@ fn resolve_talk(
                     let msg = if new1 || new2 {
                         "Elder Voss looks at you for a long time. Then he reaches into his coat and withdraws a slim, worn book. 'The old archive was mine to tend,' he says. 'I stopped when no one was interested. Perhaps you should start.' He hands you a copy of the Inscription Primer.".to_string()
                     } else {
-                        "Elder Voss nods slowly. 'You have the primer now. The rest is practice.'".to_string()
+                        "Elder Voss nods slowly. 'You have the primer now. The rest is practice.'"
+                            .to_string()
                     };
-                    (msg, vec![
-                        SideEffect::KnowledgeGained { node: knowledge::ELDER_VOSS_SECRET },
-                        SideEffect::KnowledgeGained { node: knowledge::INSCRIPTION_PRIMER },
-                    ], 8i16)
+                    (
+                        msg,
+                        vec![
+                            SideEffect::KnowledgeGained {
+                                node: knowledge::ELDER_VOSS_SECRET,
+                            },
+                            SideEffect::KnowledgeGained {
+                                node: knowledge::INSCRIPTION_PRIMER,
+                            },
+                        ],
+                        8i16,
+                    )
                 } else if elder_rel > 20 {
                     ("Elder Voss looks at you thoughtfully. 'There are old ways of knowing this settlement that most have forgotten. Come talk to me when you know the archive.' He says nothing more.".to_string(), vec![], 3i16)
                 } else {
                     ("Elder Voss gives you a long, measuring look. 'Perhaps another time.' He moves on.".to_string(), vec![], 0i16)
                 }
             } else {
-                (format!("{} seems puzzled by the question. They don't know what you mean.", npc_meta.name), vec![], 0i16)
+                (
+                    format!(
+                        "{} seems puzzled by the question. They don't know what you mean.",
+                        npc_meta.name
+                    ),
+                    vec![],
+                    0i16,
+                )
             }
         }
 
         TalkTopic::AskAbout { subject } => {
             // Gain knowledge of a person
-            let subj_def = content.npc_definitions.iter().find(|d| CitizenId(d.citizen_id) == *subject);
+            let subj_def = content
+                .npc_definitions
+                .iter()
+                .find(|d| CitizenId(d.citizen_id) == *subject);
             if let Some(sdef) = subj_def {
-                let response = if effective_disp >= 10 {
-                    format!("{} tells you what they know about {}. You learn something useful.", npc_meta.name, sdef.name)
+                let response = if rel >= 10 {
+                    format!(
+                        "{} tells you what they know about {}. You learn something useful.",
+                        npc_meta.name, sdef.name
+                    )
                 } else {
                     format!("{} shrugs. \"Don't know much about them.\"", npc_meta.name)
                 };
                 (response, vec![], 1i16)
             } else {
-                (format!("{} shrugs. \"Don't know that person.\"", npc_meta.name), vec![], 0i16)
+                (
+                    format!("{} shrugs. \"Don't know that person.\"", npc_meta.name),
+                    vec![],
+                    0i16,
+                )
             }
         }
 
         TalkTopic::AskAboutLocation { location: _ } => {
-            let _loc_def = content.npc_definitions.iter().find(|d| d.citizen_id == npc_id.0);
-            ("They tell you what they know about the location.".to_string(), vec![], 1i16)
+            let _loc_def = content
+                .npc_definitions
+                .iter()
+                .find(|d| d.citizen_id == npc_id.0);
+            (
+                "They tell you what they know about the location.".to_string(),
+                vec![],
+                1i16,
+            )
         }
 
         TalkTopic::ShareKnowledge { node } => {
-            if let Some((_, _, _, mut npc_epistemic)) = episodic_query.iter_mut().find(|(m, _, _, _)| m.id == npc_id) {
+            if let Some((_, _, _, mut npc_epistemic)) = episodic_query
+                .iter_mut()
+                .find(|(m, _, _, _)| m.id == npc_id)
+            {
                 if npc_epistemic.learn(node.0 as u16, tick) {
                     let corr = npc_epistemic.get_corroboration(node.0 as u16);
                     event_ring.emit(SimEvent::KnowledgeShared {
@@ -577,13 +859,20 @@ fn resolve_talk(
                     });
                 }
             }
-            (format!("{} listens with interest. 'That's useful to know.'", npc_meta.name), vec![], 4i16)
+            (
+                format!(
+                    "{} listens with interest. 'That's useful to know.'",
+                    npc_meta.name
+                ),
+                vec![],
+                4i16,
+            )
         }
     };
 
     // Apply relationship delta
     if rel_delta != 0 {
-        relationships.adjust(CitizenId::PLAYER, npc_id, rel_delta);
+        adjust_canonical_relationship(npc_id, rel_delta as i8, rel_delta as i8, 0, episodic_query);
         event_ring.emit(SimEvent::RelationshipEvent {
             actor: CitizenId::PLAYER,
             target: npc_id,
@@ -594,26 +883,44 @@ fn resolve_talk(
 
     let mut final_effects = side_effects;
     if rel_delta != 0 {
-        final_effects.push(SideEffect::RelationshipChanged { npc: npc_id, delta: rel_delta });
+        final_effects.push(SideEffect::RelationshipChanged {
+            npc: npc_id,
+            delta: rel_delta,
+        });
     }
 
-    ActionResult { tick, success: true, message, side_effects: final_effects }
+    ActionResult {
+        tick,
+        success: true,
+        message,
+        side_effects: final_effects,
+    }
 }
 
 fn resolve_help_with_felling(
     tick: u64,
     npc_id: CitizenId,
     settlement_ref: &SettlementRef,
-    relationships: &mut RelationshipLedger,
     event_ring: &mut EventRing,
     next_causal: &mut NextCausalId,
     consequence_reg: &mut PendingConsequenceRegistry,
     npc_query: &Query<
-        (&CitizenMeta, &mut Disposition, &NpcSchedule, &SettlementRef, &OccupationProfile),
+        (
+            &CitizenMeta,
+            &mut Disposition,
+            &NpcSchedule,
+            &SettlementRef,
+            &OccupationProfile,
+        ),
         Without<PlayerMarker>,
     >,
     episodic_query: &mut Query<
-        (&CitizenMeta, &mut EpisodicMemory, &mut RelationalLedger, &mut EpistemicState),
+        (
+            &CitizenMeta,
+            &mut EpisodicMemory,
+            &mut RelationalLedger,
+            &mut EpistemicState,
+        ),
         Without<PlayerMarker>,
     >,
 ) -> ActionResult {
@@ -626,7 +933,9 @@ fn resolve_help_with_felling(
         };
     }
 
-    let target_npc = npc_query.iter().find(|(meta, _, _, _, _)| meta.id == npc_id);
+    let target_npc = npc_query
+        .iter()
+        .find(|(meta, _, _, _, _)| meta.id == npc_id);
     if target_npc.is_none() {
         return ActionResult {
             tick,
@@ -674,7 +983,10 @@ fn resolve_help_with_felling(
         tick,
     });
 
-    if let Some((_, mut mem, mut ledger, _)) = episodic_query.iter_mut().find(|(m, _, _, _)| m.id == npc_id) {
+    if let Some((_, mut mem, mut ledger, _)) = episodic_query
+        .iter_mut()
+        .find(|(m, _, _, _)| m.id == npc_id)
+    {
         mem.add_record(EpisodicRecord {
             id: causal_id,
             tick,
@@ -691,11 +1003,11 @@ fn resolve_help_with_felling(
         ledger.adjust(CitizenId::PLAYER, 45, 45, 20);
     }
 
-    relationships.adjust(CitizenId::PLAYER, npc_id, 45);
-
     consequence_reg.register(
         causal_id,
-        TriggerCondition::TimeElapsed { duration_ticks: 336 },
+        TriggerCondition::TimeElapsed {
+            duration_ticks: 336,
+        },
         ConsequenceType::FraternalLaborStrain {
             elder: CitizenId(6),
             junior: CitizenId(12),
@@ -719,11 +1031,19 @@ fn resolve_offer(
     finances: &mut PersonalFinances,
     _inventory: &mut Inventory,
     _capabilities: &mut CapabilitySet,
-    relationships: &mut RelationshipLedger,
+    episodic_query: &mut Query<
+        (
+            &CitizenMeta,
+            &mut EpisodicMemory,
+            &mut RelationalLedger,
+            &mut EpistemicState,
+        ),
+        Without<PlayerMarker>,
+    >,
     _settlements: &mut SettlementDirectory,
     _event_ring: &mut EventRing,
 ) -> ActionResult {
-    let rel = relationships.get(CitizenId::PLAYER, npc_id);
+    let rel = canonical_relationship_score(npc_id, episodic_query);
 
     if rel < -30 {
         return ActionResult {
@@ -755,8 +1075,11 @@ fn resolve_offer(
         side_effects.push(SideEffect::CoinsGained(exchange.request_coins));
     }
 
-    relationships.adjust(CitizenId::PLAYER, npc_id, 3);
-    side_effects.push(SideEffect::RelationshipChanged { npc: npc_id, delta: 3 });
+    adjust_canonical_relationship(npc_id, 3, 3, 0, episodic_query);
+    side_effects.push(SideEffect::RelationshipChanged {
+        npc: npc_id,
+        delta: 3,
+    });
 
     ActionResult {
         tick,
@@ -778,7 +1101,10 @@ fn resolve_buy(
     let sid = SettlementDirectory::thornveil_id();
     let ordinal = resource_ordinal(resource);
 
-    let price = settlements.get(sid).map(|s| s.get_price(ordinal)).unwrap_or(99.0);
+    let price = settlements
+        .get(sid)
+        .map(|s| s.get_price(ordinal))
+        .unwrap_or(99.0);
     let total_cost = price as f64 * quantity as f64;
 
     if finances.coins < total_cost {
@@ -787,13 +1113,18 @@ fn resolve_buy(
             success: false,
             message: format!(
                 "You need {:.1} coins to buy {} {} (at {:.1} each). You only have {:.1}.",
-                total_cost, quantity, resource.display_name(), price, finances.coins
+                total_cost,
+                quantity,
+                resource.display_name(),
+                price,
+                finances.coins
             ),
             side_effects: vec![],
         };
     }
 
-    let has_stock = settlements.get(sid)
+    let has_stock = settlements
+        .get(sid)
         .map(|s| s.get_stock(ordinal) >= quantity as f64)
         .unwrap_or(false);
 
@@ -801,7 +1132,10 @@ fn resolve_buy(
         return ActionResult {
             tick,
             success: false,
-            message: format!("The market doesn't have enough {} in stock right now.", resource.display_name()),
+            message: format!(
+                "The market doesn't have enough {} in stock right now.",
+                resource.display_name()
+            ),
             side_effects: vec![],
         };
     }
@@ -828,7 +1162,10 @@ fn resolve_buy(
         success: true,
         message: format!(
             "You buy {} {} for {:.1} coins. You now have {:.1} coins.",
-            quantity, resource.display_name(), total_cost, finances.coins
+            quantity,
+            resource.display_name(),
+            total_cost,
+            finances.coins
         ),
         side_effects: vec![
             SideEffect::CoinsLost(total_cost),
@@ -853,12 +1190,19 @@ fn resolve_sell(
         return ActionResult {
             tick,
             success: false,
-            message: format!("You don't have {} {} to sell.", quantity, resource.display_name()),
+            message: format!(
+                "You don't have {} {} to sell.",
+                quantity,
+                resource.display_name()
+            ),
             side_effects: vec![],
         };
     }
 
-    let price = settlements.get(sid).map(|s| s.get_price(ordinal)).unwrap_or(1.0);
+    let price = settlements
+        .get(sid)
+        .map(|s| s.get_price(ordinal))
+        .unwrap_or(1.0);
     let total_earned = price as f64 * quantity as f64 * 0.85; // 15% market cut
 
     inventory.remove(ordinal, quantity);
@@ -873,7 +1217,9 @@ fn resolve_sell(
         success: true,
         message: format!(
             "You sell {} {} for {:.1} coins (market cut applied).",
-            quantity, resource.display_name(), total_earned
+            quantity,
+            resource.display_name(),
+            total_earned
         ),
         side_effects: vec![
             SideEffect::CoinsGained(total_earned),
@@ -932,12 +1278,14 @@ fn resolve_work(
             0u8,
             1.5,
         ),
-        _ => return ActionResult {
-            tick,
-            success: false,
-            message: "That occupation isn't available to work at directly.".to_string(),
-            side_effects: vec![],
-        },
+        _ => {
+            return ActionResult {
+                tick,
+                success: false,
+                message: "That occupation isn't available to work at directly.".to_string(),
+                side_effects: vec![],
+            }
+        }
     };
 
     if !can_work {
@@ -960,7 +1308,11 @@ fn resolve_work(
     needs.rest = needs.rest.saturating_sub(10);
 
     // Gain experience in relevant capability
-    let leveled = if cap_needed.0 > 0 { capabilities.add_practice(cap_needed, 5) } else { false };
+    let leveled = if cap_needed.0 > 0 {
+        capabilities.add_practice(cap_needed, 5)
+    } else {
+        false
+    };
 
     event_ring.emit(SimEvent::PlayerAction {
         tick,
@@ -968,18 +1320,28 @@ fn resolve_work(
         success: true,
     });
 
-    let level_msg = if leveled { " Your skill has improved!" } else { "" };
+    let level_msg = if leveled {
+        " Your skill has improved!"
+    } else {
+        ""
+    };
 
     ActionResult {
         tick,
         success: true,
         message: format!(
             "You work for a few hours. You earn {:.1} coins and gather {} {}.{}",
-            earn_rate, resources_gathered, resource_earned.display_name(), level_msg
+            earn_rate,
+            resources_gathered,
+            resource_earned.display_name(),
+            level_msg
         ),
         side_effects: vec![
             SideEffect::CoinsGained(earn_rate),
-            SideEffect::ResourceGained { resource: resource_earned, quantity: resources_gathered },
+            SideEffect::ResourceGained {
+                resource: resource_earned,
+                quantity: resources_gathered,
+            },
         ],
     }
 }
@@ -992,7 +1354,10 @@ fn resolve_practice(
     event_ring: &mut EventRing,
     _inventory: &mut Inventory,
 ) -> ActionResult {
-    let cap_def = content.capability_definitions.iter().find(|c| c.id == capability);
+    let cap_def = content
+        .capability_definitions
+        .iter()
+        .find(|c| c.id == capability);
 
     let cap_name = cap_def.map(|c| c.name.as_str()).unwrap_or("unknown skill");
 
@@ -1012,10 +1377,14 @@ fn resolve_practice(
         return ActionResult {
             tick,
             success: true,
-            message: format!("You begin practicing {}. You're a novice, but it's a start.", cap_name),
-            side_effects: vec![
-                SideEffect::CapabilityGained { capability, level: CapabilityLevel::NOVICE },
-            ],
+            message: format!(
+                "You begin practicing {}. You're a novice, but it's a start.",
+                cap_name
+            ),
+            side_effects: vec![SideEffect::CapabilityGained {
+                capability,
+                level: CapabilityLevel::NOVICE,
+            }],
         };
     }
 
@@ -1031,17 +1400,18 @@ fn resolve_practice(
         ActionResult {
             tick,
             success: true,
-            message: format!(
-                "Your {} has improved to {}!",
-                cap_name,
-                new_level.display()
-            ),
-            side_effects: vec![
-                SideEffect::CapabilityGained { capability, level: new_level },
-            ],
+            message: format!("Your {} has improved to {}!", cap_name, new_level.display()),
+            side_effects: vec![SideEffect::CapabilityGained {
+                capability,
+                level: new_level,
+            }],
         }
     } else {
-        let progress = capabilities.practice_progress.get(&capability.0).copied().unwrap_or(0);
+        let progress = capabilities
+            .practice_progress
+            .get(&capability.0)
+            .copied()
+            .unwrap_or(0);
         ActionResult {
             tick,
             success: true,
@@ -1060,24 +1430,48 @@ fn resolve_learn_from(
     capability: CapabilityId,
     capabilities: &mut CapabilitySet,
     _knowledge_inv: &mut KnowledgeInventory,
-    relationships: &mut RelationshipLedger,
     event_ring: &mut EventRing,
     npc_query: &Query<
-        (&CitizenMeta, &mut Disposition, &NpcSchedule, &SettlementRef, &OccupationProfile),
+        (
+            &CitizenMeta,
+            &mut Disposition,
+            &NpcSchedule,
+            &SettlementRef,
+            &OccupationProfile,
+        ),
         Without<PlayerMarker>,
     >,
     content: &ContentDefinitions,
+    episodic_query: &mut Query<
+        (
+            &CitizenMeta,
+            &mut EpisodicMemory,
+            &mut RelationalLedger,
+            &mut EpistemicState,
+        ),
+        Without<PlayerMarker>,
+    >,
 ) -> ActionResult {
     let npc_data = npc_query.iter().find(|(m, _, _, _, _)| m.id == npc_id);
     if npc_data.is_none() {
-        return ActionResult { tick, success: false, message: "That person isn't here.".to_string(), side_effects: vec![] };
+        return ActionResult {
+            tick,
+            success: false,
+            message: "That person isn't here.".to_string(),
+            side_effects: vec![],
+        };
     }
 
     let (npc_meta, _disposition, _, _, _) = npc_data.unwrap();
-    let npc_def = content.npc_definitions.iter().find(|d| d.citizen_id == npc_id.0);
+    let npc_def = content
+        .npc_definitions
+        .iter()
+        .find(|d| d.citizen_id == npc_id.0);
 
     // Check if NPC can teach this capability
-    let can_teach = npc_def.map(|d| d.will_teach == Some(capability)).unwrap_or(false);
+    let can_teach = npc_def
+        .map(|d| d.will_teach == Some(capability))
+        .unwrap_or(false);
     if !can_teach {
         return ActionResult {
             tick,
@@ -1089,7 +1483,7 @@ fn resolve_learn_from(
 
     // Check relationship threshold
     let threshold = npc_def.map(|d| d.teach_threshold).unwrap_or(50);
-    let rel = relationships.get(CitizenId::PLAYER, npc_id);
+    let rel = canonical_relationship_score(npc_id, episodic_query);
 
     if rel < threshold {
         let rel_needed = threshold - rel;
@@ -1105,7 +1499,10 @@ fn resolve_learn_from(
     }
 
     // Teaching happens
-    let cap_def = content.capability_definitions.iter().find(|c| c.id == capability);
+    let cap_def = content
+        .capability_definitions
+        .iter()
+        .find(|c| c.id == capability);
     let cap_name = cap_def.map(|c| c.name.as_str()).unwrap_or("this skill");
 
     capabilities.set(capability, CapabilityLevel::NOVICE);
@@ -1118,7 +1515,7 @@ fn resolve_learn_from(
     });
 
     // Small relationship boost from shared experience
-    relationships.adjust(CitizenId::PLAYER, npc_id, 5);
+    adjust_canonical_relationship(npc_id, 5, 5, 0, episodic_query);
 
     ActionResult {
         tick,
@@ -1128,8 +1525,14 @@ fn resolve_learn_from(
             npc_meta.name, cap_name
         ),
         side_effects: vec![
-            SideEffect::CapabilityGained { capability, level: CapabilityLevel::NOVICE },
-            SideEffect::RelationshipChanged { npc: npc_id, delta: 5 },
+            SideEffect::CapabilityGained {
+                capability,
+                level: CapabilityLevel::NOVICE,
+            },
+            SideEffect::RelationshipChanged {
+                npc: npc_id,
+                delta: 5,
+            },
         ],
     }
 }
@@ -1165,9 +1568,14 @@ fn resolve_inscribe(
 
     let milestone_msg = if count == 5 {
         "\n\nYou've now inscribed five observations. The habit of recording is becoming part of how you see the world."
-    } else { "" };
+    } else {
+        ""
+    };
 
-    event_ring.emit(SimEvent::TransformationEvent { stage: transform.stage, tick });
+    event_ring.emit(SimEvent::TransformationEvent {
+        stage: transform.stage,
+        tick,
+    });
 
     ActionResult {
         tick,
@@ -1178,9 +1586,10 @@ fn resolve_inscribe(
             count,
             milestone_msg
         ),
-        side_effects: vec![
-            SideEffect::TransformationProgress { stage: transform.stage, progress: transform.progress + 5 },
-        ],
+        side_effects: vec![SideEffect::TransformationProgress {
+            stage: transform.stage,
+            progress: transform.progress + 5,
+        }],
     }
 }
 
@@ -1257,7 +1666,10 @@ fn resolve_sleep(
         return ActionResult {
             tick,
             success: false,
-            message: format!("You can't afford to sleep at the inn ({:.1} coins).", inn_cost),
+            message: format!(
+                "You can't afford to sleep at the inn ({:.1} coins).",
+                inn_cost
+            ),
             side_effects: vec![],
         };
     }
@@ -1326,7 +1738,10 @@ fn resolve_diagnose(
         return ActionResult {
             tick,
             success: false,
-            message: format!("You are not at Location #{}. You must be on-site to conduct a diagnosis.", location.0),
+            message: format!(
+                "You are not at Location #{}. You must be on-site to conduct a diagnosis.",
+                location.0
+            ),
             side_effects: vec![],
         };
     }
@@ -1384,7 +1799,10 @@ fn resolve_diagnose(
     ActionResult {
         tick,
         success: true,
-        message: format!("You conduct a methodical on-site examination.\n\n{}", report_text),
+        message: format!(
+            "You conduct a methodical on-site examination.\n\n{}",
+            report_text
+        ),
         side_effects: vec![],
     }
 }
@@ -1398,7 +1816,10 @@ fn resolve_draft_document(
     documents: &mut DocumentRegistry,
     event_ring: &mut EventRing,
 ) -> ActionResult {
-    if !capabilities.has(caps::DIAGNOSIS) && transform.stage < 2 && capabilities.level(caps::INSCRIPTION) < CapabilityLevel::JOURNEYMAN {
+    if !capabilities.has(caps::DIAGNOSIS)
+        && transform.stage < 2
+        && capabilities.level(caps::INSCRIPTION) < CapabilityLevel::JOURNEYMAN
+    {
         return ActionResult {
             tick,
             success: false,
@@ -1408,7 +1829,10 @@ fn resolve_draft_document(
     }
 
     match doc_type {
-        DocumentType::HarvestDiagnosisReport { location: _, finding } => {
+        DocumentType::HarvestDiagnosisReport {
+            location: _,
+            finding,
+        } => {
             if *finding > 0 && !player_epistemic.has_knowledge(*finding) {
                 return ActionResult {
                     tick,
@@ -1418,7 +1842,11 @@ fn resolve_draft_document(
                 };
             }
         }
-        DocumentType::DebtReliefCharter { creditor, debtor, terms } => {
+        DocumentType::DebtReliefCharter {
+            creditor,
+            debtor,
+            terms,
+        } => {
             if creditor == debtor || *terms == 0 {
                 return ActionResult {
                     tick,
@@ -1433,7 +1861,9 @@ fn resolve_draft_document(
                 return ActionResult {
                     tick,
                     success: false,
-                    message: "You cannot translate an archive secret you have not observed or learned.".to_string(),
+                    message:
+                        "You cannot translate an archive secret you have not observed or learned."
+                            .to_string(),
                     side_effects: vec![],
                 };
             }
@@ -1475,15 +1905,23 @@ fn resolve_arbitrate_dispute(
     consequence_id: u32,
     documents: &mut DocumentRegistry,
     consequences: &mut PendingConsequenceRegistry,
-    relationships: &mut RelationshipLedger,
     episodic_query: &mut Query<
-        (&CitizenMeta, &mut EpisodicMemory, &mut RelationalLedger, &mut EpistemicState),
+        (
+            &CitizenMeta,
+            &mut EpisodicMemory,
+            &mut RelationalLedger,
+            &mut EpistemicState,
+        ),
         Without<PlayerMarker>,
     >,
     next_causal: &mut NextCausalId,
     event_ring: &mut EventRing,
 ) -> ActionResult {
-    let consequence = if let Some(c) = consequences.consequences.iter_mut().find(|c| c.id == consequence_id) {
+    let consequence = if let Some(c) = consequences
+        .consequences
+        .iter_mut()
+        .find(|c| c.id == consequence_id)
+    {
         c
     } else {
         return ActionResult {
@@ -1496,9 +1934,15 @@ fn resolve_arbitrate_dispute(
 
     let (doc_title, doc_matches) = if let Some(doc) = documents.get(document_id) {
         let matches = match (&consequence.consequence_type, &doc.doc_type) {
-            (ConsequenceType::CropBlightDispute { .. }, DocumentType::HarvestDiagnosisReport { .. }) => true,
+            (
+                ConsequenceType::CropBlightDispute { .. },
+                DocumentType::HarvestDiagnosisReport { .. },
+            ) => true,
             (ConsequenceType::DebtDispute { .. }, DocumentType::DebtReliefCharter { .. }) => true,
-            (ConsequenceType::FraternalLaborStrain { .. }, DocumentType::FoundingArchiveTranslation { .. }) => true,
+            (
+                ConsequenceType::FraternalLaborStrain { .. },
+                DocumentType::FoundingArchiveTranslation { .. },
+            ) => true,
             _ => false,
         };
         (doc.doc_type.title(), matches)
@@ -1506,7 +1950,10 @@ fn resolve_arbitrate_dispute(
         return ActionResult {
             tick,
             success: false,
-            message: format!("Document #{} does not exist in official records.", document_id),
+            message: format!(
+                "Document #{} does not exist in official records.",
+                document_id
+            ),
             side_effects: vec![],
         };
     };
@@ -1515,7 +1962,10 @@ fn resolve_arbitrate_dispute(
         return ActionResult {
             tick,
             success: false,
-            message: format!("Document #{} ({}) is not legally applicable to arbitrate this dispute.", document_id, doc_title),
+            message: format!(
+                "Document #{} ({}) is not legally applicable to arbitrate this dispute.",
+                document_id, doc_title
+            ),
             side_effects: vec![],
         };
     }
@@ -1524,7 +1974,10 @@ fn resolve_arbitrate_dispute(
         return ActionResult {
             tick,
             success: false,
-            message: format!("Situation #{} has already been peacefully resolved.", consequence_id),
+            message: format!(
+                "Situation #{} has already been peacefully resolved.",
+                consequence_id
+            ),
             side_effects: vec![],
         };
     }
@@ -1538,11 +1991,15 @@ fn resolve_arbitrate_dispute(
             involved_citizens.push(*elder);
             involved_citizens.push(*junior);
         }
-        ConsequenceType::CropBlightDispute { farmer_a, farmer_b, .. } => {
+        ConsequenceType::CropBlightDispute {
+            farmer_a, farmer_b, ..
+        } => {
             involved_citizens.push(*farmer_a);
             involved_citizens.push(*farmer_b);
         }
-        ConsequenceType::DebtDispute { creditor, debtor, .. } => {
+        ConsequenceType::DebtDispute {
+            creditor, debtor, ..
+        } => {
             involved_citizens.push(*creditor);
             involved_citizens.push(*debtor);
         }
@@ -1558,8 +2015,6 @@ fn resolve_arbitrate_dispute(
     }
 
     for &cit in &involved_citizens {
-        relationships.adjust(CitizenId::PLAYER, cit, 25);
-
         for (meta, mut mem, mut ledger, _) in episodic_query.iter_mut() {
             if meta.id == cit {
                 let turn_id = next_causal.next();
@@ -1581,7 +2036,10 @@ fn resolve_arbitrate_dispute(
                     }),
                 });
 
-                let bond = ledger.bonds.entry(0).or_insert_with(RelationalBond::default);
+                let bond = ledger
+                    .bonds
+                    .entry(0)
+                    .or_insert_with(RelationalBond::default);
                 *bond = RelationalBond::new(
                     (bond.sentiment + 25).min(100),
                     (bond.trust + 40).min(100),
@@ -1594,18 +2052,22 @@ fn resolve_arbitrate_dispute(
     if involved_citizens.len() >= 2 {
         let a = involved_citizens[0];
         let b = involved_citizens[1];
-        relationships.adjust(a, b, 20);
-
         for (meta, _, mut ledger, _) in episodic_query.iter_mut() {
             if meta.id == a {
-                let bond_b = ledger.bonds.entry(b.0).or_insert_with(RelationalBond::default);
+                let bond_b = ledger
+                    .bonds
+                    .entry(b.0)
+                    .or_insert_with(RelationalBond::default);
                 *bond_b = RelationalBond::new(
                     (bond_b.sentiment + 20).max(10).min(100),
                     (bond_b.trust + 20).max(10).min(100),
                     0,
                 );
             } else if meta.id == b {
-                let bond_a = ledger.bonds.entry(a.0).or_insert_with(RelationalBond::default);
+                let bond_a = ledger
+                    .bonds
+                    .entry(a.0)
+                    .or_insert_with(RelationalBond::default);
                 *bond_a = RelationalBond::new(
                     (bond_a.sentiment + 20).max(10).min(100),
                     (bond_a.trust + 20).max(10).min(100),
@@ -1617,7 +2079,10 @@ fn resolve_arbitrate_dispute(
 
     event_ring.emit(SimEvent::PlayerAction {
         tick,
-        action_name: format!("ArbitrateDispute(Doc#{}, Consequence#{})", document_id, consequence_id),
+        action_name: format!(
+            "ArbitrateDispute(Doc#{}, Consequence#{})",
+            document_id, consequence_id
+        ),
         success: true,
     });
 
@@ -1631,4 +2096,3 @@ fn resolve_arbitrate_dispute(
         side_effects: vec![SideEffect::DisputeArbitrated { consequence_id, document_id }],
     }
 }
-

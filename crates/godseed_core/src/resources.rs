@@ -1,11 +1,10 @@
 /// Godseed — ECS Resources (global simulation state)
-
 use bevy_ecs::system::Resource;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
 
-use crate::types::{CitizenId, ReputationRecord};
 use crate::events::{SimEvent, TelemetryEvent};
+use crate::types::{CitizenId, ReputationRecord};
 
 // ── Relationship Ledger ───────────────────────────────────────────────────────
 
@@ -33,7 +32,11 @@ impl RelationshipLedger {
     }
 
     fn key(a: CitizenId, b: CitizenId) -> (u64, u64) {
-        if a.0 <= b.0 { (a.0, b.0) } else { (b.0, a.0) }
+        if a.0 <= b.0 {
+            (a.0, b.0)
+        } else {
+            (b.0, a.0)
+        }
     }
 }
 
@@ -54,7 +57,6 @@ impl ReputationRegistry {
 
 // ── Event Ring (inherited from CIVITAS-1M) ────────────────────────────────────
 
-
 #[derive(Resource, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct EventRing {
     pub events: VecDeque<SimEvent>,
@@ -62,10 +64,13 @@ pub struct EventRing {
     pub total_emitted: u64,
 }
 
-
 impl EventRing {
     pub fn new(capacity: usize) -> Self {
-        Self { events: VecDeque::new(), capacity, total_emitted: 0 }
+        Self {
+            events: VecDeque::new(),
+            capacity,
+            total_emitted: 0,
+        }
     }
 
     pub fn emit(&mut self, event: SimEvent) {
@@ -91,7 +96,9 @@ pub struct TelemetryLog {
 }
 
 impl TelemetryLog {
-    pub fn new() -> Self { Self::default() }
+    pub fn new() -> Self {
+        Self::default()
+    }
 
     pub fn emit(&mut self, event: TelemetryEvent) {
         if self.events.len() >= 50_000 {
@@ -103,7 +110,8 @@ impl TelemetryLog {
     /// Dump all events to JSON lines string
     pub fn to_jsonl(&self) -> String {
         use serde_json::to_string;
-        self.events.iter()
+        self.events
+            .iter()
             .filter_map(|e| to_string(e).ok())
             .collect::<Vec<_>>()
             .join("\n")
@@ -122,7 +130,9 @@ pub struct NextCitizenId(pub u64);
 pub struct NextCausalId(pub u64);
 
 impl NextCausalId {
-    pub fn new(start: u64) -> Self { Self(start) }
+    pub fn new(start: u64) -> Self {
+        Self(start)
+    }
     pub fn next(&mut self) -> u64 {
         let id = self.0;
         self.0 += 1;
@@ -131,7 +141,9 @@ impl NextCausalId {
 }
 
 impl Default for NextCausalId {
-    fn default() -> Self { Self(100) }
+    fn default() -> Self {
+        Self(100)
+    }
 }
 
 /// Authoritative registry of active and historical consequence situations (AC-206, AC-207)
@@ -143,7 +155,10 @@ pub struct PendingConsequenceRegistry {
 
 impl PendingConsequenceRegistry {
     pub fn new() -> Self {
-        Self { consequences: Vec::new(), next_id: 1 }
+        Self {
+            consequences: Vec::new(),
+            next_id: 1,
+        }
     }
 
     pub fn register(
@@ -167,9 +182,13 @@ impl PendingConsequenceRegistry {
     }
 
     pub fn active_count(&self) -> usize {
-        self.consequences.iter().filter(|c| {
-            c.stage == crate::types::ConsequenceStage::Active || c.stage == crate::types::ConsequenceStage::Escalated
-        }).count()
+        self.consequences
+            .iter()
+            .filter(|c| {
+                c.stage == crate::types::ConsequenceStage::Active
+                    || c.stage == crate::types::ConsequenceStage::Escalated
+            })
+            .count()
     }
 }
 
@@ -189,7 +208,9 @@ pub struct ReturnDigestLog {
 
 impl ReturnDigestLog {
     pub fn new() -> Self {
-        Self { entries: VecDeque::new() }
+        Self {
+            entries: VecDeque::new(),
+        }
     }
 
     pub fn push(&mut self, entry: EpistemicReturnDigest) {
@@ -227,7 +248,10 @@ impl Default for DocumentRegistry {
 
 impl DocumentRegistry {
     pub fn new() -> Self {
-        Self { documents: Vec::new(), next_id: 1 }
+        Self {
+            documents: Vec::new(),
+            next_id: 1,
+        }
     }
 
     pub fn register(&mut self, mut doc: crate::types::InscribedDocument) -> u32 {
@@ -246,4 +270,3 @@ impl DocumentRegistry {
         self.documents.iter_mut().find(|d| d.id == id)
     }
 }
-

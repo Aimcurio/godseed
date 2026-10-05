@@ -4,7 +4,6 @@ use godseed_core::{
     types::{CapabilityLevel, LocationId, PlayerAction},
 };
 
-
 #[test]
 fn test_ac6_capability_acquisition_and_progression() {
     let mut sim = Simulation::new();
@@ -12,7 +11,9 @@ fn test_ac6_capability_acquisition_and_progression() {
     // Player starts with no Woodcutting capability
     {
         use godseed_core::components::{CapabilitySet, PlayerMarker};
-        let mut q = sim.world.query_filtered::<&CapabilitySet, bevy_ecs::query::With<PlayerMarker>>();
+        let mut q = sim
+            .world
+            .query_filtered::<&CapabilitySet, bevy_ecs::query::With<PlayerMarker>>();
         let caps = q.iter(&sim.world).next().unwrap();
         assert!(!caps.has(caps::WOODCUTTING));
     }
@@ -28,7 +29,9 @@ fn test_ac6_capability_acquisition_and_progression() {
     // Player now has Woodcutting at Novice level
     {
         use godseed_core::components::{CapabilitySet, PlayerMarker};
-        let mut q = sim.world.query_filtered::<&CapabilitySet, bevy_ecs::query::With<PlayerMarker>>();
+        let mut q = sim
+            .world
+            .query_filtered::<&CapabilitySet, bevy_ecs::query::With<PlayerMarker>>();
         let caps = q.iter(&sim.world).next().unwrap();
         assert!(caps.has(caps::WOODCUTTING));
         assert_eq!(caps.level(caps::WOODCUTTING), CapabilityLevel::NOVICE);
@@ -58,9 +61,14 @@ fn test_ac7_transformation_path_the_inscription_path() {
     // Verify knowledge gained
     {
         use godseed_core::components::{KnowledgeInventory, PlayerMarker};
-        let mut q = sim.world.query_filtered::<&KnowledgeInventory, bevy_ecs::query::With<PlayerMarker>>();
+        let mut q = sim
+            .world
+            .query_filtered::<&KnowledgeInventory, bevy_ecs::query::With<PlayerMarker>>();
         let k = q.iter(&sim.world).next().unwrap();
-        assert!(k.knows(knowledge::ANCIENT_ARCHIVE), "Must know about Ancient Archive");
+        assert!(
+            k.knows(knowledge::ANCIENT_ARCHIVE),
+            "Must know about Ancient Archive"
+        );
     }
 
     // Step 2: Practice/Acquire Inscription capability
@@ -83,7 +91,10 @@ fn test_ac7_transformation_path_the_inscription_path() {
     // Step 4: Make 5 inscriptions
     for i in 1..=5 {
         sim.push_action(PlayerAction::Inscribe {
-            observation: format!("Observation #{}: Recording settlement life in Thornveil.", i),
+            observation: format!(
+                "Observation #{}: Recording settlement life in Thornveil.",
+                i
+            ),
         });
         sim.step();
         let inscribe_res = sim.drain_results();

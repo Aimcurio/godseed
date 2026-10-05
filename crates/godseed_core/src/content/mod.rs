@@ -2,14 +2,12 @@
 ///
 /// Authored content for Thornveil: NPC identities, capabilities, knowledge nodes,
 /// transformation path definition. Systems are generic; content provides identity.
-
 use bevy_ecs::system::Resource;
 use serde::{Deserialize, Serialize};
 
 use crate::types::{
-    BehavioralMode, CapabilityId, Gender, HouseholdRole,
-    KnowledgeDefinition, KnowledgeDomain, KnowledgeNode, LocationId, NpcActivity,
-    OccupationType, ResourceType, ScheduleSlot,
+    BehavioralMode, CapabilityId, Gender, HouseholdRole, KnowledgeDefinition, KnowledgeDomain,
+    KnowledgeNode, LocationId, NpcActivity, OccupationType, ResourceType, ScheduleSlot,
 };
 
 // ── Capability Definitions ────────────────────────────────────────────────────
@@ -110,49 +108,60 @@ fn knowledge_definitions() -> Vec<KnowledgeDefinition> {
             id: 1,
             domain: KnowledgeDomain::ObservationInsight,
             title: "Timber Stress Signs".to_string(),
-            description: "Heart rot and heavy fungal spread in the old stand at West Woods.".to_string(),
+            description: "Heart rot and heavy fungal spread in the old stand at West Woods."
+                .to_string(),
             social_fallout_mode: None,
         },
         KnowledgeDefinition {
             id: 2,
             domain: KnowledgeDomain::ObservationInsight,
             title: "Crop Blight Vulnerability".to_string(),
-            description: "Stalk mildew threatening the lower furrows of South Fields during damp weeks.".to_string(),
+            description:
+                "Stalk mildew threatening the lower furrows of South Fields during damp weeks."
+                    .to_string(),
             social_fallout_mode: None,
         },
         KnowledgeDefinition {
             id: 3,
             domain: KnowledgeDomain::ObservationInsight,
             title: "Herb Habitats".to_string(),
-            description: "Rare silverleaf moss flourishing in the sheltered shale behind the garden wall.".to_string(),
+            description:
+                "Rare silverleaf moss flourishing in the sheltered shale behind the garden wall."
+                    .to_string(),
             social_fallout_mode: None,
         },
         KnowledgeDefinition {
             id: 4,
             domain: KnowledgeDomain::ObservationInsight,
             title: "Ancient Archive Lore".to_string(),
-            description: "A subterranean archive vault buried beneath the collapsed stone nave.".to_string(),
+            description: "A subterranean archive vault buried beneath the collapsed stone nave."
+                .to_string(),
             social_fallout_mode: Some(BehavioralMode::WaryConsultant),
         },
         KnowledgeDefinition {
             id: 5,
             domain: KnowledgeDomain::SecretTruth,
             title: "Elder Voss's Exiled Son".to_string(),
-            description: "Voss's eldest blood kin was quietly banished past the ridge thirty winters ago.".to_string(),
+            description:
+                "Voss's eldest blood kin was quietly banished past the ridge thirty winters ago."
+                    .to_string(),
             social_fallout_mode: Some(BehavioralMode::AffectionateRefusal),
         },
         KnowledgeDefinition {
             id: 6,
             domain: KnowledgeDomain::SecretTruth,
             title: "Delia's Hidden Debt".to_string(),
-            description: "Delia owes seventy silver guild coins under a private penalty contract.".to_string(),
+            description: "Delia owes seventy silver guild coins under a private penalty contract."
+                .to_string(),
             social_fallout_mode: Some(BehavioralMode::GrudgingDebtor),
         },
         KnowledgeDefinition {
             id: 7,
             domain: KnowledgeDomain::DocumentedRecord,
             title: "Founding Land Charter".to_string(),
-            description: "The original sealed parchment establishing Thornveil's ancient pasture boundaries.".to_string(),
+            description:
+                "The original sealed parchment establishing Thornveil's ancient pasture boundaries."
+                    .to_string(),
             social_fallout_mode: Some(BehavioralMode::WaryConsultant),
         },
     ]

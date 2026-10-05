@@ -4,8 +4,8 @@ use godseed_core::{
     resources::{EventRing, PendingConsequenceRegistry, ReturnDigestLog},
     sim::Simulation,
     types::{
-        CitizenId, ConsequenceStage, ConsequenceType, LocationId, MemoryTag,
-        OccupationType, PlayerAction, TalkTopic,
+        CitizenId, ConsequenceStage, ConsequenceType, LocationId, MemoryTag, OccupationType,
+        PlayerAction, TalkTopic,
     },
 };
 
@@ -16,15 +16,24 @@ fn test_thin_causal_slice_full_loop() {
     // 1. Move Player from Settlement Road (9) -> Well (7) -> Archive (8) -> Forest Edge (11)
     sim.push_action(PlayerAction::Move { to: LocationId(7) });
     sim.step();
-    assert!(sim.drain_results()[0].success, "Move to Well should succeed");
+    assert!(
+        sim.drain_results()[0].success,
+        "Move to Well should succeed"
+    );
 
     sim.push_action(PlayerAction::Move { to: LocationId(8) });
     sim.step();
-    assert!(sim.drain_results()[0].success, "Move to Archive should succeed");
+    assert!(
+        sim.drain_results()[0].success,
+        "Move to Archive should succeed"
+    );
 
     sim.push_action(PlayerAction::Move { to: LocationId(11) });
     sim.step();
-    assert!(sim.drain_results()[0].success, "Move to Forest Edge should succeed");
+    assert!(
+        sim.drain_results()[0].success,
+        "Move to Forest Edge should succeed"
+    );
 
     // Advance to hour 8 when Tomas Birch is actively working at West Woods
     while sim.summary().hour < 8 {
@@ -37,7 +46,10 @@ fn test_thin_causal_slice_full_loop() {
     sim.push_action(PlayerAction::HelpWithFelling { npc: CitizenId(6) });
     sim.step();
     let felling_res = sim.drain_results();
-    assert!(felling_res[0].success, "HelpWithFelling should succeed at Forest Edge");
+    assert!(
+        felling_res[0].success,
+        "HelpWithFelling should succeed at Forest Edge"
+    );
     assert!(
         felling_res[0].message.contains("Tomas Birch"),
         "Message should reference Tomas Birch"
@@ -48,11 +60,16 @@ fn test_thin_causal_slice_full_loop() {
         let ring = sim.world.resource::<EventRing>();
         ring.events.iter().any(|e| matches!(e, SimEvent::CausalAction { action_name, .. } if action_name == "HelpWithFelling"))
     };
-    assert!(causal_emitted, "EventRing must record CausalAction for HelpWithFelling");
+    assert!(
+        causal_emitted,
+        "EventRing must record CausalAction for HelpWithFelling"
+    );
 
     // 4. Verify Tomas Birch has permanent anchor memory and relational bond updated
     {
-        let mut query = sim.world.query::<(&CitizenMeta, &EpisodicMemory, &RelationalLedger)>();
+        let mut query = sim
+            .world
+            .query::<(&CitizenMeta, &EpisodicMemory, &RelationalLedger)>();
         let mut found_tomas = false;
         for (meta, mem, ledger) in query.iter(&sim.world) {
             if meta.id == CitizenId(6) {
@@ -73,7 +90,11 @@ fn test_thin_causal_slice_full_loop() {
     // 5. Verify PendingConsequenceRegistry tracks FraternalLaborStrain
     {
         let reg = sim.world.resource::<PendingConsequenceRegistry>();
-        assert_eq!(reg.consequences.len(), 1, "Must have exactly 1 pending consequence");
+        assert_eq!(
+            reg.consequences.len(),
+            1,
+            "Must have exactly 1 pending consequence"
+        );
         let c = &reg.consequences[0];
         assert_eq!(c.stage, ConsequenceStage::Active, "Stage must be Active");
         assert!(
@@ -92,7 +113,9 @@ fn test_thin_causal_slice_full_loop() {
     let early_greeting = sim.drain_results();
     assert!(early_greeting[0].success);
     assert!(
-        early_greeting[0].message.contains("oak we brought down together"),
+        early_greeting[0]
+            .message
+            .contains("oak we brought down together"),
         "Immediate greeting should recall the felling: {}",
         early_greeting[0].message
     );
@@ -107,12 +130,18 @@ fn test_thin_causal_slice_full_loop() {
     // 8. Verify PendingConsequence is now Matured
     {
         let reg = sim.world.resource::<PendingConsequenceRegistry>();
-        assert_eq!(reg.consequences[0].stage, ConsequenceStage::Matured, "Consequence must be Matured after 14 days");
+        assert_eq!(
+            reg.consequences[0].stage,
+            ConsequenceStage::Matured,
+            "Consequence must be Matured after 14 days"
+        );
     }
 
     // 9. Verify Runn's occupation is Artisan and work_location is Forge (LocationId 2)
     {
-        let mut query = sim.world.query::<(&CitizenMeta, &NpcSchedule, &OccupationProfile)>();
+        let mut query = sim
+            .world
+            .query::<(&CitizenMeta, &NpcSchedule, &OccupationProfile)>();
         let mut found_runn = false;
         for (meta, schedule, occ) in query.iter(&sim.world) {
             if meta.id == CitizenId(12) {
@@ -166,8 +195,12 @@ fn test_thin_causal_slice_full_loop() {
     let matured_tomas_greeting = sim.drain_results();
     assert!(matured_tomas_greeting[0].success);
     assert!(
-        matured_tomas_greeting[0].message.contains("Runn took it hard")
-            && matured_tomas_greeting[0].message.contains("apprenticeship with Wren at the forge"),
+        matured_tomas_greeting[0]
+            .message
+            .contains("Runn took it hard")
+            && matured_tomas_greeting[0]
+                .message
+                .contains("apprenticeship with Wren at the forge"),
         "Tomas must articulate the transformed relationship and consequence: {}",
         matured_tomas_greeting[0].message
     );
@@ -176,14 +209,24 @@ fn test_thin_causal_slice_full_loop() {
     // Forest Edge (11) -> Road (9) -> Forge (2)
     sim.push_action(PlayerAction::Move { to: LocationId(9) });
     sim.step();
-    assert!(sim.drain_results()[0].success, "Move to Road should succeed");
+    assert!(
+        sim.drain_results()[0].success,
+        "Move to Road should succeed"
+    );
 
     sim.push_action(PlayerAction::Move { to: LocationId(2) });
     sim.step();
-    assert!(sim.drain_results()[0].success, "Move to Forge should succeed");
+    assert!(
+        sim.drain_results()[0].success,
+        "Move to Forge should succeed"
+    );
 
     // Wait until working hours (e.g. hour 8..11 or 15..20) when Runn is working at Forge
-    while sim.summary().hour < 8 || sim.summary().hour == 12 || sim.summary().hour == 13 || sim.summary().hour == 14 {
+    while sim.summary().hour < 8
+        || sim.summary().hour == 12
+        || sim.summary().hour == 13
+        || sim.summary().hour == 14
+    {
         sim.push_action(PlayerAction::Wait { ticks: 1 });
         sim.step();
         sim.drain_results();

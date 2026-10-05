@@ -26,8 +26,15 @@ fn test_ac9_persistence_and_save_load_integrity() {
     let mut loaded_sim = Simulation::load_from_file(save_path).expect("Load must succeed");
 
     assert_eq!(loaded_sim.tick(), tick_before_save, "Ticks must match");
-    assert_eq!(loaded_sim.state_hash(), hash_before_save, "State hash must match across save/load");
-    assert!(loaded_sim.check_invariants().is_ok(), "Loaded state must pass all invariants");
+    assert_eq!(
+        loaded_sim.state_hash(),
+        hash_before_save,
+        "State hash must match across save/load"
+    );
+    assert!(
+        loaded_sim.check_invariants().is_ok(),
+        "Loaded state must pass all invariants"
+    );
 
     // Cleanup
     let _ = fs::remove_file(save_path);
@@ -52,7 +59,9 @@ fn test_ac9_deep_semantic_persistence_equivalence() {
     sim.drain_results();
 
     // 3. Practice inscription
-    sim.push_action(PlayerAction::Practice { capability: godseed_core::types::CapabilityId(1) });
+    sim.push_action(PlayerAction::Practice {
+        capability: godseed_core::types::CapabilityId(1),
+    });
     sim.step();
     sim.drain_results();
 
@@ -87,67 +96,205 @@ fn test_ac9_deep_semantic_persistence_equivalence() {
     let loaded_hash = loaded_sim.state_hash();
 
     // Assert overall snapshot deep equality
-    assert_eq!(pre_save_hash, loaded_hash, "State hash must match identically");
-    assert_eq!(pre_save, loaded, "Full SimulationSnapshot must be deeply identical");
+    assert_eq!(
+        pre_save_hash, loaded_hash,
+        "State hash must match identically"
+    );
+    assert_eq!(
+        pre_save, loaded,
+        "Full SimulationSnapshot must be deeply identical"
+    );
 
     // Explicit field-by-field verification (Section 8: detect missing-component loss or default substitution)
     assert_eq!(pre_save.version, loaded.version, "Version must match");
     assert_eq!(pre_save.clock, loaded.clock, "SimClock must match");
     assert_eq!(pre_save.world_map, loaded.world_map, "WorldMap must match");
-    assert_eq!(pre_save.settlements, loaded.settlements, "SettlementDirectory must match");
-    assert_eq!(pre_save.households, loaded.households, "HouseholdDirectory must match");
-    assert_eq!(pre_save.relationships, loaded.relationships, "RelationshipLedger must match");
-    assert_eq!(pre_save.reputation, loaded.reputation, "ReputationRegistry must match");
+    assert_eq!(
+        pre_save.settlements, loaded.settlements,
+        "SettlementDirectory must match"
+    );
+    assert_eq!(
+        pre_save.households, loaded.households,
+        "HouseholdDirectory must match"
+    );
+    assert_eq!(
+        pre_save.relationships, loaded.relationships,
+        "RelationshipLedger must match"
+    );
+    assert_eq!(
+        pre_save.reputation, loaded.reputation,
+        "ReputationRegistry must match"
+    );
     assert_eq!(pre_save.events, loaded.events, "EventRing must match");
-    assert_eq!(pre_save.next_citizen_id, loaded.next_citizen_id, "NextCitizenId must match");
-    assert_eq!(pre_save.pending_consequences, loaded.pending_consequences, "PendingConsequenceRegistry must match");
-    assert_eq!(pre_save.return_digests, loaded.return_digests, "ReturnDigestLog must match");
-    assert_eq!(pre_save.documents, loaded.documents, "DocumentRegistry must match");
-    assert_eq!(pre_save.next_causal_id, loaded.next_causal_id, "NextCausalId must match");
-    assert_eq!(pre_save.citizens.len(), loaded.citizens.len(), "Citizen counts must match exactly");
+    assert_eq!(
+        pre_save.next_citizen_id, loaded.next_citizen_id,
+        "NextCitizenId must match"
+    );
+    assert_eq!(
+        pre_save.pending_consequences, loaded.pending_consequences,
+        "PendingConsequenceRegistry must match"
+    );
+    assert_eq!(
+        pre_save.return_digests, loaded.return_digests,
+        "ReturnDigestLog must match"
+    );
+    assert_eq!(
+        pre_save.documents, loaded.documents,
+        "DocumentRegistry must match"
+    );
+    assert_eq!(
+        pre_save.next_causal_id, loaded.next_causal_id,
+        "NextCausalId must match"
+    );
+    assert_eq!(
+        pre_save.citizens.len(),
+        loaded.citizens.len(),
+        "Citizen counts must match exactly"
+    );
 
     // Verify all 16 citizens (15 NPCs + 1 player)
     assert_eq!(pre_save.citizens.len(), 16);
     for pre_c in &pre_save.citizens {
-        let loaded_c = loaded.citizens.iter()
+        let loaded_c = loaded
+            .citizens
+            .iter()
             .find(|c| c.meta.id == pre_c.meta.id)
             .unwrap_or_else(|| panic!("Citizen {:?} missing from loaded snapshot", pre_c.meta.id));
 
-        assert_eq!(&pre_c.meta, &loaded_c.meta, "CitizenMeta mismatch for {:?}", pre_c.meta.id);
-        assert_eq!(&pre_c.demographics, &loaded_c.demographics, "Demographics mismatch for {:?}", pre_c.meta.id);
-        assert_eq!(&pre_c.household_ref, &loaded_c.household_ref, "HouseholdRef mismatch for {:?}", pre_c.meta.id);
-        assert_eq!(&pre_c.settlement_ref, &loaded_c.settlement_ref, "SettlementRef mismatch for {:?}", pre_c.meta.id);
-        assert_eq!(&pre_c.occupation, &loaded_c.occupation, "OccupationProfile mismatch for {:?}", pre_c.meta.id);
-        assert_eq!(&pre_c.finances, &loaded_c.finances, "PersonalFinances mismatch for {:?}", pre_c.meta.id);
-        assert_eq!(&pre_c.needs, &loaded_c.needs, "PhysicalNeeds mismatch for {:?}", pre_c.meta.id);
-        assert_eq!(&pre_c.mobility, &loaded_c.mobility, "MobilityProfile mismatch for {:?}", pre_c.meta.id);
-        assert_eq!(&pre_c.kinship, &loaded_c.kinship, "Kinship mismatch for {:?}", pre_c.meta.id);
-        assert_eq!(&pre_c.causal_audit, &loaded_c.causal_audit, "CausalAudit mismatch for {:?}", pre_c.meta.id);
-        assert_eq!(&pre_c.inventory, &loaded_c.inventory, "Inventory mismatch for {:?}", pre_c.meta.id);
-        assert_eq!(&pre_c.episodic_memory, &loaded_c.episodic_memory, "EpisodicMemory mismatch for {:?}", pre_c.meta.id);
-        assert_eq!(&pre_c.relational_ledger, &loaded_c.relational_ledger, "RelationalLedger mismatch for {:?}", pre_c.meta.id);
-        assert_eq!(&pre_c.epistemic_state, &loaded_c.epistemic_state, "EpistemicState mismatch for {:?}", pre_c.meta.id);
+        assert_eq!(
+            &pre_c.meta, &loaded_c.meta,
+            "CitizenMeta mismatch for {:?}",
+            pre_c.meta.id
+        );
+        assert_eq!(
+            &pre_c.demographics, &loaded_c.demographics,
+            "Demographics mismatch for {:?}",
+            pre_c.meta.id
+        );
+        assert_eq!(
+            &pre_c.household_ref, &loaded_c.household_ref,
+            "HouseholdRef mismatch for {:?}",
+            pre_c.meta.id
+        );
+        assert_eq!(
+            &pre_c.settlement_ref, &loaded_c.settlement_ref,
+            "SettlementRef mismatch for {:?}",
+            pre_c.meta.id
+        );
+        assert_eq!(
+            &pre_c.occupation, &loaded_c.occupation,
+            "OccupationProfile mismatch for {:?}",
+            pre_c.meta.id
+        );
+        assert_eq!(
+            &pre_c.finances, &loaded_c.finances,
+            "PersonalFinances mismatch for {:?}",
+            pre_c.meta.id
+        );
+        assert_eq!(
+            &pre_c.needs, &loaded_c.needs,
+            "PhysicalNeeds mismatch for {:?}",
+            pre_c.meta.id
+        );
+        assert_eq!(
+            &pre_c.mobility, &loaded_c.mobility,
+            "MobilityProfile mismatch for {:?}",
+            pre_c.meta.id
+        );
+        assert_eq!(
+            &pre_c.kinship, &loaded_c.kinship,
+            "Kinship mismatch for {:?}",
+            pre_c.meta.id
+        );
+        assert_eq!(
+            &pre_c.causal_audit, &loaded_c.causal_audit,
+            "CausalAudit mismatch for {:?}",
+            pre_c.meta.id
+        );
+        assert_eq!(
+            &pre_c.inventory, &loaded_c.inventory,
+            "Inventory mismatch for {:?}",
+            pre_c.meta.id
+        );
+        assert_eq!(
+            &pre_c.episodic_memory, &loaded_c.episodic_memory,
+            "EpisodicMemory mismatch for {:?}",
+            pre_c.meta.id
+        );
+        assert_eq!(
+            &pre_c.relational_ledger, &loaded_c.relational_ledger,
+            "RelationalLedger mismatch for {:?}",
+            pre_c.meta.id
+        );
+        assert_eq!(
+            &pre_c.epistemic_state, &loaded_c.epistemic_state,
+            "EpistemicState mismatch for {:?}",
+            pre_c.meta.id
+        );
 
         if pre_c.is_player {
             assert!(loaded_c.is_player, "Loaded entity must be marked as player");
-            assert_eq!(&pre_c.capabilities, &loaded_c.capabilities, "Player capabilities mismatch");
-            assert_eq!(&pre_c.transformation, &loaded_c.transformation, "Player transformation mismatch");
-            assert_eq!(&pre_c.knowledge, &loaded_c.knowledge, "Player knowledge mismatch");
-            assert!(loaded_c.capabilities.is_some(), "Player capabilities must not be lost or None");
-            assert!(loaded_c.transformation.is_some(), "Player transformation must not be lost or None");
-            assert!(loaded_c.knowledge.is_some(), "Player knowledge must not be lost or None");
+            assert_eq!(
+                &pre_c.capabilities, &loaded_c.capabilities,
+                "Player capabilities mismatch"
+            );
+            assert_eq!(
+                &pre_c.transformation, &loaded_c.transformation,
+                "Player transformation mismatch"
+            );
+            assert_eq!(
+                &pre_c.knowledge, &loaded_c.knowledge,
+                "Player knowledge mismatch"
+            );
+            assert!(
+                loaded_c.capabilities.is_some(),
+                "Player capabilities must not be lost or None"
+            );
+            assert!(
+                loaded_c.transformation.is_some(),
+                "Player transformation must not be lost or None"
+            );
+            assert!(
+                loaded_c.knowledge.is_some(),
+                "Player knowledge must not be lost or None"
+            );
         } else {
-            assert_eq!(&pre_c.npc_memory, &loaded_c.npc_memory, "NPC memory mismatch for {:?}", pre_c.meta.id);
-            assert_eq!(&pre_c.npc_schedule, &loaded_c.npc_schedule, "NPC schedule mismatch for {:?}", pre_c.meta.id);
-            assert_eq!(&pre_c.npc_goals, &loaded_c.npc_goals, "NPC goals mismatch for {:?}", pre_c.meta.id);
-            assert_eq!(&pre_c.disposition, &loaded_c.disposition, "NPC disposition mismatch for {:?}", pre_c.meta.id);
-            assert!(loaded_c.npc_schedule.is_some(), "NPC schedule must not be lost or None");
-            assert!(loaded_c.disposition.is_some(), "NPC disposition must not be lost or None");
+            assert_eq!(
+                &pre_c.npc_memory, &loaded_c.npc_memory,
+                "NPC memory mismatch for {:?}",
+                pre_c.meta.id
+            );
+            assert_eq!(
+                &pre_c.npc_schedule, &loaded_c.npc_schedule,
+                "NPC schedule mismatch for {:?}",
+                pre_c.meta.id
+            );
+            assert_eq!(
+                &pre_c.npc_goals, &loaded_c.npc_goals,
+                "NPC goals mismatch for {:?}",
+                pre_c.meta.id
+            );
+            assert_eq!(
+                &pre_c.disposition, &loaded_c.disposition,
+                "NPC disposition mismatch for {:?}",
+                pre_c.meta.id
+            );
+            assert!(
+                loaded_c.npc_schedule.is_some(),
+                "NPC schedule must not be lost or None"
+            );
+            assert!(
+                loaded_c.disposition.is_some(),
+                "NPC disposition must not be lost or None"
+            );
         }
     }
 
     // Verify invariants pass on loaded simulation
-    assert!(loaded_sim.check_invariants().is_ok(), "Loaded simulation must pass all invariants");
+    assert!(
+        loaded_sim.check_invariants().is_ok(),
+        "Loaded simulation must pass all invariants"
+    );
 
     let _ = fs::remove_file(save_path);
 }
@@ -158,7 +305,11 @@ fn test_ac10_state_determinism() {
     let mut sim1 = Simulation::new();
     let mut sim2 = Simulation::new();
 
-    assert_eq!(sim1.state_hash(), sim2.state_hash(), "Initial state hashes must match");
+    assert_eq!(
+        sim1.state_hash(),
+        sim2.state_hash(),
+        "Initial state hashes must match"
+    );
 
     sim1.advance(120); // 5 days
     sim2.advance(120);
@@ -208,7 +359,10 @@ fn test_ac12_invariants_suite() {
     assert!(sim.check_invariants().is_ok());
 
     sim.advance(240);
-    assert!(sim.check_invariants().is_ok(), "Invariants must hold after 10 days");
+    assert!(
+        sim.check_invariants().is_ok(),
+        "Invariants must hold after 10 days"
+    );
 }
 
 #[test]
@@ -220,9 +374,14 @@ fn test_ac14_telemetry_emission() {
     sim.step();
     sim.advance(24);
 
-    let log = sim.world.resource::<godseed_core::resources::TelemetryLog>();
+    let log = sim
+        .world
+        .resource::<godseed_core::resources::TelemetryLog>();
     let jsonl = log.to_jsonl();
 
     assert!(!jsonl.is_empty(), "Telemetry log must contain records");
-    assert!(jsonl.contains("PlayerAction"), "Telemetry must record PlayerAction");
+    assert!(
+        jsonl.contains("PlayerAction"),
+        "Telemetry must record PlayerAction"
+    );
 }
