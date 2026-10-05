@@ -2,7 +2,6 @@
 ///
 /// Thornveil is a hand-authored 20×20 grid with named locations.
 /// The map is deterministic — no procedural generation needed for VS1.
-
 use bevy_ecs::system::Resource;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -40,7 +39,6 @@ pub enum LocationType {
 /// The Thornveil world map
 #[derive(Resource, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct WorldMap {
-
     pub width: u8,
     pub height: u8,
     pub cells: Vec<MapCell>,
@@ -59,7 +57,12 @@ impl WorldMap {
             for x in 0..width {
                 let cell_type = Self::cell_type_at(x, y);
                 let passable = !matches!(cell_type, CellType::Water);
-                cells.push(MapCell { x, y, cell_type, passable });
+                cells.push(MapCell {
+                    x,
+                    y,
+                    cell_type,
+                    passable,
+                });
             }
         }
 
@@ -71,34 +74,59 @@ impl WorldMap {
             locations.insert(loc.id.0, loc);
         }
 
-        Self { width, height, cells, locations }
+        Self {
+            width,
+            height,
+            cells,
+            locations,
+        }
     }
 
     fn cell_type_at(x: u8, y: u8) -> CellType {
         // Road through center
-        if x == 10 { return CellType::Road; }
-        if y == 10 { return CellType::Road; }
+        if x == 10 {
+            return CellType::Road;
+        }
+        if y == 10 {
+            return CellType::Road;
+        }
         // Water body (small stream, top-right)
-        if x >= 15 && y <= 5 { return CellType::Water; }
+        if x >= 15 && y <= 5 {
+            return CellType::Water;
+        }
         // Fields (south)
-        if y >= 14 && x >= 2 && x <= 12 { return CellType::Field; }
+        if y >= 14 && x >= 2 && x <= 12 {
+            return CellType::Field;
+        }
         // Forest (west)
-        if x <= 3 && y >= 4 && y <= 14 { return CellType::Forest; }
+        if x <= 3 && y >= 4 && y <= 14 {
+            return CellType::Forest;
+        }
         // Buildings at key coordinates
         if (x == 9 || x == 10 || x == 11) && (y == 7 || y == 8 || y == 9) {
-            return CellType::Building { location_id: LocationId(1) }; // Inn
+            return CellType::Building {
+                location_id: LocationId(1),
+            }; // Inn
         }
         if (x == 12 || x == 13) && (y == 8 || y == 9) {
-            return CellType::Building { location_id: LocationId(2) }; // Forge
+            return CellType::Building {
+                location_id: LocationId(2),
+            }; // Forge
         }
         if (x == 9 || x == 10 || x == 11) && (y == 11 || y == 12) {
-            return CellType::Building { location_id: LocationId(3) }; // Market
+            return CellType::Building {
+                location_id: LocationId(3),
+            }; // Market
         }
         if (x == 5 || x == 6) && (y == 5 || y == 6) {
-            return CellType::Building { location_id: LocationId(8) }; // Archive (ruined)
+            return CellType::Building {
+                location_id: LocationId(8),
+            }; // Archive (ruined)
         }
         if x == 10 && y == 5 {
-            return CellType::Building { location_id: LocationId(7) }; // Well
+            return CellType::Building {
+                location_id: LocationId(7),
+            }; // Well
         }
         CellType::Open
     }
@@ -202,7 +230,8 @@ impl WorldMap {
 
     /// Check if two locations are adjacent (directly connected)
     pub fn are_adjacent(&self, from: LocationId, to: LocationId) -> bool {
-        self.locations.get(&from.0)
+        self.locations
+            .get(&from.0)
             .map(|l| l.adjacent.contains(&to))
             .unwrap_or(false)
     }

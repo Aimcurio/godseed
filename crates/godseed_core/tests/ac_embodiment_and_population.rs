@@ -61,7 +61,10 @@ fn test_ac2_settlement_population() {
     );
 
     // Invariants must hold on initial spawn
-    assert!(sim.check_invariants().is_ok(), "Initial state must satisfy all invariants");
+    assert!(
+        sim.check_invariants().is_ok(),
+        "Initial state must satisfy all invariants"
+    );
 }
 
 #[test]
@@ -125,13 +128,18 @@ fn test_player_as_citizen_invariants_and_metabolic_parity() {
         )>();
 
         let count = player_query.iter(&sim.world).count();
-        assert_eq!(count, 1, "Player must possess all 11 core citizen components");
+        assert_eq!(
+            count, 1,
+            "Player must possess all 11 core citizen components"
+        );
     }
 
     // 2. Metabolic Decay Parity: Verify player and NPC decay at identical rate
     {
         // Align initial satiety, rest, and health for player (Citizen 0) and NPC (Citizen 1)
-        let mut needs_query = sim.world.query::<(&CitizenMeta, &mut PhysicalNeeds, &mut Demographics)>();
+        let mut needs_query = sim
+            .world
+            .query::<(&CitizenMeta, &mut PhysicalNeeds, &mut Demographics)>();
         for (meta, mut needs, mut demo) in needs_query.iter_mut(&mut sim.world) {
             if meta.id == CitizenId(0) || meta.id == CitizenId(1) {
                 needs.satiety = 80;
@@ -156,7 +164,10 @@ fn test_player_as_citizen_invariants_and_metabolic_parity() {
 
         assert_eq!(p_satiety, 79, "Player satiety must decay by 1 over 6 ticks");
         assert_eq!(npc_satiety, 79, "NPC satiety must decay by 1 over 6 ticks");
-        assert_eq!(p_satiety, npc_satiety, "Player and NPC must obey identical metabolic decay rate");
+        assert_eq!(
+            p_satiety, npc_satiety,
+            "Player and NPC must obey identical metabolic decay rate"
+        );
     }
 
     // 3. Starvation Health Collapse Parity: When satiety = 0, health decays at 2/tick until death
@@ -164,12 +175,18 @@ fn test_player_as_citizen_invariants_and_metabolic_parity() {
         let mut sim_starve = Simulation::new();
         // Clear food stock so NPCs cannot eat from settlement stockpile during starvation test
         {
-            let mut settlements = sim_starve.world.resource_mut::<godseed_core::settlement::SettlementDirectory>();
-            if let Some(s) = settlements.get_mut(godseed_core::settlement::SettlementDirectory::thornveil_id()) {
+            let mut settlements = sim_starve
+                .world
+                .resource_mut::<godseed_core::settlement::SettlementDirectory>();
+            if let Some(s) =
+                settlements.get_mut(godseed_core::settlement::SettlementDirectory::thornveil_id())
+            {
                 s.resource_stockpile.insert(0, 0.0);
             }
         }
-        let mut needs_query = sim_starve.world.query::<(&CitizenMeta, &mut PhysicalNeeds, &mut Demographics)>();
+        let mut needs_query = sim_starve
+            .world
+            .query::<(&CitizenMeta, &mut PhysicalNeeds, &mut Demographics)>();
         for (meta, mut needs, mut demo) in needs_query.iter_mut(&mut sim_starve.world) {
             if meta.id == CitizenId(0) || meta.id == CitizenId(1) {
                 needs.satiety = 0;
@@ -191,9 +208,18 @@ fn test_player_as_citizen_invariants_and_metabolic_parity() {
             }
         }
 
-        assert_eq!(p_health, 10, "Player health must collapse by 2 per starving tick (20 - 10 = 10)");
-        assert_eq!(npc_health, 10, "NPC health must collapse at identical rate (20 - 10 = 10)");
-        assert_eq!(p_health, npc_health, "Starvation health collapse rate must be identical");
+        assert_eq!(
+            p_health, 10,
+            "Player health must collapse by 2 per starving tick (20 - 10 = 10)"
+        );
+        assert_eq!(
+            npc_health, 10,
+            "NPC health must collapse at identical rate (20 - 10 = 10)"
+        );
+        assert_eq!(
+            p_health, npc_health,
+            "Starvation health collapse rate must be identical"
+        );
 
         // Test death transition: set health to 2 with satiety 0, advance 1 tick
         for (meta, mut needs, mut demo) in needs_query.iter_mut(&mut sim_starve.world) {
@@ -226,7 +252,9 @@ fn test_player_as_citizen_invariants_and_metabolic_parity() {
         let initial_coins = initial_player.coins;
         let initial_rest = initial_player.rest;
 
-        sim_work.push_action(PlayerAction::Work { occupation: OccupationType::Laborer });
+        sim_work.push_action(PlayerAction::Work {
+            occupation: OccupationType::Laborer,
+        });
         sim_work.step();
         let results = sim_work.drain_results();
 
@@ -237,8 +265,16 @@ fn test_player_as_citizen_invariants_and_metabolic_parity() {
         let after_player = after_summary.player.expect("Player exists");
 
         // Wage earned: +1.5 coins
-        assert_eq!(after_player.coins, initial_coins + 1.5, "Work must pay standard wage");
+        assert_eq!(
+            after_player.coins,
+            initial_coins + 1.5,
+            "Work must pay standard wage"
+        );
         // Rest expended: -10 rest
-        assert_eq!(after_player.rest, initial_rest.saturating_sub(10), "Work must expend rest");
+        assert_eq!(
+            after_player.rest,
+            initial_rest.saturating_sub(10),
+            "Work must expend rest"
+        );
     }
 }

@@ -1,10 +1,19 @@
 use godseed_core::{
-    resources::RelationshipLedger,
+    components::{CitizenMeta, RelationalLedger},
     settlement::SettlementDirectory,
     sim::Simulation,
     types::{CitizenId, LocationId, OccupationType, PlayerAction, ResourceType, TalkTopic},
 };
 
+fn player_bond_score(sim: &mut Simulation, npc: CitizenId) -> i16 {
+    let mut q = sim.world.query::<(&CitizenMeta, &RelationalLedger)>();
+    let (_, ledger) = q
+        .iter(&sim.world)
+        .find(|(meta, _)| meta.id == npc)
+        .expect("NPC should have canonical VS2 relational ledger");
+    let bond = ledger.get_bond(CitizenId::PLAYER);
+    ((bond.sentiment as i16 + bond.trust as i16) / 2).clamp(-100, 100)
+}
 
 #[test]
 fn test_ac4_dialogue_and_social_relationship() {
@@ -18,10 +27,7 @@ fn test_ac4_dialogue_and_social_relationship() {
     assert!(move_res[0].success, "Move to inn should succeed");
 
     // Talk to Mira
-    let initial_rel = {
-        let ledger = sim.world.resource::<RelationshipLedger>();
-        ledger.get(CitizenId::PLAYER, CitizenId(1))
-    };
+    let initial_rel = player_bond_score(&mut sim, CitizenId(1));
 
     sim.push_action(PlayerAction::Talk {
         npc: CitizenId(1),
@@ -30,12 +36,12 @@ fn test_ac4_dialogue_and_social_relationship() {
     sim.step();
     let talk_res = sim.drain_results();
     assert!(talk_res[0].success, "Talk to Mira should succeed");
-    assert!(talk_res[0].message.contains("Mira"), "Response should mention Mira");
+    assert!(
+        talk_res[0].message.contains("Mira"),
+        "Response should mention Mira"
+    );
 
-    let post_rel = {
-        let ledger = sim.world.resource::<RelationshipLedger>();
-        ledger.get(CitizenId::PLAYER, CitizenId(1))
-    };
+    let post_rel = player_bond_score(&mut sim, CitizenId(1));
 
     assert!(
         post_rel > initial_rel,
@@ -116,10 +122,7 @@ fn test_ac13_gossip_and_social_memory() {
         sim.drain_results();
     }
 
-    let mira_rel = {
-        let ledger = sim.world.resource::<RelationshipLedger>();
-        ledger.get(CitizenId::PLAYER, CitizenId(1))
-    };
+    let mira_rel = player_bond_score(&mut sim, CitizenId(1));
     assert!(mira_rel > 0, "Mira relationship should be positive");
 
     // Advance 7 ticks (a weekly cycle runs at tick % 7 == 0)

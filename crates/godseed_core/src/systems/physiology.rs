@@ -1,5 +1,4 @@
 /// Physiology System — daily satiety/health decay for NPCs and player
-
 use bevy_ecs::prelude::*;
 
 use crate::components::{CitizenMeta, Demographics, PhysicalNeeds};
@@ -15,7 +14,9 @@ pub fn physiology_system(
     mut query: Query<(&mut CitizenMeta, &mut Demographics, &mut PhysicalNeeds)>,
 ) {
     for (mut meta, mut demo, mut needs) in query.iter_mut() {
-        if !meta.alive { continue; }
+        if !meta.alive {
+            continue;
+        }
 
         // Satiety decays at ~0.17 per tick (≈4/day)
         if clock.tick % 6 == 0 && needs.satiety > 0 {
@@ -26,7 +27,6 @@ pub fn physiology_system(
         if clock.tick % 3 == 0 && needs.rest > 0 && clock.hour() >= 6 && clock.hour() <= 22 {
             needs.rest = needs.rest.saturating_sub(1);
         }
-
 
         // Health collapses when starving
         if needs.satiety == 0 {
@@ -49,4 +49,3 @@ pub fn physiology_system(
         }
     }
 }
-

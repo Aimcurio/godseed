@@ -2,14 +2,12 @@
 ///
 /// Authored content for Thornveil: NPC identities, capabilities, knowledge nodes,
 /// transformation path definition. Systems are generic; content provides identity.
-
 use bevy_ecs::system::Resource;
 use serde::{Deserialize, Serialize};
 
 use crate::types::{
-    CapabilityId, Gender, HouseholdRole,
-    KnowledgeNode, LocationId, NpcActivity,
-    OccupationType, ResourceType, ScheduleSlot,
+    BehavioralMode, CapabilityId, Gender, HouseholdRole, KnowledgeDefinition, KnowledgeDomain,
+    KnowledgeNode, LocationId, NpcActivity, OccupationType, ResourceType, ScheduleSlot,
 };
 
 // ── Capability Definitions ────────────────────────────────────────────────────
@@ -26,6 +24,7 @@ pub mod caps {
     pub const INSCRIPTION: CapabilityId = CapabilityId(7);
     pub const FARMING: CapabilityId = CapabilityId(8);
     pub const TRADING: CapabilityId = CapabilityId(9);
+    pub const DIAGNOSIS: CapabilityId = CapabilityId(10);
 }
 
 /// Well-known knowledge node IDs
@@ -49,6 +48,7 @@ pub mod milestones {
     pub const INSCRIPTION_LEARNED: MilestoneId = MilestoneId(3);
     pub const FIVE_INSCRIPTIONS: MilestoneId = MilestoneId(4);
     pub const SCHOLAR_RECOGNIZED: MilestoneId = MilestoneId(5);
+    pub const CHRONICLER_RECOGNIZED: MilestoneId = MilestoneId(6);
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -88,6 +88,7 @@ pub struct ContentDefinitions {
     pub npc_definitions: Vec<NpcDefinition>,
     pub capability_definitions: Vec<CapabilityDefinition>,
     pub knowledge_nodes: Vec<KnowledgeNode>,
+    pub knowledge_definitions: Vec<KnowledgeDefinition>,
 }
 
 impl ContentDefinitions {
@@ -96,8 +97,74 @@ impl ContentDefinitions {
             npc_definitions: thornveil_npcs(),
             capability_definitions: capability_defs(),
             knowledge_nodes: knowledge_nodes(),
+            knowledge_definitions: knowledge_definitions(),
         }
     }
+}
+
+fn knowledge_definitions() -> Vec<KnowledgeDefinition> {
+    vec![
+        KnowledgeDefinition {
+            id: 1,
+            domain: KnowledgeDomain::ObservationInsight,
+            title: "Timber Stress Signs".to_string(),
+            description: "Heart rot and heavy fungal spread in the old stand at West Woods."
+                .to_string(),
+            social_fallout_mode: None,
+        },
+        KnowledgeDefinition {
+            id: 2,
+            domain: KnowledgeDomain::ObservationInsight,
+            title: "Crop Blight Vulnerability".to_string(),
+            description:
+                "Stalk mildew threatening the lower furrows of South Fields during damp weeks."
+                    .to_string(),
+            social_fallout_mode: None,
+        },
+        KnowledgeDefinition {
+            id: 3,
+            domain: KnowledgeDomain::ObservationInsight,
+            title: "Herb Habitats".to_string(),
+            description:
+                "Rare silverleaf moss flourishing in the sheltered shale behind the garden wall."
+                    .to_string(),
+            social_fallout_mode: None,
+        },
+        KnowledgeDefinition {
+            id: 4,
+            domain: KnowledgeDomain::ObservationInsight,
+            title: "Ancient Archive Lore".to_string(),
+            description: "A subterranean archive vault buried beneath the collapsed stone nave."
+                .to_string(),
+            social_fallout_mode: Some(BehavioralMode::WaryConsultant),
+        },
+        KnowledgeDefinition {
+            id: 5,
+            domain: KnowledgeDomain::SecretTruth,
+            title: "Elder Voss's Exiled Son".to_string(),
+            description:
+                "Voss's eldest blood kin was quietly banished past the ridge thirty winters ago."
+                    .to_string(),
+            social_fallout_mode: Some(BehavioralMode::AffectionateRefusal),
+        },
+        KnowledgeDefinition {
+            id: 6,
+            domain: KnowledgeDomain::SecretTruth,
+            title: "Delia's Hidden Debt".to_string(),
+            description: "Delia owes seventy silver guild coins under a private penalty contract."
+                .to_string(),
+            social_fallout_mode: Some(BehavioralMode::GrudgingDebtor),
+        },
+        KnowledgeDefinition {
+            id: 7,
+            domain: KnowledgeDomain::DocumentedRecord,
+            title: "Founding Land Charter".to_string(),
+            description:
+                "The original sealed parchment establishing Thornveil's ancient pasture boundaries."
+                    .to_string(),
+            social_fallout_mode: Some(BehavioralMode::WaryConsultant),
+        },
+    ]
 }
 
 // ── Thornveil NPC Roster ──────────────────────────────────────────────────────
@@ -516,6 +583,17 @@ fn capability_defs() -> Vec<CapabilityDefinition> {
             description: "Ability to evaluate goods and negotiate prices. Unlocks better market terms.".to_string(),
             practice_resource: None,
             unlocks_actions: vec!["Buy/Sell at improved prices".to_string()],
+        },
+        CapabilityDefinition {
+            id: caps::DIAGNOSIS,
+            name: "Diagnosis".to_string(),
+            description: "Ability to examine agricultural, structural, and ecological symptoms in the field. Core of the Settlement Chronicler path. Unlocks Diagnose and DraftDocument actions.".to_string(),
+            practice_resource: None,
+            unlocks_actions: vec![
+                "Diagnose(Location)".to_string(),
+                "DraftDocument(Type)".to_string(),
+                "ArbitrateDispute(Document, Consequence)".to_string(),
+            ],
         },
     ]
 }

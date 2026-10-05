@@ -2,16 +2,15 @@
 ///
 /// All ECS components for both NPC and Player entities.
 /// Player-specific components are marked; most are shared with NPCs.
-
 use bevy_ecs::component::Component;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet, VecDeque};
 
 use crate::types::{
-    CapabilityId, CapabilityLevel, CitizenId, DecisionTrace, Gender, HouseholdId, HouseholdRole,
-    KnowledgeNodeId, LocationId, MemoryEvent, MigrationStatus, MilestoneId, NpcActivity,
-    NpcFact, NpcGoal, OccupationType, PlayerAction, ScheduleSlot, SettlementId,
-    TransformationPath,
+    CapabilityId, CapabilityLevel, CitizenId, DecisionTrace, EpisodicRecord, Gender, HouseholdId,
+    HouseholdRole, KnowledgeNodeId, LocationId, MemoryEvent, MemoryTag, MigrationStatus,
+    MilestoneId, NpcActivity, NpcFact, NpcGoal, OccupationType, PlayerAction, RelationalBond,
+    ScheduleSlot, SettlementId, TransformationPath,
 };
 
 // ── Shared Components (NPC + Player) ─────────────────────────────────────────
@@ -30,7 +29,7 @@ pub struct CitizenMeta {
 pub struct Demographics {
     pub age_years: u16,
     pub age_ticks: u32,
-    pub health: u8,       // 0–100
+    pub health: u8, // 0–100
     pub fertility_timer: u8,
 }
 
@@ -69,9 +68,9 @@ pub struct PersonalFinances {
 /// Physical needs — shared by NPCs and player
 #[derive(Component, Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PhysicalNeeds {
-    pub satiety: u8,   // 0–100; 0 = starving, 100 = full
-    pub shelter: u8,   // 0–100
-    pub rest: u8,      // 0–100; 0 = exhausted
+    pub satiety: u8, // 0–100; 0 = starving, 100 = full
+    pub shelter: u8, // 0–100
+    pub rest: u8,    // 0–100; 0 = exhausted
 }
 
 /// Migration/mobility status
@@ -104,7 +103,9 @@ pub struct Inventory {
 
 impl Inventory {
     pub fn new() -> Self {
-        Self { items: HashMap::new() }
+        Self {
+            items: HashMap::new(),
+        }
     }
 
     pub fn get(&self, resource_ordinal: u8) -> u32 {
@@ -117,14 +118,18 @@ impl Inventory {
 
     pub fn remove(&mut self, resource_ordinal: u8, quantity: u32) -> bool {
         let current = self.get(resource_ordinal);
-        if current < quantity { return false; }
+        if current < quantity {
+            return false;
+        }
         *self.items.entry(resource_ordinal).or_insert(0) -= quantity;
         true
     }
 }
 
 impl Default for Inventory {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 // ── NPC-Only Components ───────────────────────────────────────────────────────
@@ -140,7 +145,10 @@ pub struct NpcMemory {
 
 impl NpcMemory {
     pub fn new() -> Self {
-        Self { events: VecDeque::new(), known_facts: HashMap::new() }
+        Self {
+            events: VecDeque::new(),
+            known_facts: HashMap::new(),
+        }
     }
 
     pub fn add_event(&mut self, event: MemoryEvent) {
@@ -152,7 +160,8 @@ impl NpcMemory {
 
     /// Sum of impact from all events involving a given subject
     pub fn disposition_toward(&self, subject: CitizenId) -> i16 {
-        self.events.iter()
+        self.events
+            .iter()
             .filter(|e| e.subject == subject)
             .map(|e| e.impact as i16)
             .sum()
@@ -160,7 +169,9 @@ impl NpcMemory {
 }
 
 impl Default for NpcMemory {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 /// NPC daily schedule (what they do and where)
@@ -197,15 +208,20 @@ pub struct NpcGoals {
 
 impl NpcGoals {
     pub fn new() -> Self {
-        Self { active_goal: None, goal_ticks_remaining: 0 }
+        Self {
+            active_goal: None,
+            goal_ticks_remaining: 0,
+        }
     }
 }
 
 impl Default for NpcGoals {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
-/// NPC disposition toward the player and reputation assessment
+/// Legacy V1/V2 persistence migration structure. Discarded from V2/V3 runtime state.
 #[derive(Component, Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Disposition {
     /// Memory-derived disposition toward the player (-100 to +100)
@@ -237,6 +253,176 @@ impl Disposition {
     }
 }
 
+/// Static authored social and teaching profile (immutable design parameters, Sec 11)
+#[derive(Component, Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct NpcSocialProfile {
+    /// Baseline from initial personality (-20 to +20)
+    pub base_personality: i8,
+    /// Suspicion baseline from background (0–100)
+    pub base_suspicion: u8,
+    /// Whether this NPC will teach capabilities
+    pub will_teach: Option<CapabilityId>,
+    /// Minimum relationship required to unlock teaching
+    pub teach_threshold: i16,
+}
+
+impl NpcSocialProfile {
+    pub fn new(base: i8) -> Self {
+        Self {
+            base_personality: base,
+            base_suspicion: 0,
+            will_teach: None,
+            teach_threshold: 40,
+        }
+    }
+}
+
+impl Default for NpcSocialProfile {
+    fn default() -> Self {
+        Self::new(0)
+    }
+}
+
+// ── VS2 Relational Ledger & Episodic Memory Components ───────────────────────
+
+/// Entity-local Relational Ledger holding triad bonds (AC-201)
+#[derive(Component, Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+pub struct RelationalLedger {
+    pub bonds: HashMap<u64, RelationalBond>,
+}
+
+impl RelationalLedger {
+    pub fn new() -> Self {
+        Self {
+            bonds: HashMap::new(),
+        }
+    }
+
+    pub fn get_bond(&self, target: CitizenId) -> RelationalBond {
+        *self
+            .bonds
+            .get(&target.0)
+            .unwrap_or(&RelationalBond::default())
+    }
+
+    pub fn get_bond_mut(&mut self, target: CitizenId) -> &mut RelationalBond {
+        self.bonds
+            .entry(target.0)
+            .or_insert(RelationalBond::default())
+    }
+
+    pub fn set_bond(&mut self, target: CitizenId, bond: RelationalBond) {
+        self.bonds.insert(target.0, bond);
+    }
+
+    pub fn adjust(&mut self, target: CitizenId, delta_s: i8, delta_t: i8, delta_o: i16) {
+        let bond = self
+            .bonds
+            .entry(target.0)
+            .or_insert(RelationalBond::default());
+        bond.sentiment = (bond.sentiment as i16 + delta_s as i16).clamp(-100, 100) as i8;
+        bond.trust = (bond.trust as i16 + delta_t as i16).clamp(-100, 100) as i8;
+        bond.obligation = (bond.obligation + delta_o).clamp(-1000, 1000);
+    }
+}
+
+/// Compact permanent anchor preserving semantic fact indefinitely under anchor pressure (AC-202, Option A)
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct CompactAnchor {
+    pub id: u64,
+    pub tick: u64,
+    pub actor: CitizenId,
+    pub target: Option<CitizenId>,
+    pub tag: MemoryTag,
+    pub narrative_token: u16,
+    pub causal: Option<crate::types::CausalPointer>,
+}
+
+/// Dual-stream bounded episodic memory (12 transient FIFO + 6 active anchors + compact permanent storage) (AC-202)
+#[derive(Component, Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct EpisodicMemory {
+    pub transient: VecDeque<EpisodicRecord>,
+    pub anchors: Vec<EpisodicRecord>,
+    #[serde(default)]
+    pub compacted_anchors: Vec<CompactAnchor>,
+}
+
+impl EpisodicMemory {
+    pub fn new() -> Self {
+        Self {
+            transient: VecDeque::new(),
+            anchors: Vec::new(),
+            compacted_anchors: Vec::new(),
+        }
+    }
+
+    pub fn add_record(&mut self, record: EpisodicRecord) {
+        if record.is_permanent {
+            if self.anchors.len() >= 6 {
+                // Evict anchor with smallest absolute delta impact into compact permanent storage (Option A)
+                if let Some((min_idx, _)) = self.anchors.iter().enumerate().min_by_key(|(_, r)| {
+                    r.delta_sentiment.abs() as i32 + r.delta_trust.abs() as i32
+                }) {
+                    let evicted = self.anchors.remove(min_idx);
+                    self.compacted_anchors.push(CompactAnchor {
+                        id: evicted.id,
+                        tick: evicted.tick,
+                        actor: evicted.actor,
+                        target: evicted.target,
+                        tag: evicted.tag,
+                        narrative_token: evicted.narrative_token,
+                        causal: evicted.causal,
+                    });
+                }
+            }
+            self.anchors.push(record);
+        } else {
+            self.add_transient(record);
+        }
+    }
+
+    fn add_transient(&mut self, record: EpisodicRecord) {
+        if self.transient.len() >= 12 {
+            self.transient.pop_front();
+        }
+        self.transient.push_back(record);
+    }
+
+    pub fn has_anchor_with_tag(&self, tag: MemoryTag) -> bool {
+        self.anchors.iter().any(|a| a.tag == tag)
+            || self.compacted_anchors.iter().any(|c| c.tag == tag)
+    }
+
+    pub fn has_record_with_tag(&self, tag: MemoryTag) -> bool {
+        self.has_anchor_with_tag(tag) || self.transient.iter().any(|t| t.tag == tag)
+    }
+
+    pub fn find_anchor(&self, tag: MemoryTag) -> Option<&EpisodicRecord> {
+        self.anchors.iter().find(|a| a.tag == tag)
+    }
+
+    pub fn find_record_with_tag(&self, tag: MemoryTag) -> Option<&EpisodicRecord> {
+        self.anchors
+            .iter()
+            .find(|a| a.tag == tag)
+            .or_else(|| self.transient.iter().find(|t| t.tag == tag))
+    }
+
+    pub fn find_compact_anchor(&self, tag: MemoryTag) -> Option<&CompactAnchor> {
+        self.compacted_anchors.iter().find(|c| c.tag == tag)
+    }
+
+    pub fn all_records(&self) -> impl Iterator<Item = &EpisodicRecord> {
+        self.anchors.iter().chain(self.transient.iter())
+    }
+}
+
+impl Default for EpisodicMemory {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 // ── Player-Only Components ─────────────────────────────────────────────────────
 
 /// Marker: the unique player entity
@@ -253,7 +439,10 @@ pub struct PlayerInputBuffer {
 
 impl PlayerInputBuffer {
     pub fn new() -> Self {
-        Self { queue: VecDeque::new(), last_results: VecDeque::new() }
+        Self {
+            queue: VecDeque::new(),
+            last_results: VecDeque::new(),
+        }
     }
 
     pub fn push_action(&mut self, action: PlayerAction) {
@@ -273,7 +462,9 @@ impl PlayerInputBuffer {
 }
 
 impl Default for PlayerInputBuffer {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 /// Set of capabilities the player (or NPC) has acquired
@@ -286,15 +477,24 @@ pub struct CapabilitySet {
 
 impl CapabilitySet {
     pub fn new() -> Self {
-        Self { capabilities: HashMap::new(), practice_progress: HashMap::new() }
+        Self {
+            capabilities: HashMap::new(),
+            practice_progress: HashMap::new(),
+        }
     }
 
     pub fn has(&self, id: CapabilityId) -> bool {
-        self.capabilities.get(&id.0).map(|l| l.0 > 0).unwrap_or(false)
+        self.capabilities
+            .get(&id.0)
+            .map(|l| l.0 > 0)
+            .unwrap_or(false)
     }
 
     pub fn level(&self, id: CapabilityId) -> CapabilityLevel {
-        *self.capabilities.get(&id.0).unwrap_or(&CapabilityLevel::NONE)
+        *self
+            .capabilities
+            .get(&id.0)
+            .unwrap_or(&CapabilityLevel::NONE)
     }
 
     pub fn set(&mut self, id: CapabilityId, level: CapabilityLevel) {
@@ -305,10 +505,14 @@ impl CapabilitySet {
         let progress = self.practice_progress.entry(id.0).or_insert(0);
         *progress += ticks;
         // Level up every 100 practice ticks (up to SKILLED)
-        let current = *self.capabilities.get(&id.0).unwrap_or(&CapabilityLevel::NONE);
+        let current = *self
+            .capabilities
+            .get(&id.0)
+            .unwrap_or(&CapabilityLevel::NONE);
         if *progress >= 100 && current < CapabilityLevel::SKILLED {
             *progress = 0;
-            self.capabilities.insert(id.0, CapabilityLevel(current.0 + 1));
+            self.capabilities
+                .insert(id.0, CapabilityLevel(current.0 + 1));
             return true; // leveled up
         }
         false
@@ -316,15 +520,17 @@ impl CapabilitySet {
 }
 
 impl Default for CapabilitySet {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 /// Current transformation path and stage
 #[derive(Component, Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct TransformationState {
     pub path: TransformationPath,
-    pub stage: u8,          // 0 = uninitiated, 1 = Scholar, 2+ = seamed
-    pub progress: u16,      // within current stage (0–100)
+    pub stage: u8,     // 0 = uninitiated, 1 = Scholar, 2+ = seamed
+    pub progress: u16, // within current stage (0–100)
     pub milestones: Vec<MilestoneId>,
     pub inscriptions_completed: u32,
     pub archive_studied_count: u32,
@@ -348,7 +554,9 @@ impl TransformationState {
 }
 
 impl Default for TransformationState {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 /// Knowledge the player has learned about the world
@@ -359,7 +567,9 @@ pub struct KnowledgeInventory {
 
 impl KnowledgeInventory {
     pub fn new() -> Self {
-        Self { nodes: HashSet::new() }
+        Self {
+            nodes: HashSet::new(),
+        }
     }
 
     pub fn learn(&mut self, node: KnowledgeNodeId) -> bool {
@@ -372,5 +582,46 @@ impl KnowledgeInventory {
 }
 
 impl Default for KnowledgeInventory {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// Epistemic state tracking factual knowledge nodes and corroboration (AC-204, Sec 8)
+#[derive(Component, Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+pub struct EpistemicState {
+    /// KnowledgeId (u16) -> (AcquiredTick, CorroborationCount)
+    pub known: HashMap<u16, (u64, u8)>,
+}
+
+impl EpistemicState {
+    pub fn new() -> Self {
+        Self {
+            known: HashMap::new(),
+        }
+    }
+
+    pub fn has_knowledge(&self, id: u16) -> bool {
+        self.known.contains_key(&id)
+    }
+
+    pub fn get_corroboration(&self, id: u16) -> u8 {
+        self.known.get(&id).map(|(_, c)| *c).unwrap_or(0)
+    }
+
+    /// Learn or corroborate knowledge. Returns true if novel or corroboration increased.
+    /// Returns false if already max corroborated (no-op suppression).
+    pub fn learn(&mut self, id: u16, tick: u64) -> bool {
+        if let Some((_, count)) = self.known.get_mut(&id) {
+            if *count < 3 {
+                *count += 1;
+                true
+            } else {
+                false // No-op suppression (already saturated at max corroboration)
+            }
+        } else {
+            self.known.insert(id, (tick, 1));
+            true
+        }
+    }
 }

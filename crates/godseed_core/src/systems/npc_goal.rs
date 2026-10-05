@@ -1,20 +1,27 @@
 /// NPC Goal System — NPCs evaluate and pursue short-term goals
-
 use bevy_ecs::prelude::*;
 
-use crate::components::{CitizenMeta, NpcGoals, NpcSchedule, PersonalFinances, PhysicalNeeds};
 use crate::components::PlayerMarker;
+use crate::components::{CitizenMeta, NpcGoals, NpcSchedule, PersonalFinances, PhysicalNeeds};
 use crate::types::{NpcGoal, SimClock};
 
 pub fn npc_goal_system(
     _clock: Res<SimClock>,
     mut query: Query<
-        (&CitizenMeta, &mut NpcGoals, &PhysicalNeeds, &PersonalFinances, &NpcSchedule),
+        (
+            &CitizenMeta,
+            &mut NpcGoals,
+            &PhysicalNeeds,
+            &PersonalFinances,
+            &NpcSchedule,
+        ),
         Without<PlayerMarker>,
     >,
 ) {
     for (meta, mut goals, needs, finances, _schedule) in query.iter_mut() {
-        if !meta.alive { continue; }
+        if !meta.alive {
+            continue;
+        }
 
         // Decrement goal timer
         if goals.goal_ticks_remaining > 0 {

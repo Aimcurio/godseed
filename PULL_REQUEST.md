@@ -25,7 +25,7 @@ It proves that meaningful progression can emerge from real capabilities, social 
 5. **Social Ledger & Gossip (`relationship.rs`, `gossip.rs`, `npc_memory.rs`)**: Pairwise relationship matrix, reputation tracking, and weekly sentiment diffusion between co-located citizens.
 6. **Player Action Resolver (`player_action.rs`)**: Drains the player input buffer, validates physical adjacency and capability requirements, applies state transitions, emits telemetry, and formats rich text feedback.
 7. **Transformation System (`transformation.rs`)**: Evaluates milestone criteria for the Inscription path, managing title transitions, inscription logs, and progress accumulation.
-8. **Persistence & Replay (`persistence.rs`, `replay.rs`, `invariants.rs`)**: Fast binary serialization with CRC32 tamper detection, FNV-1a state hashing for bit-for-bit replay verification, and machine-checkable invariant assertions.
+8. **Persistence & Replay (`persistence.rs`, `replay.rs`, `invariants.rs`)**: Fast binary serialization with CRC32 tamper detection, FNV-1a state hashing for deterministic state equivalence across save/load boundaries, monotonic upward / forward migration (V1 → V2 → V3), and machine-checkable invariant assertions.
 
 ## How to Run
 
@@ -79,7 +79,7 @@ cargo run --release --bin soak_test
 - **Throughput**: ~20,000–600,000 ticks/sec depending on profile and logging.
 - **Memory Footprint**: ~14.2 MB RSS.
 - **Binary Footprint**: 5.45 MB (Windows PE x86_64).
-- **Persistence Integrity**: Verified via bit-flip test; corrupted payloads are deterministically rejected with `CRC32 mismatch`. Deep semantic equivalence confirmed across all entity components.
+- **Persistence Integrity**: Verified via bit-flip test; corrupted payloads are deterministically rejected with `CRC32 mismatch`. Deterministic state equivalence across save/load boundaries confirmed across continuous vs. interrupted executions. Monotonic upward / forward migration chain (V1 → V2 → V3) preserves state without downward conversion.
 - **Independent Acceptance Status**: `INDEPENDENT_ACCEPTANCE_NOT_PERFORMED` (automated evaluation performed by primary author/test battery per governance standard; independent human evaluator review pending).
 
 ## Limitations

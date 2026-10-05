@@ -1,0 +1,332 @@
+╔══════════════════════════════════════════════════════╗
+║              G O D S E E D                          ║
+║     A Persistent World Simulation RPG — VS1         ║
+║     Thornveil awaits.                                ║
+╚══════════════════════════════════════════════════════╝
+
+You arrive at Thornveil as the sun is rising.
+You know no one. You have 5 coins, a worn tool,
+and three days of travel provisions.
+
+
+═══ Settlement Road ═══
+The packed-mud main road through Thornveil. Everything connects to it.
+
+People here:
+  • Aldous Minner (idle — Settlement Road)
+  • Gwen Minner (idle — Settlement Road)
+
+Connected to: The Slanted Timber (Inn), Wren's Forge, Market Square, North Fields, The Well
+
+── Day 1 Hour 01:00 ─── Settlement Road ──────────────────────
+  Satiety: 75%  Health: 100%  Rest: 80%  Coins: 5.0
+[Type 'help' for commands, 'quit' to exit]
+
+> 
+═══ Settlement Road ═══
+The packed-mud main road through Thornveil. Everything connects to it.
+
+People here:
+  • Aldous Minner (idle — Settlement Road)
+  • Gwen Minner (idle — Settlement Road)
+
+Connected to: The Slanted Timber (Inn), Wren's Forge, Market Square, North Fields, The Well
+
+── Day 1 Hour 02:00 ─── Settlement Road ──────────────────────
+  Satiety: 75%  Health: 100%  Rest: 80%  Coins: 5.0
+
+> 
+You move to The Slanted Timber (Inn).
+A low-roofed inn with smoke-darkened beams. Smells of woodsmoke and stew. Mira Ashbridge keeps the place running.
+
+── Day 1 Hour 03:00 ─── The Slanted Timber (Inn) ──────────────────────
+  Satiety: 75%  Health: 100%  Rest: 80%  Coins: 5.0
+
+> 
+Mira Ashbridge smiles. "Good to see you again."
+  → Relationship with NPC#1: +2
+
+── Day 1 Hour 04:00 ─── The Slanted Timber (Inn) ──────────────────────
+  Satiety: 75%  Health: 100%  Rest: 80%  Coins: 5.0
+
+> 
+Mira Ashbridge describes managing the inn — food, lodging, keeping the common room civil.
+  → Relationship with NPC#1: +3
+
+── Day 1 Hour 05:00 ─── The Slanted Timber (Inn) ──────────────────────
+  Satiety: 75%  Health: 100%  Rest: 80%  Coins: 5.0
+
+> 
+You move to Settlement Road.
+The packed-mud main road through Thornveil. Everything connects to it.
+
+── Day 1 Hour 06:00 ─── Settlement Road ──────────────────────
+  Satiety: 74%  Health: 100%  Rest: 79%  Coins: 5.0
+
+> 
+You move to The Well.
+Stone-rimmed, deep. People gather here in the morning to fill pails and exchange gossip.
+
+── Day 1 Hour 07:00 ─── The Well ──────────────────────
+  Satiety: 74%  Health: 100%  Rest: 79%  Coins: 5.0
+
+> 
+═══ The Well ═══
+Stone-rimmed, deep. People gather here in the morning to fill pails and exchange gossip.
+
+No one else is here.
+
+Connected to: North Fields, Settlement Road, The Old Archive
+
+── Day 1 Hour 08:00 ─── The Well ──────────────────────
+  Satiety: 74%  Health: 100%  Rest: 79%  Coins: 5.0
+
+> 
+You move to The Old Archive.
+A half-collapsed stone structure older than anyone in Thornveil. Rumored to have held records. Most of the shelves are rotted or missing.
+
+── Day 1 Hour 09:00 ─── The Old Archive ──────────────────────
+  Satiety: 74%  Health: 100%  Rest: 78%  Coins: 5.0
+
+> 
+You examine the ruined archive. Most of the records are gone, but the structure itself is interesting — it was clearly designed to store knowledge systematically. You learn something about the archive's history.
+  → Knowledge gained: node #1
+
+── Day 1 Hour 10:00 ─── The Old Archive ──────────────────────
+  Satiety: 74%  Health: 100%  Rest: 78%  Coins: 5.0
+
+> 
+You begin practicing Inscription. You're a novice, but it's a start.
+  → New capability: CapabilityId(7) (Novice)
+
+── Day 1 Hour 11:00 ─── The Old Archive ──────────────────────
+  Satiety: 74%  Health: 100%  Rest: 78%  Coins: 5.0
+
+> 
+You move to Forest Edge.
+Where the tree line begins. Timber is plentiful but the further in you go, the quieter it gets.
+
+── Day 1 Hour 12:00 ─── Forest Edge ──────────────────────
+  Satiety: 73%  Health: 100%  Rest: 77%  Coins: 5.0
+
+> 
+You wait for 5 hours. Time passes.
+
+── Day 1 Hour 13:00 ─── Forest Edge ──────────────────────
+  Satiety: 73%  Health: 100%  Rest: 77%  Coins: 5.0
+
+> 
+═══ Forest Edge ═══
+Where the tree line begins. Timber is plentiful but the further in you go, the quieter it gets.
+
+People here:
+  • Tomas Birch (working — Forest Edge)
+  • Aldous Minner (working — Forest Edge)
+
+Connected to: The Old Archive, Settlement Road
+
+── Day 1 Hour 14:00 ─── Forest Edge ──────────────────────
+  Satiety: 73%  Health: 100%  Rest: 77%  Coins: 5.0
+
+> 
+Tomas Birch nods. "Hello."
+  → Relationship with NPC#6: +2
+
+── Day 1 Hour 15:00 ─── Forest Edge ──────────────────────
+  Satiety: 73%  Health: 100%  Rest: 76%  Coins: 5.0
+
+> 
+You spend several arduous hours helping Tomas Birch fell and clear the heavy timber at West Woods. Tomas wipes the sweat from his brow and clasps your arm in deep gratitude: 'I won't forget this. Few strangers would give their backs to another man's labor.' In the distance, young Runn watches silently, an unreadable shadow crossing his face.
+  → Relationship with NPC#6: +45
+
+── Day 1 Hour 16:00 ─── Forest Edge ──────────────────────
+  Satiety: 73%  Health: 100%  Rest: 76%  Coins: 5.0
+
+> 
+You inscribe your observation: "Assisting Tomas with the oak felling revealed deep strain with his brother Runn."
+
+Inscription #1 complete.
+  → Transformation progress: Stage 0 — 5%
+
+── Day 1 Hour 17:00 ─── Forest Edge ──────────────────────
+  Satiety: 73%  Health: 100%  Rest: 76%  Coins: 5.0
+
+> 
+You move to Settlement Road.
+The packed-mud main road through Thornveil. Everything connects to it.
+
+── Day 1 Hour 18:00 ─── Settlement Road ──────────────────────
+  Satiety: 72%  Health: 100%  Rest: 75%  Coins: 5.0
+
+> 
+You move to The Slanted Timber (Inn).
+A low-roofed inn with smoke-darkened beams. Smells of woodsmoke and stew. Mira Ashbridge keeps the place running.
+
+── Day 1 Hour 19:00 ─── The Slanted Timber (Inn) ──────────────────────
+  Satiety: 72%  Health: 100%  Rest: 75%  Coins: 5.0
+
+> 
+You need 5.4 coins to buy 3 Food (at 1.8 each). You only have 5.0.
+
+── Day 1 Hour 20:00 ─── The Slanted Timber (Inn) ──────────────────────
+  Satiety: 72%  Health: 100%  Rest: 75%  Coins: 5.0
+
+> 
+You sleep for several hours (cost 2.0 coins), waking rested.
+
+── Day 1 Hour 21:00 ─── The Slanted Timber (Inn) ──────────────────────
+  Satiety: 87%  Health: 100%  Rest: 100%  Coins: 3.0
+
+> Advancing 336 ticks (336 hours)...
+Time passes.
+
+> 
+You move to Settlement Road.
+The packed-mud main road through Thornveil. Everything connects to it.
+
+── Day 15 Hour 22:00 ─── Settlement Road ──────────────────────
+  Satiety: 31%  Health: 100%  Rest: 16%  Coins: 3.0
+  [Scholar — Stage 1 — Progress 10%  Inscriptions: 1]
+
+> 
+You move to The Well.
+Stone-rimmed, deep. People gather here in the morning to fill pails and exchange gossip.
+
+── Day 15 Hour 23:00 ─── The Well ──────────────────────
+  Satiety: 31%  Health: 100%  Rest: 16%  Coins: 3.0
+  [Scholar — Stage 1 — Progress 10%  Inscriptions: 1]
+
+> 
+You move to The Old Archive.
+A half-collapsed stone structure older than anyone in Thornveil. Rumored to have held records. Most of the shelves are rotted or missing.
+
+── Day 16 Hour 00:00 ─── The Old Archive ──────────────────────
+  Satiety: 30%  Health: 100%  Rest: 16%  Coins: 3.0
+  [Scholar — Stage 1 — Progress 10%  Inscriptions: 1]
+
+> 
+You move to Forest Edge.
+Where the tree line begins. Timber is plentiful but the further in you go, the quieter it gets.
+
+── Day 16 Hour 01:00 ─── Forest Edge ──────────────────────
+  Satiety: 30%  Health: 100%  Rest: 16%  Coins: 3.0
+  [Scholar — Stage 1 — Progress 10%  Inscriptions: 1]
+
+> 
+Tomas Birch speaks with quiet regret: 'I haven't forgotten how you stood with me at the woodlot. But Runn took it hard... he felt he wasn't needed. He's taken an apprenticeship with Wren at the forge. I work the timber alone now.'
+  → Relationship with NPC#6: +2
+
+── Day 16 Hour 02:00 ─── Forest Edge ──────────────────────
+  Satiety: 30%  Health: 100%  Rest: 16%  Coins: 3.0
+  [Scholar — Stage 1 — Progress 10%  Inscriptions: 1]
+
+> 
+You move to Settlement Road.
+The packed-mud main road through Thornveil. Everything connects to it.
+
+── Day 16 Hour 03:00 ─── Settlement Road ──────────────────────
+  Satiety: 30%  Health: 100%  Rest: 16%  Coins: 3.0
+  [Scholar — Stage 1 — Progress 10%  Inscriptions: 1]
+
+> 
+You move to Wren's Forge.
+A stone-walled workshop with a perpetually glowing hearth. The smell of hot iron hangs in the air.
+
+── Day 16 Hour 04:00 ─── Wren's Forge ──────────────────────
+  Satiety: 30%  Health: 100%  Rest: 16%  Coins: 3.0
+  [Scholar — Stage 1 — Progress 10%  Inscriptions: 1]
+
+> 
+═══ Wren's Forge ═══
+A stone-walled workshop with a perpetually glowing hearth. The smell of hot iron hangs in the air.
+
+People here:
+  • Wren Forscythe (idle — Wren's Forge)
+
+Connected to: Settlement Road, Market Square
+
+── Day 16 Hour 05:00 ─── Wren's Forge ──────────────────────
+  Satiety: 30%  Health: 100%  Rest: 16%  Coins: 3.0
+  [Scholar — Stage 1 — Progress 10%  Inscriptions: 1]
+
+> 
+Runn isn't here right now.
+
+── Day 16 Hour 06:00 ─── Wren's Forge ──────────────────────
+  Satiety: 29%  Health: 100%  Rest: 15%  Coins: 3.0
+  [Scholar — Stage 1 — Progress 10%  Inscriptions: 1]
+
+> 
+You inscribe your observation: "Runn has left his family woodlot to apprentice under Wren at the forge."
+
+Inscription #2 complete.
+  → Transformation progress: Stage 1 — 15%
+
+── Day 16 Hour 07:00 ─── Wren's Forge ──────────────────────
+  Satiety: 29%  Health: 100%  Rest: 15%  Coins: 3.0
+  [Scholar — Stage 1 — Progress 10%  Inscriptions: 2]
+
+> Advancing 720 ticks (720 hours)...
+Time passes.
+
+> 
+You move to Settlement Road.
+The packed-mud main road through Thornveil. Everything connects to it.
+
+── Day 46 Hour 08:00 ─── Settlement Road ──────────────────────
+  Satiety: 0%  Health: 0%  Rest: 0%  Coins: 3.0
+  [Scholar — Stage 1 — Progress 10%  Inscriptions: 2]
+  ⚠ You are HUNGRY. Find food or your health will suffer.
+  ⚠ You are EXHAUSTED. You need to sleep.
+  ⚠ Your health is DANGEROUSLY LOW.
+
+> 
+You move to The Slanted Timber (Inn).
+A low-roofed inn with smoke-darkened beams. Smells of woodsmoke and stew. Mira Ashbridge keeps the place running.
+
+── Day 46 Hour 09:00 ─── The Slanted Timber (Inn) ──────────────────────
+  Satiety: 0%  Health: 0%  Rest: 0%  Coins: 3.0
+  [Scholar — Stage 1 — Progress 10%  Inscriptions: 2]
+  ⚠ You are HUNGRY. Find food or your health will suffer.
+  ⚠ You are EXHAUSTED. You need to sleep.
+  ⚠ Your health is DANGEROUSLY LOW.
+
+> 
+Mira Ashbridge wipes down the bar counter and looks up with a knowing nod: 'You've been gone a spell. Word from the woods is Tomas works alone now—young Runn moved his kit over to Wren's forge. Timber's gotten dearer in the market since.'
+  → Relationship with NPC#1: +2
+
+── Day 46 Hour 10:00 ─── The Slanted Timber (Inn) ──────────────────────
+  Satiety: 0%  Health: 0%  Rest: 0%  Coins: 3.0
+  [Scholar — Stage 1 — Progress 10%  Inscriptions: 2]
+  ⚠ You are HUNGRY. Find food or your health will suffer.
+  ⚠ You are EXHAUSTED. You need to sleep.
+  ⚠ Your health is DANGEROUSLY LOW.
+
+> 
+═══ THORNVEIL MARKET PRICES ═══
+  Timber: 12.5 coins/unit  (stock: 0)
+  Tools: 8.4 coins/unit  (stock: 153)
+  Food: 1.4 coins/unit  (stock: 1000)
+  Parchment: 7.0 coins/unit  (stock: 10)
+  Luxury: 50.0 coins/unit  (stock: 0)
+  Herbs: 4.2 coins/unit  (stock: 124)
+  Stone: 5.6 coins/unit  (stock: 104)
+  Ink: 10.5 coins/unit  (stock: 5)
+
+> ✓ All invariants pass.
+
+> 
+═══ PLAYER STATUS ═══
+  Alive: false
+  Satiety: 0%  Health: 0%  Rest: 0%
+  Coins: 3.0
+  Capabilities: 1
+  Knowledge nodes: 1
+  Transformation: Stage 1 (10%)
+  Inscriptions: 2
+═══ WORLD ═══
+  Day: 46  Hour: 10:00
+  Living NPCs: 15
+  State hash: 80fa22763161360b
+
+> Quitting Godseed.

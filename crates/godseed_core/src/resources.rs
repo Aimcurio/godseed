@@ -1,11 +1,10 @@
 /// Godseed — ECS Resources (global simulation state)
-
 use bevy_ecs::system::Resource;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
 
-use crate::types::{CitizenId, ReputationRecord};
 use crate::events::{SimEvent, TelemetryEvent};
+use crate::types::{CitizenId, ReputationRecord};
 
 // ── Relationship Ledger ───────────────────────────────────────────────────────
 
@@ -33,7 +32,11 @@ impl RelationshipLedger {
     }
 
     fn key(a: CitizenId, b: CitizenId) -> (u64, u64) {
-        if a.0 <= b.0 { (a.0, b.0) } else { (b.0, a.0) }
+        if a.0 <= b.0 {
+            (a.0, b.0)
+        } else {
+            (b.0, a.0)
+        }
     }
 }
 
@@ -54,7 +57,6 @@ impl ReputationRegistry {
 
 // ── Event Ring (inherited from CIVITAS-1M) ────────────────────────────────────
 
-
 #[derive(Resource, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct EventRing {
     pub events: VecDeque<SimEvent>,
@@ -62,10 +64,13 @@ pub struct EventRing {
     pub total_emitted: u64,
 }
 
-
 impl EventRing {
     pub fn new(capacity: usize) -> Self {
-        Self { events: VecDeque::new(), capacity, total_emitted: 0 }
+        Self {
+            events: VecDeque::new(),
+            capacity,
+            total_emitted: 0,
+        }
     }
 
     pub fn emit(&mut self, event: SimEvent) {
@@ -91,7 +96,9 @@ pub struct TelemetryLog {
 }
 
 impl TelemetryLog {
-    pub fn new() -> Self { Self::default() }
+    pub fn new() -> Self {
+        Self::default()
+    }
 
     pub fn emit(&mut self, event: TelemetryEvent) {
         if self.events.len() >= 50_000 {
@@ -103,7 +110,8 @@ impl TelemetryLog {
     /// Dump all events to JSON lines string
     pub fn to_jsonl(&self) -> String {
         use serde_json::to_string;
-        self.events.iter()
+        self.events
+            .iter()
             .filter_map(|e| to_string(e).ok())
             .collect::<Vec<_>>()
             .join("\n")
@@ -114,3 +122,151 @@ impl TelemetryLog {
 
 #[derive(Resource, Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct NextCitizenId(pub u64);
+
+// ── VS2 Resources ─────────────────────────────────────────────────────────────
+
+/// Monotonically increasing causal event ID generator (NC-44)
+#[derive(Resource, Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct NextCausalId(pub u64);
+
+impl NextCausalId {
+    pub fn new(start: u64) -> Self {
+        Self(start)
+    }
+    pub fn next(&mut self) -> u64 {
+        let id = self.0;
+        self.0 += 1;
+        id
+    }
+}
+
+impl Default for NextCausalId {
+    fn default() -> Self {
+        Self(100)
+    }
+}
+
+/// Authoritative registry of active and historical consequence situations (AC-206, AC-207)
+#[derive(Resource, Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+pub struct PendingConsequenceRegistry {
+    pub consequences: Vec<crate::types::PendingConsequence>,
+    pub next_id: u32,
+}
+
+impl PendingConsequenceRegistry {
+    pub fn new() -> Self {
+        Self {
+            consequences: Vec::new(),
+            next_id: 1,
+        }
+    }
+
+    pub fn register(
+        &mut self,
+        causal_root: u64,
+        trigger: crate::types::TriggerCondition,
+        consequence_type: crate::types::ConsequenceType,
+        created_tick: u64,
+    ) -> u32 {
+        let id = self.next_id;
+        self.next_id += 1;
+        self.consequences.push(crate::types::PendingConsequence {
+            id,
+            causal_root,
+            stage: crate::types::ConsequenceStage::Active,
+            trigger,
+            consequence_type,
+            created_tick,
+        });
+        id
+    }
+
+    pub fn active_count(&self) -> usize {
+        self.consequences
+            .iter()
+            .filter(|c| {
+                c.stage == crate::types::ConsequenceStage::Active
+                    || c.stage == crate::types::ConsequenceStage::Escalated
+            })
+            .count()
+    }
+}
+
+/// Personal narrative return digest entries generated during absence (AC-207, AC-208)
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct EpistemicReturnDigest {
+    pub tick: u64,
+    pub speaker: CitizenId,
+    pub causal_root: u64,
+    pub message: String,
+}
+
+#[derive(Resource, Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+pub struct ReturnDigestLog {
+    pub entries: VecDeque<EpistemicReturnDigest>,
+}
+
+impl ReturnDigestLog {
+    pub fn new() -> Self {
+        Self {
+            entries: VecDeque::new(),
+        }
+    }
+
+    pub fn push(&mut self, entry: EpistemicReturnDigest) {
+        if self.entries.len() >= 8 {
+            self.entries.pop_front();
+        }
+        self.entries.push_back(entry);
+    }
+
+    pub fn find_digest_for(&self, speaker: CitizenId) -> Option<&EpistemicReturnDigest> {
+        self.entries.iter().rev().find(|d| d.speaker == speaker)
+    }
+
+    pub fn pop_digest_for(&mut self, speaker: CitizenId) -> Option<EpistemicReturnDigest> {
+        if let Some(pos) = self.entries.iter().rposition(|d| d.speaker == speaker) {
+            self.entries.remove(pos)
+        } else {
+            None
+        }
+    }
+}
+
+/// Authoritative registry of inscribed documents and legal charters (AC-205, Architecture Sec 12)
+#[derive(Resource, Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct DocumentRegistry {
+    pub documents: Vec<crate::types::InscribedDocument>,
+    pub next_id: u32,
+}
+
+impl Default for DocumentRegistry {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl DocumentRegistry {
+    pub fn new() -> Self {
+        Self {
+            documents: Vec::new(),
+            next_id: 1,
+        }
+    }
+
+    pub fn register(&mut self, mut doc: crate::types::InscribedDocument) -> u32 {
+        let id = self.next_id;
+        self.next_id += 1;
+        doc.id = id;
+        self.documents.push(doc);
+        id
+    }
+
+    pub fn get(&self, id: u32) -> Option<&crate::types::InscribedDocument> {
+        self.documents.iter().find(|d| d.id == id)
+    }
+
+    pub fn get_mut(&mut self, id: u32) -> Option<&mut crate::types::InscribedDocument> {
+        self.documents.iter_mut().find(|d| d.id == id)
+    }
+}
