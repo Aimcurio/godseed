@@ -6,7 +6,7 @@ use godseed_core::{
     content::caps,
     persistence::{
         load_snapshot, save_snapshot, save_snapshot_v1, CitizenSnapshotV1, SimulationSnapshotV1,
-        FORMAT_VERSION_V1, FORMAT_VERSION_V2, MAGIC_V2,
+        FORMAT_VERSION_V1, FORMAT_VERSION_V3, MAGIC_V2,
     },
     resources::{DocumentRegistry, PendingConsequenceRegistry, ReturnDigestLog},
     sim::Simulation,
@@ -512,9 +512,9 @@ fn test_v1_to_v2_migration_verification() {
     sim.advance(48);
 
     // Build a V2 snapshot and convert to V1 for fixture creation
-    let snap_v2 = sim.build_snapshot();
-    let mut citizens_v1 = Vec::with_capacity(snap_v2.citizens.len());
-    for c in snap_v2.citizens {
+    let snap_v3 = sim.build_snapshot();
+    let mut citizens_v1 = Vec::with_capacity(snap_v3.citizens.len());
+    for c in snap_v3.citizens {
         citizens_v1.push(CitizenSnapshotV1 {
             meta: c.meta,
             demographics: c.demographics,
@@ -527,10 +527,10 @@ fn test_v1_to_v2_migration_verification() {
             kinship: c.kinship,
             causal_audit: c.causal_audit,
             inventory: c.inventory,
-            npc_memory: c.npc_memory,
+            npc_memory: None,
             npc_schedule: c.npc_schedule,
             npc_goals: c.npc_goals,
-            disposition: c.disposition,
+            disposition: None,
             is_player: c.is_player,
             capabilities: c.capabilities,
             transformation: c.transformation,
@@ -540,16 +540,16 @@ fn test_v1_to_v2_migration_verification() {
 
     let snap_v1 = SimulationSnapshotV1 {
         version: FORMAT_VERSION_V1,
-        clock: snap_v2.clock,
-        world_map: snap_v2.world_map,
-        settlements: snap_v2.settlements,
-        households: snap_v2.households,
-        relationships: snap_v2.relationships,
-        reputation: snap_v2.reputation,
-        events: snap_v2.events,
-        next_citizen_id: snap_v2.next_citizen_id,
+        clock: snap_v3.clock,
+        world_map: snap_v3.world_map,
+        settlements: snap_v3.settlements,
+        households: snap_v3.households,
+        relationships: godseed_core::resources::RelationshipLedger::default(),
+        reputation: snap_v3.reputation,
+        events: snap_v3.events,
+        next_citizen_id: snap_v3.next_citizen_id,
         citizens: citizens_v1,
-        seed: snap_v2.seed,
+        seed: snap_v3.seed,
     };
 
     // Serialize to V1 format with MAGIC_V1 and FORMAT_VERSION_V1
@@ -558,25 +558,25 @@ fn test_v1_to_v2_migration_verification() {
 
     // Load buffer using load_snapshot
     let mut cursor = Cursor::new(buffer);
-    let migrated_v2 =
-        load_snapshot(&mut cursor).expect("load_snapshot must migrate V1 to V2 without error");
+    let migrated_v3 =
+        load_snapshot(&mut cursor).expect("load_snapshot must migrate V1 to V3 without error");
 
-    assert_eq!(migrated_v2.version, FORMAT_VERSION_V2);
-    assert_eq!(migrated_v2.citizens.len(), 16);
+    assert_eq!(migrated_v3.version, FORMAT_VERSION_V3);
+    assert_eq!(migrated_v3.citizens.len(), 16);
 
     // Verify player and NPCs received sensible defaults
-    let player_c = migrated_v2.citizens.iter().find(|c| c.is_player).unwrap();
+    let player_c = migrated_v3.citizens.iter().find(|c| c.is_player).unwrap();
     assert!(player_c.episodic_memory.is_none());
     assert!(player_c.relational_ledger.is_some());
     assert!(player_c.epistemic_state.is_some());
 
-    let npc_c = migrated_v2.citizens.iter().find(|c| !c.is_player).unwrap();
+    let npc_c = migrated_v3.citizens.iter().find(|c| !c.is_player).unwrap();
     assert!(npc_c.episodic_memory.is_some());
     assert!(npc_c.relational_ledger.is_some());
     assert!(npc_c.epistemic_state.is_some());
 
     // Load into Simulation and verify invariants pass
-    let mut loaded_sim = Simulation::from_snapshot(migrated_v2);
+    let mut loaded_sim = Simulation::from_snapshot(migrated_v3);
     assert!(
         loaded_sim.check_invariants().is_ok(),
         "Migrated V1 state must satisfy all invariants"
@@ -767,13 +767,14 @@ fn test_legacy_relationship_ledger_is_migration_only() {
         sim.world
             .get_resource::<godseed_core::resources::RelationshipLedger>()
             .is_none(),
-        "V2 runtime must not install legacy RelationshipLedger as a gameplay resource"
+        "Runtime must not install legacy RelationshipLedger as a gameplay resource"
     );
 
     let snapshot = sim.build_snapshot();
-    assert!(
-        snapshot.relationships.values.is_empty(),
-        "V2 snapshots preserve the legacy field only as an inert compatibility shell"
+    assert_eq!(
+        snapshot.version,
+        godseed_core::persistence::FORMAT_VERSION_V3,
+        "Fresh snapshots must use V3 clean format with zero legacy relationship ledger"
     );
 }
 

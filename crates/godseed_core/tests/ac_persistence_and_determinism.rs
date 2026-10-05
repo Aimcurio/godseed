@@ -118,10 +118,6 @@ fn test_ac9_deep_semantic_persistence_equivalence() {
         "HouseholdDirectory must match"
     );
     assert_eq!(
-        pre_save.relationships, loaded.relationships,
-        "RelationshipLedger must match"
-    );
-    assert_eq!(
         pre_save.reputation, loaded.reputation,
         "ReputationRegistry must match"
     );
@@ -260,11 +256,6 @@ fn test_ac9_deep_semantic_persistence_equivalence() {
             );
         } else {
             assert_eq!(
-                &pre_c.npc_memory, &loaded_c.npc_memory,
-                "NPC memory mismatch for {:?}",
-                pre_c.meta.id
-            );
-            assert_eq!(
                 &pre_c.npc_schedule, &loaded_c.npc_schedule,
                 "NPC schedule mismatch for {:?}",
                 pre_c.meta.id
@@ -275,8 +266,8 @@ fn test_ac9_deep_semantic_persistence_equivalence() {
                 pre_c.meta.id
             );
             assert_eq!(
-                &pre_c.disposition, &loaded_c.disposition,
-                "NPC disposition mismatch for {:?}",
+                &pre_c.social_profile, &loaded_c.social_profile,
+                "NPC social profile mismatch for {:?}",
                 pre_c.meta.id
             );
             assert!(
@@ -284,8 +275,8 @@ fn test_ac9_deep_semantic_persistence_equivalence() {
                 "NPC schedule must not be lost or None"
             );
             assert!(
-                loaded_c.disposition.is_some(),
-                "NPC disposition must not be lost or None"
+                loaded_c.social_profile.is_some(),
+                "NPC social profile must not be lost or None"
             );
         }
     }

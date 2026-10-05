@@ -221,7 +221,7 @@ impl Default for NpcGoals {
     }
 }
 
-/// NPC disposition toward the player and reputation assessment
+/// Legacy V1/V2 persistence migration structure. Discarded from V2/V3 runtime state.
 #[derive(Component, Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Disposition {
     /// Memory-derived disposition toward the player (-100 to +100)
@@ -250,6 +250,36 @@ impl Disposition {
     /// Effective relationship (memory-derived + base)
     pub fn effective_relationship(&self) -> i16 {
         (self.toward_player + self.base_personality as i16).clamp(-100, 100)
+    }
+}
+
+/// Static authored social and teaching profile (immutable design parameters, Sec 11)
+#[derive(Component, Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct NpcSocialProfile {
+    /// Baseline from initial personality (-20 to +20)
+    pub base_personality: i8,
+    /// Suspicion baseline from background (0–100)
+    pub base_suspicion: u8,
+    /// Whether this NPC will teach capabilities
+    pub will_teach: Option<CapabilityId>,
+    /// Minimum relationship required to unlock teaching
+    pub teach_threshold: i16,
+}
+
+impl NpcSocialProfile {
+    pub fn new(base: i8) -> Self {
+        Self {
+            base_personality: base,
+            base_suspicion: 0,
+            will_teach: None,
+            teach_threshold: 40,
+        }
+    }
+}
+
+impl Default for NpcSocialProfile {
+    fn default() -> Self {
+        Self::new(0)
     }
 }
 
@@ -296,11 +326,25 @@ impl RelationalLedger {
     }
 }
 
-/// Dual-stream bounded episodic memory (12 transient FIFO + 6 permanent anchors) (AC-202)
+/// Compact permanent anchor preserving semantic fact indefinitely under anchor pressure (AC-202, Option A)
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct CompactAnchor {
+    pub id: u64,
+    pub tick: u64,
+    pub actor: CitizenId,
+    pub target: Option<CitizenId>,
+    pub tag: MemoryTag,
+    pub narrative_token: u16,
+    pub causal: Option<crate::types::CausalPointer>,
+}
+
+/// Dual-stream bounded episodic memory (12 transient FIFO + 6 active anchors + compact permanent storage) (AC-202)
 #[derive(Component, Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct EpisodicMemory {
     pub transient: VecDeque<EpisodicRecord>,
     pub anchors: Vec<EpisodicRecord>,
+    #[serde(default)]
+    pub compacted_anchors: Vec<CompactAnchor>,
 }
 
 impl EpisodicMemory {
@@ -308,18 +352,27 @@ impl EpisodicMemory {
         Self {
             transient: VecDeque::new(),
             anchors: Vec::new(),
+            compacted_anchors: Vec::new(),
         }
     }
 
     pub fn add_record(&mut self, record: EpisodicRecord) {
         if record.is_permanent {
             if self.anchors.len() >= 6 {
-                // Evict anchor with smallest absolute delta impact into transient
+                // Evict anchor with smallest absolute delta impact into compact permanent storage (Option A)
                 if let Some((min_idx, _)) = self.anchors.iter().enumerate().min_by_key(|(_, r)| {
                     r.delta_sentiment.abs() as i32 + r.delta_trust.abs() as i32
                 }) {
                     let evicted = self.anchors.remove(min_idx);
-                    self.add_transient(evicted);
+                    self.compacted_anchors.push(CompactAnchor {
+                        id: evicted.id,
+                        tick: evicted.tick,
+                        actor: evicted.actor,
+                        target: evicted.target,
+                        tag: evicted.tag,
+                        narrative_token: evicted.narrative_token,
+                        causal: evicted.causal,
+                    });
                 }
             }
             self.anchors.push(record);
@@ -337,10 +390,26 @@ impl EpisodicMemory {
 
     pub fn has_anchor_with_tag(&self, tag: MemoryTag) -> bool {
         self.anchors.iter().any(|a| a.tag == tag)
+            || self.compacted_anchors.iter().any(|c| c.tag == tag)
+    }
+
+    pub fn has_record_with_tag(&self, tag: MemoryTag) -> bool {
+        self.has_anchor_with_tag(tag) || self.transient.iter().any(|t| t.tag == tag)
     }
 
     pub fn find_anchor(&self, tag: MemoryTag) -> Option<&EpisodicRecord> {
         self.anchors.iter().find(|a| a.tag == tag)
+    }
+
+    pub fn find_record_with_tag(&self, tag: MemoryTag) -> Option<&EpisodicRecord> {
+        self.anchors
+            .iter()
+            .find(|a| a.tag == tag)
+            .or_else(|| self.transient.iter().find(|t| t.tag == tag))
+    }
+
+    pub fn find_compact_anchor(&self, tag: MemoryTag) -> Option<&CompactAnchor> {
+        self.compacted_anchors.iter().find(|c| c.tag == tag)
     }
 
     pub fn all_records(&self) -> impl Iterator<Item = &EpisodicRecord> {

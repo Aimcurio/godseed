@@ -2,9 +2,9 @@
 use bevy_ecs::prelude::*;
 
 use crate::components::{
-    CausalAudit, CitizenMeta, Demographics, Disposition, EpisodicMemory, EpistemicState,
-    HouseholdRef, Inventory, Kinship, MobilityProfile, NpcGoals, NpcSchedule, OccupationProfile,
-    PersonalFinances, PhysicalNeeds, RelationalLedger, SettlementRef,
+    CausalAudit, CitizenMeta, Demographics, EpisodicMemory, EpistemicState, HouseholdRef,
+    Inventory, Kinship, MobilityProfile, NpcGoals, NpcSchedule, NpcSocialProfile,
+    OccupationProfile, PersonalFinances, PhysicalNeeds, RelationalLedger, SettlementRef,
 };
 use crate::content::{ContentDefinitions, NpcDefinition};
 use crate::household::{Household, HouseholdDirectory};
@@ -51,9 +51,12 @@ fn spawn_npc_from_def(world: &mut World, def: &NpcDefinition) {
         }
     }
 
-    let mut disposition = Disposition::new(def.base_personality);
-    disposition.will_teach = def.will_teach;
-    disposition.teach_threshold = def.teach_threshold;
+    let social_profile = NpcSocialProfile {
+        base_personality: def.base_personality,
+        base_suspicion: 0,
+        will_teach: def.will_teach,
+        teach_threshold: def.teach_threshold,
+    };
 
     let schedule = NpcSchedule {
         slots: def.schedule.clone(),
@@ -140,7 +143,7 @@ fn spawn_npc_from_def(world: &mut World, def: &NpcDefinition) {
         RelationalLedger::new(),
         epistemic,
         schedule,
-        disposition,
+        social_profile,
         CausalAudit {
             trace: DecisionTrace::new(ReasonCode::InitialSpawn, 0, 0.0, 0.0, 0),
         },

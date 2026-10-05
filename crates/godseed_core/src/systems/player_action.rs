@@ -5,8 +5,8 @@
 use bevy_ecs::prelude::*;
 
 use crate::components::{
-    CapabilitySet, CitizenMeta, Disposition, EpisodicMemory, EpistemicState, Inventory,
-    KnowledgeInventory, NpcSchedule, OccupationProfile, PersonalFinances, PhysicalNeeds,
+    CapabilitySet, CitizenMeta, EpisodicMemory, EpistemicState, Inventory, KnowledgeInventory,
+    NpcSchedule, NpcSocialProfile, OccupationProfile, PersonalFinances, PhysicalNeeds,
     PlayerInputBuffer, PlayerMarker, RelationalLedger, SettlementRef, TransformationState,
 };
 use crate::content::{caps, knowledge, ContentDefinitions};
@@ -17,10 +17,10 @@ use crate::resources::{
 };
 use crate::settlement::SettlementDirectory;
 use crate::types::{
-    ActionResult, CapabilityId, CapabilityLevel, CausalPointer, CitizenId, ConsequenceStage,
-    ConsequenceType, DocumentType, EpisodicRecord, Exchange, InscribedDocument, LocationId,
-    MemoryTag, OccupationType, PlayerAction, RelationalBond, ResourceType, SideEffect, SimClock,
-    TalkTopic, TriggerCondition,
+    ActionResult, BehavioralMode, CapabilityId, CapabilityLevel, CausalPointer, CitizenId,
+    ConsequenceStage, ConsequenceType, DocumentType, EpisodicRecord, Exchange, InscribedDocument,
+    LocationId, MemoryTag, OccupationType, PlayerAction, RelationalBond, ResourceType, SideEffect,
+    SimClock, TalkTopic, TriggerCondition,
 };
 use crate::world::WorldMap;
 
@@ -55,7 +55,7 @@ pub fn player_action_system(
     npc_query: Query<
         (
             &CitizenMeta,
-            &mut Disposition,
+            &NpcSocialProfile,
             &NpcSchedule,
             &SettlementRef,
             &OccupationProfile,
@@ -148,7 +148,7 @@ fn resolve_action(
     npc_query: &Query<
         (
             &CitizenMeta,
-            &mut Disposition,
+            &NpcSocialProfile,
             &NpcSchedule,
             &SettlementRef,
             &OccupationProfile,
@@ -455,7 +455,7 @@ fn resolve_look(
     npc_query: &Query<
         (
             &CitizenMeta,
-            &mut Disposition,
+            &NpcSocialProfile,
             &NpcSchedule,
             &SettlementRef,
             &OccupationProfile,
@@ -526,7 +526,7 @@ fn resolve_inspect(
     npc_query: &Query<
         (
             &CitizenMeta,
-            &mut Disposition,
+            &NpcSocialProfile,
             &NpcSchedule,
             &SettlementRef,
             &OccupationProfile,
@@ -543,10 +543,15 @@ fn resolve_inspect(
         Without<PlayerMarker>,
     >,
 ) -> ActionResult {
-    if let Some((meta, _disposition, schedule, _sref, occ)) =
+    if let Some((meta, _profile, schedule, _sref, occ)) =
         npc_query.iter().find(|(m, _, _, _, _)| m.id == target)
     {
-        let rel = canonical_relationship_score(target, episodic_query);
+        let bond = episodic_query
+            .iter()
+            .find(|(m, _, _, _)| m.id == target)
+            .map(|(_, _, l, _)| l.get_bond(CitizenId::PLAYER))
+            .unwrap_or_default();
+
         let def = content
             .npc_definitions
             .iter()
@@ -557,16 +562,27 @@ fn resolve_inspect(
             .unwrap_or("A person you don't know much about.");
         let occ_name = occ.occupation.display_name();
 
-        let disposition_note = if rel > 50 {
-            "They seem friendly toward you."
-        } else if rel > 20 {
-            "They regard you with mild goodwill."
-        } else if rel < -50 {
-            "They look at you with clear hostility."
-        } else if rel < -20 {
-            "They seem wary of you."
-        } else {
-            "They regard you with neutral curiosity."
+        let disposition_note = match bond.mode() {
+            BehavioralMode::DevotedAlly => {
+                "They look upon you with devoted warmth and deep respect."
+            }
+            BehavioralMode::GrudgingDebtor => {
+                "They watch you with sour resentment, mindful of their obligations."
+            }
+            BehavioralMode::AffectionateRefusal => {
+                "They look upon you with affectionate warmth, though a flicker of caution remains."
+            }
+            BehavioralMode::HardenedEnemy => "They glare at you with open hostility.",
+            BehavioralMode::WaryConsultant => {
+                let rel = canonical_relationship_score(target, episodic_query);
+                if rel > 20 {
+                    "They regard you with mild goodwill."
+                } else if rel < -20 {
+                    "They seem wary of you."
+                } else {
+                    "They regard you with neutral curiosity."
+                }
+            }
         };
 
         let activity = schedule.current_activity.display();
@@ -603,7 +619,7 @@ fn resolve_talk(
     npc_query: &Query<
         (
             &CitizenMeta,
-            &mut Disposition,
+            &NpcSocialProfile,
             &NpcSchedule,
             &SettlementRef,
             &OccupationProfile,
@@ -634,7 +650,7 @@ fn resolve_talk(
         };
     }
 
-    let (npc_meta, _disposition, _schedule, npc_sref, occ) = npc_result.unwrap();
+    let (npc_meta, _profile, _schedule, npc_sref, occ) = npc_result.unwrap();
 
     // Check if NPC is accessible (same location)
     if npc_sref.current_location != settlement_ref.current_location {
@@ -646,6 +662,11 @@ fn resolve_talk(
         };
     }
 
+    let bond = episodic_query
+        .iter()
+        .find(|(m, _, _, _)| m.id == npc_id)
+        .map(|(_, _, l, _)| l.get_bond(CitizenId::PLAYER))
+        .unwrap_or_default();
     let rel = canonical_relationship_score(npc_id, episodic_query);
     let _def = content
         .npc_definitions
@@ -668,6 +689,10 @@ fn resolve_talk(
                 let has_helped_felling = episodic_query.iter().any(|(meta, mem, _, _)| {
                     meta.id == CitizenId(6) && mem.has_anchor_with_tag(MemoryTag::HelpedWithFelling)
                 });
+                let has_heard_tomas_gossip = episodic_query.iter().any(|(meta, mem, _, _)| {
+                    meta.id == npc_id
+                        && mem.has_record_with_tag(MemoryTag::HeardGossipAbout(CitizenId(6)))
+                });
 
                 let response = if npc_id == CitizenId(6) && has_helped_felling {
                     if is_fraternal_matured {
@@ -679,20 +704,46 @@ fn resolve_talk(
                     format!("{} wipes iron grime from his leather apron, looking at you with proud defiance. \"Wren took me on at the forge. Tomas didn't need two sets of hands at the woodlot anymore—not after you showed him how quick the felling could be. Here, I'm forging my own iron.\"", npc_meta.name)
                 } else if npc_id == CitizenId(1) && is_fraternal_matured {
                     format!("{} nods as you approach the bar. \"Tomas is holding up at the woodlot, but timber prices haven't settled since Runn moved to the forge. Good to see you.\"", npc_meta.name)
-                } else if rel >= 20 {
-                    format!("{} smiles. \"Good to see you again.\"", npc_meta.name)
-                } else if rel >= 0 {
-                    format!("{} nods. \"Hello.\"", npc_meta.name)
-                } else if rel >= -20 {
-                    format!(
-                        "{} gives you a measured look. \"What do you want?\"",
-                        npc_meta.name
-                    )
+                } else if npc_id != CitizenId(6) && has_heard_tomas_gossip {
+                    format!("{} smiles at you. \"Tomas told me what you did at the woodlot with that great oak. We can always use good hands around here.\"", npc_meta.name)
                 } else {
-                    format!(
-                        "{} turns away briefly before answering. \"Well?\"",
-                        npc_meta.name
-                    )
+                    match bond.mode() {
+                        BehavioralMode::DevotedAlly => {
+                            format!(
+                                "{} beams warmly. \"Always a delight to see you, my friend!\"",
+                                npc_meta.name
+                            )
+                        }
+                        BehavioralMode::AffectionateRefusal => {
+                            format!("{} gives you an affectionate smile, though their eyes remain cautious. \"Good to see you. What's on your mind?\"", npc_meta.name)
+                        }
+                        BehavioralMode::GrudgingDebtor => {
+                            format!("{} gives you a stiff, guarded nod. \"I acknowledge you. Let's make this brief.\"", npc_meta.name)
+                        }
+                        BehavioralMode::HardenedEnemy => {
+                            format!(
+                                "{} glares at you with cold disdain. \"What do you want?\"",
+                                npc_meta.name
+                            )
+                        }
+                        BehavioralMode::WaryConsultant => {
+                            if rel >= 20 {
+                                format!("{} smiles. \"Good to see you again.\"", npc_meta.name)
+                            } else if rel >= 0 {
+                                format!("{} nods. \"Hello.\"", npc_meta.name)
+                            } else if rel >= -20 {
+                                format!(
+                                    "{} gives you a measured look. \"What do you want?\"",
+                                    npc_meta.name
+                                )
+                            } else {
+                                format!(
+                                    "{} turns away briefly before answering. \"Well?\"",
+                                    npc_meta.name
+                                )
+                            }
+                        }
+                    }
                 };
                 (response, vec![], 2i16)
             }
@@ -746,21 +797,111 @@ fn resolve_talk(
         }
 
         TalkTopic::RequestWork => {
-            if rel >= 0 {
-                let work_msg = format!(
-                    "{} looks you over. \"I could use some help. Come back when you're ready to work.\"",
-                    npc_meta.name
-                );
-                (work_msg, vec![], 1i16)
-            } else {
+            // Check Delia's debt leverage first (AC-204)
+            let delia_debt_leveraged = npc_id == CitizenId(7) && bond.obligation >= 60;
+
+            if delia_debt_leveraged {
                 (
                     format!(
-                        "{} shakes their head. \"Not from you. Not right now.\"",
+                        "{} lowers her voice, looking around nervously. \"Fine. I'll give you ledger work and market concession—just keep your silence about my debt.\"",
                         npc_meta.name
                     ),
                     vec![],
-                    0i16,
+                    2i16,
                 )
+            } else {
+                let has_felling_memory = episodic_query.iter().any(|(m, mem, _, _)| {
+                    m.id == npc_id && mem.has_anchor_with_tag(MemoryTag::HelpedWithFelling)
+                });
+                let has_tomas_gossip = episodic_query.iter().any(|(m, mem, _, _)| {
+                    m.id == npc_id
+                        && mem.has_record_with_tag(MemoryTag::HeardGossipAbout(CitizenId(6)))
+                });
+
+                match bond.mode() {
+                    BehavioralMode::GrudgingDebtor => {
+                        // Begrudging compliance despite dislike; reduces obligation upon providing assistance
+                        adjust_canonical_relationship(npc_id, 0, 0, -20, episodic_query);
+                        (
+                            format!(
+                                "{} grimaces, looking at you with open resentment. \"I don't like you, but I honor my debts. Fine, take the work.\"",
+                                npc_meta.name
+                            ),
+                            vec![],
+                            1i16,
+                        )
+                    }
+                    BehavioralMode::AffectionateRefusal => {
+                        // High sentiment, low trust: warm refusal of sensitive assistance
+                        (
+                            format!(
+                                "{} offers a warm, apologetic smile. \"I'm fond of you, truly. But I cannot trust you with this work right now.\"",
+                                npc_meta.name
+                            ),
+                            vec![],
+                            0i16,
+                        )
+                    }
+                    BehavioralMode::DevotedAlly => {
+                        (
+                            format!(
+                                "{} beams with genuine delight. \"Always a pleasure to work beside you, my friend. Let's get to it.\"",
+                                npc_meta.name
+                            ),
+                            vec![],
+                            2i16,
+                        )
+                    }
+                    BehavioralMode::HardenedEnemy => {
+                        (
+                            format!(
+                                "{} glares with cold hostility. \"Get away from me. I'd burn my tools before hiring you.\"",
+                                npc_meta.name
+                            ),
+                            vec![],
+                            0i16,
+                        )
+                    }
+                    BehavioralMode::WaryConsultant => {
+                        if has_felling_memory {
+                            (
+                                format!(
+                                    "{} nods with deep respect. \"After what you did with the great oak, my work is always open to you.\"",
+                                    npc_meta.name
+                                ),
+                                vec![],
+                                2i16,
+                            )
+                        } else if has_tomas_gossip {
+                            (
+                                format!(
+                                    "{} nods thoughtfully. \"Tomas told me you know your way around hard labor. I can use hands like yours.\"",
+                                    npc_meta.name
+                                ),
+                                vec![],
+                                2i16,
+                            )
+                        } else if bond.trust >= 0 {
+                            (
+                                format!(
+                                    "{} looks you over. \"I could use some help. Come back when you're ready to work.\"",
+                                    npc_meta.name
+                                ),
+                                vec![],
+                                1i16,
+                            )
+                        } else {
+                            (
+                                format!(
+                                    "{} shakes their head. \"Not from you. Not right now.\"",
+                                    npc_meta.name
+                                ),
+                                vec![],
+                                0i16,
+                            )
+                        }
+                    }
+                }
             }
         }
 
@@ -768,7 +909,11 @@ fn resolve_talk(
             // Elder Voss only
             if npc_id.0 == 5 {
                 let elder_rel = rel;
-                if elder_rel > 40 && knowledge_inv.knows(knowledge::ANCIENT_ARCHIVE) {
+                if bond.mode() == BehavioralMode::AffectionateRefusal {
+                    ("Elder Voss smiles gently but shakes his head. 'Fond as I am of your company, the ancient archive demands absolute trust I cannot yet bestow.'".to_string(), vec![], 0i16)
+                } else if (bond.trust > 40 || elder_rel > 40)
+                    && knowledge_inv.knows(knowledge::ANCIENT_ARCHIVE)
+                {
                     let new1 = knowledge_inv.learn(knowledge::ELDER_VOSS_SECRET);
                     let new2 = knowledge_inv.learn(knowledge::INSCRIPTION_PRIMER);
                     let msg = if new1 || new2 {
@@ -789,7 +934,7 @@ fn resolve_talk(
                         ],
                         8i16,
                     )
-                } else if elder_rel > 20 {
+                } else if bond.trust > 20 || elder_rel > 20 {
                     ("Elder Voss looks at you thoughtfully. 'There are old ways of knowing this settlement that most have forgotten. Come talk to me when you know the archive.' He says nothing more.".to_string(), vec![], 3i16)
                 } else {
                     ("Elder Voss gives you a long, measuring look. 'Perhaps another time.' He moves on.".to_string(), vec![], 0i16)
@@ -813,7 +958,14 @@ fn resolve_talk(
                 .iter()
                 .find(|d| CitizenId(d.citizen_id) == *subject);
             if let Some(sdef) = subj_def {
-                let response = if rel >= 10 {
+                let response = if bond.mode() == BehavioralMode::HardenedEnemy
+                    || bond.mode() == BehavioralMode::AffectionateRefusal
+                {
+                    format!(
+                        "{} gives you a guarded look. \"I don't share others' affairs with you.\"",
+                        npc_meta.name
+                    )
+                } else if rel >= 10 || bond.trust >= 20 {
                     format!(
                         "{} tells you what they know about {}. You learn something useful.",
                         npc_meta.name, sdef.name
@@ -844,6 +996,50 @@ fn resolve_talk(
         }
 
         TalkTopic::ShareKnowledge { node } => {
+            // AC-204 Fail closed unless player possesses node in epistemic state or inventory
+            let player_has_node =
+                player_epistemic.has_knowledge(node.0 as u16) || knowledge_inv.knows(*node);
+            if !player_has_node {
+                return ActionResult {
+                    tick,
+                    success: false,
+                    message: "You don't know enough about that to share it.".to_string(),
+                    side_effects: vec![],
+                };
+            }
+
+            // Asymmetric leverage: Delia Croft's hidden debt (Knowledge 6)
+            if npc_id == CitizenId(7) && node.0 == 6 {
+                if let Some((_, _, mut npc_ledger, mut npc_epistemic)) = episodic_query
+                    .iter_mut()
+                    .find(|(m, _, _, _)| m.id == npc_id)
+                {
+                    npc_epistemic.learn(6, tick);
+                    // Delia's obligation increases by 80 because player holds debt leverage (GrudgingDebtor)
+                    npc_ledger.adjust(CitizenId::PLAYER, -25, 0, 80);
+                    let corr = npc_epistemic.get_corroboration(6);
+                    event_ring.emit(SimEvent::KnowledgeShared {
+                        speaker: CitizenId::PLAYER,
+                        listener: npc_id,
+                        knowledge_id: 6,
+                        corroboration: corr,
+                        tick,
+                    });
+                }
+                return ActionResult {
+                    tick,
+                    success: true,
+                    message: format!(
+                        "{} goes pale. 'Where did you hear about that debt...? Keep your voice down. Very well, you have your terms.'",
+                        npc_meta.name
+                    ),
+                    side_effects: vec![SideEffect::RelationshipChanged {
+                        npc: npc_id,
+                        delta: 1,
+                    }],
+                };
+            }
+
             if let Some((_, _, _, mut npc_epistemic)) = episodic_query
                 .iter_mut()
                 .find(|(m, _, _, _)| m.id == npc_id)
@@ -907,7 +1103,7 @@ fn resolve_help_with_felling(
     npc_query: &Query<
         (
             &CitizenMeta,
-            &mut Disposition,
+            &NpcSocialProfile,
             &NpcSchedule,
             &SettlementRef,
             &OccupationProfile,
@@ -1043,15 +1239,34 @@ fn resolve_offer(
     _settlements: &mut SettlementDirectory,
     _event_ring: &mut EventRing,
 ) -> ActionResult {
-    let rel = canonical_relationship_score(npc_id, episodic_query);
+    let bond = episodic_query
+        .iter()
+        .find(|(m, _, _, _)| m.id == npc_id)
+        .map(|(_, _, l, _)| l.get_bond(CitizenId::PLAYER))
+        .unwrap_or_default();
 
-    if rel < -30 {
-        return ActionResult {
-            tick,
-            success: false,
-            message: "They're not interested in doing business with you right now.".to_string(),
-            side_effects: vec![],
-        };
+    match bond.mode() {
+        BehavioralMode::HardenedEnemy => {
+            return ActionResult {
+                tick,
+                success: false,
+                message: "They're not interested in doing business with you right now.".to_string(),
+                side_effects: vec![],
+            };
+        }
+        BehavioralMode::AffectionateRefusal => {
+            if exchange.offer_coins < exchange.request_coins {
+                return ActionResult {
+                    tick,
+                    success: false,
+                    message:
+                        "They smile warmly but decline to extend credit without greater trust."
+                            .to_string(),
+                    side_effects: vec![],
+                };
+            }
+        }
+        _ => {}
     }
 
     // Simple validation: player must have offered resources
@@ -1434,7 +1649,7 @@ fn resolve_learn_from(
     npc_query: &Query<
         (
             &CitizenMeta,
-            &mut Disposition,
+            &NpcSocialProfile,
             &NpcSchedule,
             &SettlementRef,
             &OccupationProfile,
@@ -1462,16 +1677,10 @@ fn resolve_learn_from(
         };
     }
 
-    let (npc_meta, _disposition, _, _, _) = npc_data.unwrap();
-    let npc_def = content
-        .npc_definitions
-        .iter()
-        .find(|d| d.citizen_id == npc_id.0);
+    let (npc_meta, social_profile, _, _, _) = npc_data.unwrap();
 
     // Check if NPC can teach this capability
-    let can_teach = npc_def
-        .map(|d| d.will_teach == Some(capability))
-        .unwrap_or(false);
+    let can_teach = social_profile.will_teach == Some(capability);
     if !can_teach {
         return ActionResult {
             tick,
@@ -1481,21 +1690,59 @@ fn resolve_learn_from(
         };
     }
 
-    // Check relationship threshold
-    let threshold = npc_def.map(|d| d.teach_threshold).unwrap_or(50);
-    let rel = canonical_relationship_score(npc_id, episodic_query);
+    // Check relationship mode and threshold (AC-201)
+    let bond = episodic_query
+        .iter()
+        .find(|(m, _, _, _)| m.id == npc_id)
+        .map(|(_, _, l, _)| l.get_bond(CitizenId::PLAYER))
+        .unwrap_or_default();
 
-    if rel < threshold {
-        let rel_needed = threshold - rel;
-        return ActionResult {
-            tick,
-            success: false,
-            message: format!(
-                "{} isn't ready to teach you yet. Your relationship needs to improve by {} more.",
-                npc_meta.name, rel_needed
-            ),
-            side_effects: vec![],
-        };
+    match bond.mode() {
+        BehavioralMode::HardenedEnemy => {
+            return ActionResult {
+                tick,
+                success: false,
+                message: format!(
+                    "{} refuses to speak with you, let alone share their craft.",
+                    npc_meta.name
+                ),
+                side_effects: vec![],
+            };
+        }
+        BehavioralMode::AffectionateRefusal => {
+            return ActionResult {
+                tick,
+                success: false,
+                message: format!(
+                    "{} smiles gently. \"I care for you, but teaching this craft requires deep trust I cannot offer yet.\"",
+                    npc_meta.name
+                ),
+                side_effects: vec![],
+            };
+        }
+        BehavioralMode::GrudgingDebtor => {
+            // Complies to pay off obligation; reduces obligation by 30 upon teaching
+            adjust_canonical_relationship(npc_id, 0, 0, -30, episodic_query);
+        }
+        BehavioralMode::DevotedAlly => {
+            // Devoted ally willingly teaches
+        }
+        BehavioralMode::WaryConsultant => {
+            let threshold = social_profile.teach_threshold;
+            let rel = canonical_relationship_score(npc_id, episodic_query);
+            if rel < threshold {
+                let rel_needed = threshold - rel;
+                return ActionResult {
+                    tick,
+                    success: false,
+                    message: format!(
+                        "{} isn't ready to teach you yet. Your relationship needs to improve by {} more.",
+                        npc_meta.name, rel_needed
+                    ),
+                    side_effects: vec![],
+                };
+            }
+        }
     }
 
     // Teaching happens

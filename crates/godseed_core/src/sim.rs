@@ -7,10 +7,10 @@ use std::fs;
 use std::io;
 
 use crate::components::{
-    CapabilitySet, CausalAudit, CitizenMeta, Demographics, Disposition, EpisodicMemory,
-    EpistemicState, HouseholdRef, Inventory, Kinship, KnowledgeInventory, MobilityProfile,
-    NpcGoals, NpcMemory, NpcSchedule, OccupationProfile, PersonalFinances, PhysicalNeeds,
-    PlayerInputBuffer, PlayerMarker, RelationalLedger, SettlementRef, TransformationState,
+    CapabilitySet, CausalAudit, CitizenMeta, Demographics, EpisodicMemory, EpistemicState,
+    HouseholdRef, Inventory, Kinship, KnowledgeInventory, MobilityProfile, NpcGoals, NpcSchedule,
+    NpcSocialProfile, OccupationProfile, PersonalFinances, PhysicalNeeds, PlayerInputBuffer,
+    PlayerMarker, RelationalLedger, SettlementRef, TransformationState,
 };
 use crate::content::ContentDefinitions;
 use crate::household::HouseholdDirectory;
@@ -21,7 +21,7 @@ use crate::player::spawn_player;
 use crate::replay::compute_authoritative_state_hash;
 use crate::resources::{
     DocumentRegistry, EventRing, NextCausalId, NextCitizenId, PendingConsequenceRegistry,
-    RelationshipLedger, ReputationRegistry, ReturnDigestLog, TelemetryLog,
+    ReputationRegistry, ReturnDigestLog, TelemetryLog,
 };
 use crate::settlement::{Settlement, SettlementDirectory};
 use crate::systems::{
@@ -299,7 +299,6 @@ impl Simulation {
         let world_map = self.world.resource::<WorldMap>().clone();
         let settlements = self.world.resource::<SettlementDirectory>().clone();
         let households = self.world.resource::<HouseholdDirectory>().clone();
-        let relationships = RelationshipLedger::default();
         let reputation = self.world.resource::<ReputationRegistry>().clone();
         let events = self.world.resource::<EventRing>().clone();
         let next_id = self.world.resource::<NextCitizenId>().0;
@@ -327,10 +326,9 @@ impl Simulation {
                     &Inventory,
                 ),
                 (
-                    Option<&NpcMemory>,
                     Option<&NpcSchedule>,
                     Option<&NpcGoals>,
-                    Option<&Disposition>,
+                    Option<&NpcSocialProfile>,
                     Option<&PlayerMarker>,
                     Option<&CapabilitySet>,
                     Option<&TransformationState>,
@@ -345,7 +343,7 @@ impl Simulation {
 
             for (
                 (meta, demo, hh_ref, sref, occ, fin, needs, mob, kin, audit, inv),
-                (npc_mem, npc_sched, npc_goals, disp, is_player, caps, transform, knowledge),
+                (npc_sched, npc_goals, social_prof, is_player, caps, transform, knowledge),
                 (episodic, relational, epistemic),
             ) in q.iter(&self.world)
             {
@@ -361,10 +359,9 @@ impl Simulation {
                     kinship: kin.clone(),
                     causal_audit: audit.clone(),
                     inventory: inv.clone(),
-                    npc_memory: npc_mem.cloned(),
                     npc_schedule: npc_sched.cloned(),
                     npc_goals: npc_goals.cloned(),
-                    disposition: disp.cloned(),
+                    social_profile: social_prof.cloned(),
                     is_player: is_player.is_some(),
                     capabilities: caps.cloned(),
                     transformation: transform.cloned(),
@@ -379,12 +376,11 @@ impl Simulation {
         citizens.sort_by_key(|c| c.meta.id.0);
 
         SimulationSnapshot {
-            version: crate::persistence::FORMAT_VERSION_V2,
+            version: crate::persistence::FORMAT_VERSION_V3,
             clock,
             world_map,
             settlements,
             households,
-            relationships,
             reputation,
             events,
             next_citizen_id: next_id,
@@ -404,8 +400,6 @@ impl Simulation {
         world.insert_resource(snapshot.world_map);
         world.insert_resource(snapshot.settlements);
         world.insert_resource(snapshot.households);
-        // V2 runtime social authority is entity-local RelationalLedger/EpisodicMemory/EpistemicState.
-        // The legacy RelationshipLedger remains only in save structs for GODSEED1 migration.
         world.insert_resource(snapshot.reputation);
         world.insert_resource(snapshot.events);
         world.insert_resource(NextCitizenId(snapshot.next_citizen_id));
@@ -431,17 +425,14 @@ impl Simulation {
                 c.inventory,
             ));
 
-            if let Some(mem) = c.npc_memory {
-                builder.insert(mem);
-            }
             if let Some(sched) = c.npc_schedule {
                 builder.insert(sched);
             }
             if let Some(goals) = c.npc_goals {
                 builder.insert(goals);
             }
-            if let Some(disp) = c.disposition {
-                builder.insert(disp);
+            if let Some(sp) = c.social_profile {
+                builder.insert(sp);
             }
 
             // VS2 Authoritative Components

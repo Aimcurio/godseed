@@ -3,7 +3,7 @@
 **Document Identifier:** `GODSEED-VS2-TRACE-001`  
 **Governing Contract:** [GODSEED_VS2_PRODUCT_CONTRACT_REVISED.md](file:///C:/Users/15103/.gemini/antigravity/scratch/godseed/GODSEED_VS2_PRODUCT_CONTRACT_REVISED.md)  
 **Governing Architecture:** [GODSEED_VS2_ARCHITECTURE.md](file:///C:/Users/15103/.gemini/antigravity/scratch/godseed/GODSEED_VS2_ARCHITECTURE.md)  
-**Date:** 2026-09-29  
+**Date:** 2026-10-05  
 
 ---
 
@@ -11,68 +11,76 @@
 
 This matrix establishes complete, bidirectional traceability between the 8 approved product acceptance criteria (AC-201 through AC-208) in the Revised Product Contract and the technical systems, components, and execution paths defined in the Systems Architecture.
 
+All referenced symbols, components, resources, and tests in this document exist directly in the verified codebase.
+
 ---
 
 ## 2. Requirement Traceability Records (AC-201 through AC-208)
 
 ### AC-201: Qualitative Relational Divergence
-- **Product Requirement:** Two NPCs must exhibit distinctly different behavioral responses to the identical player request (e.g., lodging, loan, teaching) based on differing historical combinations of trust, obligation, and warmth, rather than a single rapport score.
+- **Product Requirement:** Two NPCs must exhibit distinctly different behavioral responses to the identical player request (e.g., lodging, loan, teaching, work) based on differing historical combinations of trust, obligation, and warmth, rather than a single rapport score.
 - **Architectural Capability:** Triad Relational Bond (`RelationalBond`) & Derived Behavioral Mode Deduction (`BehavioralMode`).
 - **Authoritative State:** `RelationalLedger` component on NPC entities storing `sentiment: i8`, `trust: i8`, `obligation: i16`.
 - **Execution Path:**
-  1. Player issues `PlayerAction::Talk` or `PlayerAction::Offer`.
-  2. `PlayerActionSystem` queries target NPC's `RelationalLedger`.
+  1. Player issues `PlayerAction::Talk { npc, topic: TalkTopic::RequestWork }` or other interaction.
+  2. `player_action_system` queries target NPC's `RelationalLedger`.
   3. `RelationalBond::mode()` evaluates whether bond is `GrudgingDebtor`, `AffectionateRefusal`, `WaryConsultant`, `DevotedAlly`, or `HardenedEnemy`.
-  4. `evaluate_assistance_request()` branches on mode.
-- **Observable Result:** Wren (GrudgingDebtor) begrudgingly accepts a tool repair due to debt while expressing hostility; Mira (AffectionateRefusal) warmly declines a loan due to lack of trust.
-- **Automated Verification:** `test_ac201_relational_divergence` (Unit & Integration).
+  4. Response branches directly on mode:
+     - `AffectionateRefusal` (high sentiment +50, low trust -30, obligation 0): warmly refuses sensitive business/work.
+     - `GrudgingDebtor` (negative sentiment -30, moderate trust 0, high obligation +60): complies begrudgingly due to obligation, deducting 20 obligation.
+- **Observable Result:** A scalar rapport average would score NPC A as +10 (accept) and NPC B as -15 (reject). The multi-dimensional Godseed model strictly inverts this outcome, producing warm refusal from NPC A and begrudging compliance from NPC B.
+- **Automated Verification:** `test_ac201_relational_divergence` in `crates/godseed_core/tests/social_authority_corrective.rs`.
 - **Human Verification:** Observed in playtest session during player assistance negotiations.
 
 ---
 
 ### AC-202: Episodic Narrative Recall
 - **Product Requirement:** A major life-altering player action must be explicitly cited by an NPC witness in dialogue at least 14 simulated days after occurrence, altering at least one available dialogue option or decision.
-- **Architectural Capability:** Bounded Episodic Memory with Permanent Anchor Retention and Template Token Translation.
-- **Authoritative State:** `EpisodicMemory.anchors` vector on NPC entities storing `EpisodicRecord` with `is_permanent = true` and `narrative_token`.
+- **Architectural Capability:** Dual-Stream Bounded Episodic Memory with Permanent Anchor Retention (`EpisodicMemory`, Option A Compact Overflow Storage) and Template Token Translation.
+- **Authoritative State:** `EpisodicMemory.anchors` vector and `EpisodicMemory.compacted_anchors` vector storing `EpisodicRecord` / `CompactAnchor` with `is_permanent = true` and `narrative_token: u16`.
 - **Execution Path:**
-  1. Significant player action commits `EpisodicRecord` with `is_permanent = true`.
-  2. 14 days advance (336 ticks); `EpisodicMemoryConsolidationSystem` prunes transient memories but preserves anchors.
-  3. Player initiates `PlayerAction::Talk`.
-  4. Dialogue assembly system checks `EpisodicMemory.anchors` involving `CitizenId::PLAYER` and prepends authored recall line to dialogue options.
-- **Observable Result:** After 14 days, NPC explicitly states: *"I haven't forgotten that you gave the last sack of grain to Gwen while our kettle was empty."*
-- **Automated Verification:** `test_ac202_episodic_recall` (advances clock 336 ticks; verifies memory presence and dialogue output string).
+  1. Significant player action (`PlayerAction::HelpWithFelling`) commits `EpisodicRecord` with `tag = MemoryTag::HelpedWithFelling`, `is_permanent = true`.
+  2. 14 days advance ($\ge 336$ ticks).
+  3. Under anchor pressure (>6 permanent anchors, >12 transients), Option A evicts lowest-magnitude active anchors into `compacted_anchors` indefinitely.
+  4. Player interacts via `PlayerAction::Talk { npc: CitizenId(6), topic: TalkTopic::RequestWork }`.
+  5. `has_anchor_with_tag(MemoryTag::HelpedWithFelling)` detects turning point and grants work with explicit citation: *"After what you did with the great oak, my work is always open to you."*
+- **Observable Result:** After $\ge 14$ days and under severe memory pressure, NPC explicitly cites the felling assistance and accepts work even when neutral/wary.
+- **Automated Verification:** `test_ac202_episodic_recall_changes_behavior` and `test_permanent_turning_point_survives_anchor_pressure` in `crates/godseed_core/tests/social_authority_corrective.rs`.
 - **Human Verification:** Evaluated via Story Retelling Test (player references NPC recalling past events).
 
 ---
 
 ### AC-203: One-Hop Narrative Gossip
 - **Product Requirement:** A high-impact player action witnessed by Citizen A must propagate to co-located Citizen B during socializing, causing Citizen B to alter their attitude or dialogue toward the player before direct contact.
-- **Architectural Capability:** Weekly Narrative Gossip System.
-- **Authoritative State:** `EpisodicMemory.transient` on non-witness NPC entities; `EventRing` log.
+- **Architectural Capability:** Weekly Narrative Gossip System (`gossip_system`) with Firsthand One-Hop Propagation Boundary.
+- **Authoritative State:** `EpisodicMemory` on listener NPC; `RelationalLedger` on listener NPC.
 - **Execution Path:**
-  1. Action witnessed by Citizen A creates permanent anchor.
-  2. Weekly schedule fires `NarrativeGossipSystem`.
-  3. Citizen A and Citizen B co-locate at The Slanted Timber during `NpcActivity::Socializing`.
-  4. System transfers attenuated `EpisodicRecord` with tag `HeardGossipAbout(PLAYER)` to Citizen B's `EpisodicMemory`.
-  5. Citizen B's `RelationalLedger.bonds[PLAYER]` shifts sentiment and trust.
-- **Observable Result:** Player approaches Citizen B for the first time; Citizen B greets the player with suspicion or gratitude based on what they heard from Citizen A.
-- **Automated Verification:** `test_ac203_one_hop_gossip` (places A and B at Inn, triggers gossip tick, verifies B's memory and bond).
+  1. Witness A possesses firsthand episodic record regarding player (`actor == CitizenId::PLAYER || target == Some(CitizenId::PLAYER)`).
+  2. Weekly schedule fires `gossip_system`.
+  3. Witness A and Citizen B co-locate during `NpcActivity::Socializing`.
+  4. Witness A shares firsthand experience.
+  5. Citizen B receives `EpisodicRecord` with `tag: MemoryTag::HeardGossipAbout(speaker_id)` and attenuated relational bond shift.
+  6. Secondhand gossip cannot be re-transmitted (one-hop bound).
+  7. On first greeting, Citizen B states: *"Tomas told me what you did at the woodlot with that great oak. We can always use good hands around here."*
+- **Observable Result:** Citizen B greets the player citing Tomas's story and alters interaction before any direct player contact.
+- **Automated Verification:** `test_ac203_one_hop_narrative_gossip` in `crates/godseed_core/tests/social_authority_corrective.rs`.
 - **Human Verification:** N/A (Automated test sufficient).
 
 ---
 
 ### AC-204: Asymmetric Knowledge Leverage
 - **Product Requirement:** The player must be able to acquire a documented or observed fact unknown to a target NPC, and revealing that fact must cause the NPC to alter an ongoing economic or social decision.
-- **Architectural Capability:** Asymmetric Epistemic State & Knowledge Gating System.
-- **Authoritative State:** `EpistemicState.known` map on player and NPC entities.
+- **Architectural Capability:** Asymmetric Epistemic State & Knowledge Gating System (`EpistemicState`, fail-closed sharing).
+- **Authoritative State:** `EpistemicState.known` on player and NPC entities; `RelationalLedger`.
 - **Execution Path:**
-  1. Player learns `KnowledgeId` (e.g., Delia's private debt or crop blight sign) via observation or archive study.
-  2. Player initiates `PlayerAction::Talk` with topic `ShareKnowledge(KnowledgeId)`.
-  3. `PlayerActionSystem` verifies knowledge asymmetry (player knows, NPC does not).
-  4. Knowledge is inserted into NPC's `EpistemicState`.
-  5. If knowledge carries a `social_fallout_mode`, target NPC's current goal or commercial term mutates immediately.
-- **Observable Result:** Revealing Delia's secret ledger causes Delia to drop a surcharge or forgive an outstanding rent claim.
-- **Automated Verification:** `test_ac204_asymmetric_knowledge` (verifies action availability and decision flip upon knowledge transfer).
+  1. Attempting to share unknown knowledge (`PlayerAction::Talk { topic: TalkTopic::ShareKnowledge }`) fails closed with *"You don't know enough about that to share it."*
+  2. Player acquires Knowledge 6 (Delia's Hidden Debt).
+  3. Before revelation, Delia Croft refuses concession on `RequestWork`.
+  4. Player shares Knowledge 6 with Delia Croft.
+  5. Delia's obligation increases by 80 into `BehavioralMode::GrudgingDebtor`.
+  6. Delia concedes on `RequestWork`: *"Fine. I'll give you ledger work and market concession—just keep your silence about my debt."*
+- **Observable Result:** Player uses debt secret as social leverage, shifting Delia into `GrudgingDebtor` and granting market and ledger work concessions.
+- **Automated Verification:** `test_share_unknown_knowledge_fails_closed` and `test_ac204_asymmetric_knowledge_leverage` in `crates/godseed_core/tests/social_authority_corrective.rs`.
 - **Human Verification:** Playtester unpromptedly uses secrets as social leverage.
 
 ---
@@ -84,102 +92,93 @@ This matrix establishes complete, bidirectional traceability between the 8 appro
 - **Execution Path:**
   1. Player meets Scholar Stage 2 prerequisites (studied archive founding stone, 5 basic inscriptions, consulted Voss).
   2. Player performs `PlayerAction::Diagnose` at North Fields, identifying blight.
-  3. Player performs `PlayerAction::InscribeDocument(DebtReliefCharter)`.
+  3. Player performs `PlayerAction::InscribeDocument`.
   4. Document item created in player inventory and registered in `DocumentRegistry`.
-  5. Player presents document to Delia and Pella; both sign (`signers.push()`).
-  6. Related vector in `SocialVectorRegistry` transitions from `Active` to `Resolved`.
-- **Observable Result:** Legal debt charter signed; Pella is permanently released from lodging debt; Delia ceases harassment.
-- **Automated Verification:** `test_ac205_scholar_stage2_inscription` (validates diagnosis action, document creation, and dispute resolution).
+  5. Player arbitrates dispute between affected citizens; signatures recorded on document.
+  6. Dispute transitions to resolved state.
+- **Observable Result:** Legal debt charter / arbitration signed; dispute permanently resolved.
+- **Automated Verification:** `crates/godseed_core/tests/scholar_stage2_arbitration.rs`.
 - **Human Verification:** Evaluated in Story Retelling Test (player recounts using documentation to resolve a town crisis).
 
 ---
 
 ### AC-206: Intelligible Delayed Consequence
 - **Product Requirement:** A player intervention in Week 1 must trigger a secondary consequence in Week 3 that was not immediately resolved upon action completion, with a fully auditable causal chain in telemetry.
-- **Architectural Capability:** Social Vector Progression Pipeline with Causal Pointers.
-- **Authoritative State:** `SocialVectorRegistry.vectors` with `VectorStage::Active`, `trigger_tick`, and `causal_root`.
+- **Architectural Capability:** Causal Consequence Pipeline with Root Event Pointers (`PendingConsequenceRegistry`, `EventRing`).
+- **Authoritative State:** `PendingConsequenceRegistry.consequences` with `stage: ConsequenceStage`, `causal_root: u64`.
 - **Execution Path:**
-  1. Week 1: Player intervention creates `SocialVector` with `trigger_tick = current_tick + 336` (14 days).
-  2. Daily ticks advance; vector remains `Active`, emitting forewarning dialogue cues.
-  3. Week 3: `SocialVectorProgressionSystem` detects `current_tick >= trigger_tick`.
-  4. Vector state advances to `Matured`; secondary effect executed (e.g. tool price spike or labor reassignment).
-  5. `TelemetryEvent::VectorMatured` emitted linking `causal_root`.
-- **Observable Result:** Two weeks after aiding Oswin, player discovers tool prices doubled at Wren's forge, with Wren explicitly citing Delia's lack of cash to buy iron.
-- **Automated Verification:** `test_ac206_delayed_consequence` (validates 14-day delay and causal lineage in telemetry log).
+  1. Root Action: `PlayerAction::HelpWithFelling { npc: CitizenId(6) }`.
+  2. Root Event: `SimEvent::CausalAction { causal, action_name: "HelpWithFelling" }` emitted to `EventRing` with unique `causal.root_event_id`.
+  3. Consequence tracked in `PendingConsequenceRegistry` with `cons.causal_root == causal.root_event_id` in stage `Active`.
+  4. 14 days advance (336 ticks); consequence matures to `ConsequenceStage::Matured`.
+  5. Secondary effect executes: Runn Birch transfers from West Woods woodlot to Apprentice Artisan at Wren's Forge (LocationId 2).
+  6. Dialogues reflect the economic/social ripple (Tomas Birch, Runn Birch, Mira Ashbridge).
+- **Observable Result:** Complete unbroken lineage from root action to root event ID to pending consequence to matured consequence to physical occupation and dialogue transformation.
+- **Automated Verification:** `test_ac206_causal_trace_lineage` in `crates/godseed_core/tests/social_authority_corrective.rs` and `crates/godseed_core/tests/thin_causal_slice.rs`.
 - **Human Verification:** Playtester identifies the link between their early choice and the later dilemma without confusion.
 
 ---
 
 ### AC-207: Autonomous Absence Continuation
 - **Product Requirement:** An active situation involving two NPCs must advance through at least one major state transition during a 30-day player absence, producing observable physical and conversational changes upon return.
-- **Architectural Capability:** Macro-Absence Vector Resolver & Return Digest System.
-- **Authoritative State:** `SocialVectorRegistry`, `ReturnDigestLog`, `NpcSchedule`.
+- **Architectural Capability:** Long-Horizon Progression & Return Digest System (`ReturnDigestLog`).
+- **Authoritative State:** `PendingConsequenceRegistry`, `ReturnDigestLog`, `NpcSchedule`.
 - **Execution Path:**
-  1. Active vector exists (e.g., Runn's labor strain at the timber stand).
-  2. Player departs / executes `Wait(720)` (30 days).
-  3. `MacroAbsenceVectorResolver` advances simulation in macro blocks:
-     - Vector transitions from `Active` to `Matured`.
-     - Runn's `NpcSchedule` changes from Forest Edge to Wren's Forge.
-     - `ReturnDigestLog` records entry for Runn's apprenticeship.
+  1. Active consequence exists.
+  2. Player departs / advances 30 days (720 ticks).
+  3. Simulation advances autonomously in absence:
+     - Consequence matures.
+     - Schedule and occupation reassign.
+     - `ReturnDigestLog` stores return digest messages.
   4. Player returns to Thornveil.
-  5. Inspecting forge shows Runn present; speaking with Mira triggers return digest salutation.
-- **Observable Result:** The player returns to find Runn working at the blacksmith forge; NPCs comment on the change that occurred while the player was away.
-- **Automated Verification:** `test_ac207_absence_continuation` (verifies 720-tick leap, schedule reassignment, and digest emission).
+  5. Speaking with citizens drains return digests and presents narrative recaps.
+- **Observable Result:** Physical and conversational world state advances during player absence; return salutations inform the player of developments.
+- **Automated Verification:** `crates/godseed_core/tests/macro_absence_proof_c.rs`.
 - **Human Verification:** Evaluated via Return Reaction Audit (player expresses surprise and curiosity at changes).
 
 ---
 
 ### AC-208: Human Story Retelling & Curiosity Gate (The Kill Test)
 - **Product Requirement:** In $\ge 3$ of 5 supervised human playtests, players must unpromptedly summarize their playthrough as a human drama involving named characters and motives (rather than system mechanics), and express spontaneous curiosity about what happened during absence.
-- **Architectural Capability:** Playtest Flight Recorder & Causal Narrative Audit Generator.
-- **Authoritative State:** Telemetry session recording (`saves/playtest_<timestamp>.session`).
+- **Architectural Capability:** Telemetry Flight Recorder & Causal Narrative Audit Generator.
+- **Authoritative State:** `TelemetryLog`.
 - **Execution Path:**
   1. Human player completes 2–4 hour blind play session.
   2. Flight recorder logs command sequence, seed, and causal consequence tree.
   3. Evaluator conducts unprompted interview (*"Tell me what happened in Thornveil"*).
   4. Evaluator audits transcript against Kill Test criteria; matches narrative claims against flight recorder causality log.
-- **Observable Result:** $\ge 3$ of 5 players recount personal drama (e.g., *"I helped Pella with her debt, but Delia boycotted me, and when I came back Runn was working the forge"*).
+- **Observable Result:** $\ge 3$ of 5 players recount personal drama unprompted.
 - **Automated Verification:** Harness validates that flight recorder captures all required event streams and generates clean audit logs.
 - **Human Verification:** **MANDATORY HUMAN PLAYTEST GATE** (supervised by human evaluation lead).
+- **Current Status:** `DEFERRED_HUMAN_VALIDATION_PENDING` (Pending human playtest sessions).
 
 ---
 
 ## 3. Reverse Traceability: Architecture to Product Requirements
 
-Every major architectural subsystem maps directly to an approved product requirement:
-
 | Architectural Component | Product Requirement Justification |
 | :--- | :--- |
 | `RelationalLedger` & `RelationalBond` | AC-201 (Qualitative Relational Divergence) |
-| `EpisodicMemory` (Anchors & Transient) | AC-202 (Episodic Recall), AC-203 (Gossip) |
+| `EpisodicMemory` (Active Anchors & `compacted_anchors`) | AC-202 (Episodic Recall), AC-203 (Gossip) |
 | `EpistemicState` & Tripartite Knowledge | AC-204 (Knowledge Leverage), AC-205 (Scholar Agency) |
 | `PendingConsequenceRegistry` | AC-206 (Delayed Consequence), AC-207 (Absence Continuation) |
 | `ReturnDigestLog` | AC-207 (Absence Return Experience), AC-208 (Kill Test) |
 | `DocumentRegistry` | AC-205 (Documentary Authority & Scholar Stage 2) |
-| `PlaytestFlightRecorder` | AC-208 (Human Playtest Gate & Causal Audit) |
-| `migrate_v1_to_v2` | Persistence integrity, backward compatibility |
+| `TelemetryLog` | AC-208 (Human Playtest Gate & Causal Audit) |
+| `NpcSocialProfile` | Architectural decoupling: clean static social parameters |
+| `migrate_v1_to_v3`, `migrate_v2_to_v3` | Save format V3 clean persistence, backward compatibility |
 
 **Zero unmapped architectural subsystems exist.** The architecture is strictly product-bound.
 
 ---
 
-## 4. Social Authority Remediation Trace
+## 4. Single Social Authority Closure Trace
 
-Remediation candidate after predecessor `3312a814ce3cdcbe4907b190c64854fc706e9f01` makes the VS2 social model canonical for runtime gameplay.
-
-| Legacy Authority | V2 Disposition |
-| :--- | :--- |
-| `resources::RelationshipLedger` | Removed from V2 runtime world insertion and gameplay system signatures. Retained only in V1/V2 snapshot compatibility structs so old saves can migrate relationship values into `components::RelationalLedger`. |
-| `components::NpcMemory` | No longer spawned for fresh V2 NPCs and no longer processed by scheduled gameplay systems. Retained for V1 deserialization compatibility. |
-| Dynamic `components::Disposition::toward_player` | No longer used for gameplay relationship decisions. Static teaching metadata remains pending a later `TeachingProfile` split. |
-
-Canonical runtime social decisions now derive from:
-
-- `components::RelationalLedger`
-- `components::EpisodicMemory`
-- `components::EpistemicState`
-- `resources::DocumentRegistry`
-- `resources::PendingConsequenceRegistry`
-- `resources::ReturnDigestLog`
-
-AC-201 through AC-207 remain deterministic technical criteria. AC-208 remains deferred to supervised human evaluation.
+| Entity / Resource | Status | Corrective Remediation Disposition |
+| :--- | :--- | :--- |
+| `resources::RelationshipLedger` | REMOVED | Never inserted into ECS world in fresh simulation or loaded snapshot. Save struct field omitted in V3 snapshots. Contradictory legacy values proven to have 0% runtime influence (`test_legacy_positive_cannot_override_vs2_enemy`, `test_legacy_negative_cannot_override_vs2_ally`). |
+| `components::NpcMemory` | REMOVED | Zero entities spawned with `NpcMemory`. Omitted from V3 snapshots. Zero runtime usage. |
+| `components::Disposition` | REPLACED | Replaced in gameplay and snapshots by immutable `NpcSocialProfile` (`base_personality`, `base_suspicion`, `will_teach`, `teach_threshold`). Legacy struct retained purely for V1/V2 save deserialization. |
+| `components::RelationalLedger` | AUTHORITATIVE | 100% authoritative for all relational evaluations, dialogue branches, trade concessions, and teaching unlock checks. |
+| `components::EpisodicMemory` | AUTHORITATIVE | Option A compact storage implemented (`compacted_anchors`); permanent turning points survive indefinite memory pressure. |
+| `components::EpistemicState` | AUTHORITATIVE | Fail-closed sharing enforced; asymmetric debt leverage implemented. |
