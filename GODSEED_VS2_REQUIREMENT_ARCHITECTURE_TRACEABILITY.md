@@ -41,7 +41,7 @@ All referenced symbols, components, resources, and tests in this document exist 
 - **Execution Path:**
   1. Significant player action (`PlayerAction::HelpWithFelling`) commits `EpisodicRecord` with `tag = MemoryTag::HelpedWithFelling`, `is_permanent = true`.
   2. 14 days advance ($\ge 336$ ticks).
-  3. Under anchor pressure (>6 permanent anchors, >12 transients), Option A evicts lowest-magnitude active anchors into `compacted_anchors` indefinitely.
+  3. Under anchor pressure (>6 permanent anchors, >12 transients), Option A evicts lowest-magnitude active anchors into `compacted_anchors` across tested compaction pressure (with no explicit application-level bound on `compacted_anchors`; total storage remains governed by host memory).
   4. Player interacts via `PlayerAction::Talk { npc: CitizenId(6), topic: TalkTopic::RequestWork }`.
   5. `has_anchor_with_tag(MemoryTag::HelpedWithFelling)` detects turning point and grants work with explicit citation: *"After what you did with the great oak, my work is always open to you."*
 - **Observable Result:** After $\ge 14$ days and under severe memory pressure, NPC explicitly cites the felling assistance and accepts work even when neutral/wary.
@@ -60,7 +60,7 @@ All referenced symbols, components, resources, and tests in this document exist 
   3. Witness A and Citizen B co-locate during `NpcActivity::Socializing`.
   4. Witness A shares firsthand experience.
   5. Citizen B receives `EpisodicRecord` with `tag: MemoryTag::HeardGossipAbout(speaker_id)` and attenuated relational bond shift.
-  6. Secondhand gossip cannot be re-transmitted (one-hop bound).
+  6. Production propagation logic structurally rejects records tagged `HeardGossipAbout(_)` from further propagation (enforcing the strict one-hop boundary).
   7. On first greeting, Citizen B states: *"Tomas told me what you did at the woodlot with that great oak. We can always use good hands around here."*
 - **Observable Result:** Citizen B greets the player citing Tomas's story and alters interaction before any direct player contact.
 - **Automated Verification:** `test_ac203_one_hop_narrative_gossip` in `crates/godseed_core/tests/social_authority_corrective.rs`.
@@ -180,5 +180,5 @@ All referenced symbols, components, resources, and tests in this document exist 
 | `components::NpcMemory` | REMOVED | Zero entities spawned with `NpcMemory`. Omitted from V3 snapshots. Zero runtime usage. |
 | `components::Disposition` | REPLACED | Replaced in gameplay and snapshots by immutable `NpcSocialProfile` (`base_personality`, `base_suspicion`, `will_teach`, `teach_threshold`). Legacy struct retained purely for V1/V2 save deserialization. |
 | `components::RelationalLedger` | AUTHORITATIVE | 100% authoritative for all relational evaluations, dialogue branches, trade concessions, and teaching unlock checks. |
-| `components::EpisodicMemory` | AUTHORITATIVE | Option A compact storage implemented (`compacted_anchors`); permanent turning points survive indefinite memory pressure. |
+| `components::EpisodicMemory` | AUTHORITATIVE | Option A compact storage implemented (`compacted_anchors`); permanent turning points survive tested compaction pressure without application-level cap. |
 | `components::EpistemicState` | AUTHORITATIVE | Fail-closed sharing enforced; asymmetric debt leverage implemented. |

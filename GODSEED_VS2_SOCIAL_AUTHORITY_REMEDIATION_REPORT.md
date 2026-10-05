@@ -29,7 +29,7 @@ The single authoritative runtime and persistence model is now 100% active, ECS-c
   - Introduced clean `CitizenSnapshot` containing static `social_profile: Option<NpcSocialProfile>` and omitting legacy `npc_memory` and `disposition`.
   - Created `NpcSocialProfile` component representing immutable authored social parameters (`base_personality: i8`, `base_suspicion: u8`, `will_teach: Option<CapabilityId>`, `teach_threshold: i16`).
   - Marked `Disposition` as a migration-only legacy struct. Zero entities spawn with `Disposition` or `NpcMemory`.
-  - Implemented migration chain: `migrate_v1_to_v2`, `migrate_v2_to_v3`, and `migrate_v1_to_v3`. Older save files (V1 and V2) load transparently into V3 runtime.
+  - Implemented monotonic upward / forward migration chain: `migrate_v1_to_v2`, `migrate_v2_to_v3`, and `migrate_v1_to_v3` (V1 → V2 → V3). Downward migration (e.g. V3 → V2 or V2 → V1) is not implemented and not required by the product contract; older save files (V1 and V2) load transparently into V3 runtime.
   - Verified via `test_v2_runtime_has_single_social_authority` that 0 entities have `Disposition` or `NpcMemory`, and `RelationshipLedger` is not present in runtime resources.
   - Verified via `test_legacy_positive_cannot_override_vs2_enemy` and `test_legacy_negative_cannot_override_vs2_ally` that contradictory legacy values have 0% influence over runtime decisions.
 
@@ -45,7 +45,7 @@ The single authoritative runtime and persistence model is now 100% active, ECS-c
 - **Problem:** Under high memory pressure (>6 permanent anchors), FIFO eviction could discard permanent life-altering memories.
 - **Remediation:**
   - Implemented Option A compact permanent storage on `EpisodicMemory`: `compacted_anchors: Vec<CompactAnchor>`.
-  - When active anchors exceed 6, lowest-impact records evict into `compacted_anchors`, retaining `id`, `tick`, `actor`, `target`, `tag`, `narrative_token`, and `causal` pointer indefinitely.
+  - When active anchors exceed 6, lowest-impact records evict into `compacted_anchors`, retaining `id`, `tick`, `actor`, `target`, `tag`, `narrative_token`, and `causal` pointer across tested compaction pressure. There is no explicit application-level bound on `compacted_anchors` (retention survives tested compaction pressure, while resource exhaustion remains governed by host memory).
   - `has_anchor_with_tag` and `has_record_with_tag` scan both active and compacted anchors.
   - Verified via `test_permanent_turning_point_survives_anchor_pressure` (flooded with >10 anchors and >20 transients; turning point survived and remained active).
   - Verified via `test_ac202_episodic_recall_changes_behavior` (after $\ge 14$ simulated days, `HelpedWithFelling` is cited and alters `RequestWork` outcome).
@@ -55,7 +55,7 @@ The single authoritative runtime and persistence model is now 100% active, ECS-c
 - **Remediation:**
   - `gossip_system` identifies firsthand episodic records regarding player (`actor == CitizenId::PLAYER || target == Some(CitizenId::PLAYER)`) from socializing NPCs.
   - Co-located listener receives `EpisodicRecord` with `tag: MemoryTag::HeardGossipAbout(speaker_id)` and narrative token; relational bond shifts.
-  - Second-hand gossip is filtered (`!matches!(tag, MemoryTag::HeardGossipAbout(_))`), enforcing the strict one-hop boundary.
+  - Production propagation logic structurally rejects records tagged `HeardGossipAbout(_)` from further propagation (`!matches!(tag, MemoryTag::HeardGossipAbout(_))`), strictly enforcing the one-hop boundary.
   - Listener's first greeting cites the gossip before any direct interaction.
   - Verified via `test_ac203_one_hop_narrative_gossip`.
 
@@ -67,6 +67,10 @@ The single authoritative runtime and persistence model is now 100% active, ECS-c
   - Revealing Knowledge 6 (Delia's Hidden Debt) adjusts Delia's obligation by +80 and sentiment by -25, placing her into `BehavioralMode::GrudgingDebtor`.
   - Delia subsequently concedes on `RequestWork`: *"Fine. I'll give you ledger work and market concession—just keep your silence about my debt."*
   - Verified via `test_share_unknown_knowledge_fails_closed` and `test_ac204_asymmetric_knowledge_leverage`.
+
+### Finding 6: Determinism & Persistence Equivalence
+- **Specification:** State determinism across save/load boundaries is verified as deterministic state equivalence across save/load boundaries via authoritative state hash equality (`compute_authoritative_state_hash`), guaranteeing identical simulation progression across uninterrupted versus interrupted save/load executions.
+
 
 ---
 
